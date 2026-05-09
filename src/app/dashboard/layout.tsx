@@ -7,8 +7,8 @@ import Link from "next/link";
 import {
   Building2, LayoutDashboard, Users, Receipt, MessageSquareWarning,
   Megaphone, UserCheck, CalendarDays, Settings, LogOut, Menu, X,
-  Bell, BarChart3, Globe, ChevronRight, Sparkles, ShieldCheck, CalendarClock
-  , FileSpreadsheet, Fingerprint
+  Bell, BarChart3, Globe, ChevronRight, Sparkles, ShieldCheck, CalendarClock,
+  FileSpreadsheet, Fingerprint, BookOpen, ClipboardList
 } from "lucide-react";
 import { getInitials } from "@/lib/utils";
 import { useLocale } from "@/context/LocaleContext";
@@ -32,6 +32,8 @@ const navItems = [
   { href: "/dashboard/tax", label: "Tax & Returns", icon: FileSpreadsheet, roles: ["ADMIN", "TREASURER"], section: "analytics" },
   { href: "/dashboard/compliance", label: "Compliance Calendar", icon: CalendarClock, roles: ["ADMIN", "TREASURER", "COMMITTEE"], section: "analytics" },
   { href: "/dashboard/notifications", label: "Notifications", icon: ShieldCheck, roles: ["ADMIN", "TREASURER", "COMMITTEE"], section: "analytics" },
+  { href: "/dashboard/accounting", label: "Accounting", icon: BookOpen, roles: ["ADMIN", "TREASURER", "MAKER", "CHECKER", "COMMITTEE", "PLATFORM_ADMIN"], section: "analytics" },
+  { href: "/dashboard/audit", label: "Audit Trail", icon: ClipboardList, roles: ["ADMIN", "TREASURER", "COMMITTEE", "PLATFORM_ADMIN"], section: "analytics" },
   { href: "/dashboard/privacy", label: "Privacy & Consent", icon: Fingerprint, roles: ["ADMIN", "TREASURER", "COMMITTEE", "RESIDENT", "PLATFORM_ADMIN", "MAKER", "CHECKER"], section: "settings" },
   { href: "/dashboard/societies", label: "Societies & Plans", icon: Globe, roles: ["PLATFORM_ADMIN"], section: "analytics" },
   { href: "/dashboard/settings", label: "Settings", icon: Settings, roles: ["ADMIN", "PLATFORM_ADMIN"], section: "settings" },

@@ -166,10 +166,30 @@ export const societyAPI = {
   addFlat: (id: string, data: any) => api.post(`/societies/${id}/flats`, data),
 };
 
-// Plan APIs
 export const planAPI = {
   getAll: () => api.get('/plans'),
   create: (data: any) => api.post('/plans', data),
   update: (id: string, data: any) => api.put(`/plans/${id}`, data),
   delete: (id: string) => api.delete(`/plans/${id}`)
 };
+
+// Accounting APIs
+export const accountingAPI = {
+  getAccounts:      () => api.get('/accounting/accounts'),
+  createAccount:    (data: any) => api.post('/accounting/accounts', data),
+  getVouchers:      (params?: any) => api.get('/accounting/vouchers', { params }),
+  createVoucher:    (data: any) => api.post('/accounting/vouchers', data),
+  approveVoucher:   (id: string) => api.put(`/accounting/vouchers/${id}/approve`),
+  reverseVoucher:   (id: string) => api.put(`/accounting/vouchers/${id}/reverse`),
+  getVoucherEntries:(id: string) => api.get(`/accounting/vouchers/${id}/entries`),
+  getTrialBalance:  (params?: any) => api.get('/accounting/trial-balance', { params }),
+  getLedger:        (accountId: string, params?: any) => api.get(`/accounting/ledger/${accountId}`, { params }),
+};
+
+// Audit Log APIs
+export const auditAPI = {
+  getLogs:       (params?: any) => api.get('/audit', { params }),
+  getActionTypes:() => api.get('/audit/actions'),
+  getStats:      () => api.get('/audit/stats'),
+};
+
