@@ -5,10 +5,11 @@ import { useAuth } from "@/context/AuthContext";
 import { useLocale } from "@/context/LocaleContext";
 import { dashboardAPI, billingAPI } from "@/lib/api";
 import { formatCurrency, formatDate, getStatusColor } from "@/lib/utils";
+import Link from "next/link";
 import {
   Users, Receipt, MessageSquareWarning, UserCheck, IndianRupee,
   TrendingUp, Megaphone, ArrowUpRight, Clock, CheckCircle2, XCircle,
-  Building2, Zap, AlertTriangle, Activity
+  Building2, Zap, AlertTriangle, Activity, QrCode, ShieldAlert
 } from "lucide-react";
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -120,15 +121,31 @@ export default function DashboardPage() {
 
   const role = String(user?.role || "").toUpperCase();
   const isResident = role === "RESIDENT";
+  const isGuard = role === "GUARD";
+  const isMakerChecker = ["MAKER", "CHECKER"].includes(role);
 
   const statCards = [
-    ...(!isResident ? [{ label: t("totalMembers"), value: stats?.total_members || 0, icon: Users, gradient: "from-blue-500 to-blue-600" }] : []),
-    { label: t("monthlyCollection"), value: formatCurrency(stats?.monthly_collection || 0), icon: IndianRupee, gradient: "from-emerald-500 to-green-600" },
-    { label: t("pendingBills"), value: stats?.pending_bills || 0, icon: Receipt, gradient: "from-orange-500 to-amber-500" },
-    { label: t("openComplaints"), value: stats?.pending_complaints || 0, icon: MessageSquareWarning, gradient: "from-rose-500 to-red-600" },
-    ...(!isResident ? [{ label: t("todayVisitors"), value: stats?.today_visitors || 0, icon: UserCheck, gradient: "from-violet-500 to-purple-600" }] : []),
-    { label: t("activeNotices"), value: stats?.active_notices || 0, icon: Megaphone, gradient: "from-indigo-500 to-indigo-600" },
+    // Guard-specific: focus on visitors and safety
+    ...(isGuard ? [
+      { label: "Today's Visitors", value: stats?.today_visitors || 0, icon: UserCheck, gradient: "from-violet-500 to-purple-600" },
+      { label: "Active Notices", value: stats?.active_notices || 0, icon: Megaphone, gradient: "from-indigo-500 to-indigo-600" },
+    ] : []),
+    // Maker/Checker: accounting focus
+    ...(isMakerChecker ? [
+      { label: "Pending Bills", value: stats?.pending_bills || 0, icon: Receipt, gradient: "from-orange-500 to-amber-500" },
+      { label: "Active Notices", value: stats?.active_notices || 0, icon: Megaphone, gradient: "from-indigo-500 to-indigo-600" },
+    ] : []),
+    // Standard roles
+    ...(!isGuard && !isMakerChecker ? [
+      ...(!isResident ? [{ label: t("totalMembers"), value: stats?.total_members || 0, icon: Users, gradient: "from-blue-500 to-blue-600" }] : []),
+      { label: t("monthlyCollection"), value: formatCurrency(stats?.monthly_collection || 0), icon: IndianRupee, gradient: "from-emerald-500 to-green-600" },
+      { label: t("pendingBills"), value: stats?.pending_bills || 0, icon: Receipt, gradient: "from-orange-500 to-amber-500" },
+      { label: t("openComplaints"), value: stats?.pending_complaints || 0, icon: MessageSquareWarning, gradient: "from-rose-500 to-red-600" },
+      ...(!isResident ? [{ label: t("todayVisitors"), value: stats?.today_visitors || 0, icon: UserCheck, gradient: "from-violet-500 to-purple-600" }] : []),
+      { label: t("activeNotices"), value: stats?.active_notices || 0, icon: Megaphone, gradient: "from-indigo-500 to-indigo-600" },
+    ] : []),
   ];
+
 
   const PIE_COLORS = ["#f59e0b", "#3b82f6", "#10b981", "#6b7280"];
   const pieData = complaintStats
@@ -185,18 +202,29 @@ export default function DashboardPage() {
 
         {/* Quick stats row */}
         <div className="relative z-10 grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5">
-          {[
+          {(isGuard ? [
+            { label: "Today's Visitors", value: stats?.today_visitors || 0 },
+            { label: "Active Notices", value: stats?.active_notices || 0 },
+            { label: "Active Notices", value: stats?.active_notices || 0 },
+            { label: "Bills Pending", value: "-" },
+          ] : isMakerChecker ? [
+            { label: "Pending Bills", value: stats?.pending_bills || 0 },
+            { label: "Active Notices", value: stats?.active_notices || 0 },
+            { label: "Total Collection", value: formatCurrency(stats?.total_collection || 0) },
+            { label: "Open Complaints", value: stats?.pending_complaints || 0 },
+          ] : [
             ...(!isResident ? [{ label: "Total Flats", value: stats?.total_flats || 0 }] : []),
             { label: isResident ? "My Collection" : "Total Collection", value: formatCurrency(stats?.total_collection || 0) },
             ...(!isResident ? [{ label: "Active Members", value: stats?.total_members || 0 }] : [{ label: "Active Notices", value: stats?.active_notices || 0 }]),
             { label: "Bills Pending", value: stats?.pending_bills || 0 },
-          ].map((item, i) => (
+          ]).slice(0, 4).map((item, i) => (
             <div key={i} className="bg-white/10 backdrop-blur-sm rounded-xl px-3 py-2.5">
               <p className="text-xs text-indigo-200">{item.label}</p>
               <p className="text-lg font-bold text-white mt-0.5">{item.value}</p>
             </div>
           ))}
         </div>
+
       </div>
 
       {/* Stats Grid */}
@@ -353,6 +381,42 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Guard Quick Actions */}
+      {isGuard && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-slide-up" style={{ animationDelay: "400ms" }}>
+          <Link href="/dashboard/visitors" className="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-100 rounded-2xl p-4 flex items-center gap-4 hover:shadow-md transition-all group">
+            <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center shrink-0">
+              <UserCheck className="w-5 h-5 text-indigo-600" />
+            </div>
+            <div>
+              <p className="font-semibold text-gray-900">Log Visitor</p>
+              <p className="text-xs text-gray-500 mt-0.5">Record new entry</p>
+            </div>
+            <ArrowUpRight className="w-4 h-4 text-indigo-400 ml-auto group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+          </Link>
+          <Link href="/dashboard/patrol" className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl p-4 flex items-center gap-4 hover:shadow-md transition-all group">
+            <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center shrink-0">
+              <QrCode className="w-5 h-5 text-emerald-600" />
+            </div>
+            <div>
+              <p className="font-semibold text-gray-900">Patrol Scan</p>
+              <p className="text-xs text-gray-500 mt-0.5">Scan QR checkpoint</p>
+            </div>
+            <ArrowUpRight className="w-4 h-4 text-emerald-400 ml-auto group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+          </Link>
+          <Link href="/dashboard/sos" className="bg-gradient-to-r from-rose-50 to-red-50 border border-rose-100 rounded-2xl p-4 flex items-center gap-4 hover:shadow-md transition-all group">
+            <div className="w-10 h-10 bg-rose-100 rounded-xl flex items-center justify-center shrink-0">
+              <ShieldAlert className="w-5 h-5 text-rose-600" />
+            </div>
+            <div>
+              <p className="font-semibold text-gray-900">SOS Alerts</p>
+              <p className="text-xs text-gray-500 mt-0.5">View active alerts</p>
+            </div>
+            <ArrowUpRight className="w-4 h-4 text-rose-400 ml-auto group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

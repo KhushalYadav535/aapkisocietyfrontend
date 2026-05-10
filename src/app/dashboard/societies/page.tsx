@@ -375,7 +375,7 @@ export default function SocietiesPage() {
       {/* Edit Plan & Modules Modal for Society */}
       {showEditSociety && (
         <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl animate-scale-in">
+          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-5">
               <div><h2 className="text-lg font-bold text-gray-900">{t("managePlanModules")}</h2><p className="text-xs text-gray-400 mt-0.5">{showEditSociety.name}</p></div>
               <button onClick={() => setShowEditSociety(null)} className="p-2 hover:bg-gray-100 rounded-xl"><X className="w-5 h-5 text-gray-500" /></button>
@@ -399,7 +399,7 @@ export default function SocietiesPage() {
       {/* Add Plan Modal */}
       {showAddPlan && (
         <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl animate-scale-in">
+          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-5">
               <div><h2 className="text-lg font-bold text-gray-900">{t("createSubscriptionPlan")}</h2></div>
               <button onClick={() => setShowAddPlan(false)} className="p-2 hover:bg-gray-100 rounded-xl"><X className="w-5 h-5 text-gray-500" /></button>

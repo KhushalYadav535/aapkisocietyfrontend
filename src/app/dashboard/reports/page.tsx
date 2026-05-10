@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { dashboardAPI, billingAPI } from "@/lib/api";
 import { useLocale } from "@/context/LocaleContext";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import { BarChart3, TrendingUp, IndianRupee, Receipt, MessageSquareWarning, Users, Download, Calendar } from "lucide-react";
+import Link from "next/link";
+import { BarChart3, TrendingUp, IndianRupee, Receipt, MessageSquareWarning, Users, Download, Calendar, TrendingDown } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   AreaChart, Area, PieChart, Pie, Cell, LineChart, Line, Legend
@@ -328,6 +329,20 @@ export default function ReportsPage() {
           </table>
         </div>
       </div>
+      {/* Defaulter Aging Quick Access */}
+      <Link href="/dashboard/reports/defaulters"
+        className="flex items-center justify-between bg-gradient-to-r from-red-50 to-rose-50 border border-red-100 rounded-2xl p-5 hover:shadow-md transition-shadow animate-slide-up group">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+            <TrendingDown className="w-6 h-6 text-red-600" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-gray-900">Defaulter Aging Report</h3>
+            <p className="text-sm text-gray-500 mt-0.5">View outstanding dues by age buckets: 0–30, 31–60, 61–90, 90+ days</p>
+          </div>
+        </div>
+        <span className="text-sm font-semibold text-red-600 group-hover:translate-x-1 transition-transform">View →</span>
+      </Link>
     </div>
   );
 }

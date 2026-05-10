@@ -10,6 +10,9 @@ import {
   Megaphone, Plus, Search, X, Calendar, Send, Trash2,
   AlertTriangle, Info, Zap, Leaf, DollarSign
 } from "lucide-react";
+import Pagination from "@/components/Pagination";
+
+const ITEMS_PER_PAGE = 12;
 
 interface Notice {
   id: string; title: string; content: string; category: string;
@@ -47,6 +50,7 @@ export default function NoticesPage() {
   const [formData, setFormData] = useState({
     title: "", content: "", category: "GENERAL", priority: "NORMAL", expiry_date: ""
   });
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => { loadNotices(); }, []);
 
@@ -86,7 +90,15 @@ export default function NoticesPage() {
     return matchSearch && matchCat;
   });
 
-  const isAdmin = ["ADMIN", "COMMITTEE", "TREASURER"].includes(user?.role || "");
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const paginatedNotices = filtered.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  useEffect(() => { setCurrentPage(1); }, [searchTerm, catFilter]);
+
+  const isAdmin = ["ADMIN", "COMMITTEE", "TREASURER", "PLATFORM_ADMIN"].includes(user?.role || "");
 
   return (
     <div className="space-y-6">
@@ -135,8 +147,9 @@ export default function NoticesPage() {
           <p className="text-gray-400">No notices found</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 stagger">
-          {filtered.map((notice, i) => {
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 stagger">
+            {paginatedNotices.map((notice, i) => {
             const cfg = CATEGORY_CONFIG[notice.category] || CATEGORY_CONFIG.GENERAL;
             const Icon = cfg.icon;
             return (
@@ -180,6 +193,14 @@ export default function NoticesPage() {
               </div>
             );
           })}
+          </div>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={filtered.length}
+            itemsPerPage={ITEMS_PER_PAGE}
+            onPageChange={setCurrentPage}
+          />
         </div>
       )}
 
@@ -214,7 +235,7 @@ export default function NoticesPage() {
       {/* Create Notice Modal */}
       {showAddModal && (
         <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl animate-scale-in">
+          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-5">
               <div>
                 <h2 className="text-lg font-bold text-gray-900">Create Notice</h2>

@@ -140,7 +140,7 @@ export default function PropertiesPage() {
       {/* Add Wing Modal */}
       {showAddWing && (
         <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-scale-in">
+          <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-5"><div><h2 className="text-lg font-bold text-gray-900">Add New Wing</h2></div><button onClick={() => setShowAddWing(false)} className="p-2 hover:bg-gray-100 rounded-xl"><X className="w-5 h-5 text-gray-500" /></button></div>
             <form onSubmit={handleAddWing} className="space-y-4">
               <div><label className="block text-xs font-semibold text-gray-600 mb-1.5">Wing Name/Letter *</label><input value={wingForm.name} onChange={e=>setWingForm(p=>({...p,name:e.target.value.toUpperCase()}))} required className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="A, B, or Tower 1" /></div>
@@ -157,7 +157,7 @@ export default function PropertiesPage() {
       {/* Add Flat Modal */}
       {showAddFlat && (
         <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-scale-in">
+          <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-5"><div><h2 className="text-lg font-bold text-gray-900">Add Flat</h2></div><button onClick={() => setShowAddFlat(false)} className="p-2 hover:bg-gray-100 rounded-xl"><X className="w-5 h-5 text-gray-500" /></button></div>
             <form onSubmit={handleAddFlat} className="space-y-4">
               <div><label className="block text-xs font-semibold text-gray-600 mb-1.5">Select Wing *</label><select required value={flatForm.wing_id} onChange={e=>setFlatForm(p=>({...p,wing_id:e.target.value}))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50">{wings.map(w=><option key={w.id} value={w.id}>Wing {w.name}</option>)}</select></div>

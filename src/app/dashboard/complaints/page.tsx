@@ -6,6 +6,9 @@ import { useLocale } from "@/context/LocaleContext";
 import toast from "react-hot-toast";
 import { formatDate, getStatusColor } from "@/lib/utils";
 import { MessageSquareWarning, Plus, Search, X, CheckCircle2, UserCheck2, XCircle } from "lucide-react";
+import Pagination from "@/components/Pagination";
+
+const ITEMS_PER_PAGE = 10;
 
 interface Complaint { id: string; title: string; description: string; category: string; priority: string; status: string; raised_by: string; assigned_to: string; resolution_notes: string; created_at: string; }
 
@@ -28,6 +31,7 @@ export default function ComplaintsPage() {
   const [resolveNotes, setResolveNotes] = useState("");
   const [assignTo, setAssignTo] = useState("");
   const [form, setForm] = useState({ title: "", description: "", category: "GENERAL", priority: "MEDIUM" });
+  const [currentPage, setCurrentPage] = useState(1);
 
   const isAdmin = ["ADMIN","COMMITTEE","TREASURER","PLATFORM_ADMIN"].includes(user?.role || "");
   const canRaise = (user?.role || "") === "RESIDENT";
@@ -64,6 +68,14 @@ export default function ComplaintsPage() {
     const mf = statusFilter === "ALL" || c.status === statusFilter;
     return ms && mf;
   });
+
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const paginatedComplaints = filtered.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  useEffect(() => { setCurrentPage(1); }, [search, statusFilter]);
 
   return (
     <div className="space-y-6">
@@ -104,7 +116,7 @@ export default function ComplaintsPage() {
         <div className="text-center py-16"><MessageSquareWarning className="w-14 h-14 mx-auto mb-3 text-gray-200" /><p className="text-gray-400">No complaints found</p></div>
       ) : (
         <div className="space-y-3">
-          {filtered.map(c => {
+          {paginatedComplaints.map(c => {
             const Icon = STATUS_ICONS[c.status] || MessageSquareWarning;
             return (
               <div key={c.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 card-hover animate-slide-up">
@@ -144,13 +156,20 @@ export default function ComplaintsPage() {
               </div>
             );
           })}
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={filtered.length}
+            itemsPerPage={ITEMS_PER_PAGE}
+            onPageChange={setCurrentPage}
+          />
         </div>
       )}
 
       {/* Detail/Action Modal */}
       {selected && (
         <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl animate-scale-in">
+          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-gray-900">{selected.status==="OPEN"?"Assign Complaint":"Resolve Complaint"}</h2>
               <button onClick={()=>setSelected(null)} className="p-2 hover:bg-gray-100 rounded-xl"><X className="w-5 h-5 text-gray-500" /></button>
@@ -186,7 +205,7 @@ export default function ComplaintsPage() {
       {/* Create Modal */}
       {showAdd && canRaise && (
         <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl animate-scale-in">
+          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-5"><h2 className="text-lg font-bold text-gray-900">Raise Complaint</h2><button onClick={()=>setShowAdd(false)} className="p-2 hover:bg-gray-100 rounded-xl"><X className="w-5 h-5 text-gray-500" /></button></div>
             <form onSubmit={handleCreate} className="space-y-4">
               <div><label className="block text-xs font-semibold text-gray-600 mb-1.5">Title *</label><input value={form.title} onChange={e=>setForm(p=>({...p,title:e.target.value}))} required className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50" placeholder="Brief description of the issue" /></div>

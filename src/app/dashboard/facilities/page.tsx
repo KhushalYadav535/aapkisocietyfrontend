@@ -139,7 +139,7 @@ export default function FacilitiesPage() {
       {/* Book Modal */}
       {showBook && (
         <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-scale-in">
+          <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4"><div><h2 className="text-lg font-bold text-gray-900">Book {showBook.name}</h2><p className="text-xs text-gray-400">{showBook.type.replace("_"," ")} · Capacity: {showBook.capacity}</p></div><button onClick={()=>setShowBook(null)} className="p-2 hover:bg-gray-100 rounded-xl"><X className="w-5 h-5 text-gray-500" /></button></div>
             <form onSubmit={handleBook} className="space-y-3">
               <div><label className="block text-xs font-semibold text-gray-600 mb-1.5">Date *</label><input type="date" value={bookForm.booking_date} onChange={e=>setBookForm(p=>({...p,booking_date:e.target.value}))} required min={new Date().toISOString().split("T")[0]} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50" /></div>
@@ -158,7 +158,7 @@ export default function FacilitiesPage() {
       {/* Add Facility Modal */}
       {showAdd && (
         <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl animate-scale-in">
+          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-5"><h2 className="text-lg font-bold text-gray-900">Add Facility</h2><button onClick={()=>setShowAdd(false)} className="p-2 hover:bg-gray-100 rounded-xl"><X className="w-5 h-5 text-gray-500" /></button></div>
             <form onSubmit={handleAdd} className="space-y-3">
               <div><label className="block text-xs font-semibold text-gray-600 mb-1.5">Name *</label><input value={addForm.name} onChange={e=>setAddForm(p=>({...p,name:e.target.value}))} required className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50" placeholder="Community Hall" /></div>

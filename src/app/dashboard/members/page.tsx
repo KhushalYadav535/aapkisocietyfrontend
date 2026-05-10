@@ -6,11 +6,14 @@ import { memberAPI, societyAPI } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { useLocale } from "@/context/LocaleContext";
 import toast from "react-hot-toast";
-import { getInitials, getStatusColor } from "@/lib/utils";
+import { getInitials } from "@/lib/utils";
 import {
   Users, Plus, Search, Mail, Phone, Home, Shield, X, UserPlus,
   Filter, ChevronDown, MoreVertical, UserMinus, UserCheck2
 } from "lucide-react";
+import Pagination from "@/components/Pagination";
+
+const ITEMS_PER_PAGE = 12;
 
 interface Member {
   id: string; email: string; first_name: string; last_name: string;
@@ -67,6 +70,7 @@ export default function MembersPage() {
     email: "", first_name: "", last_name: "", phone: "",
     role: "RESIDENT", flat_number: "", wing: "", password: "",
   });
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => { loadData(); }, []);
 
@@ -92,7 +96,7 @@ export default function MembersPage() {
       await memberAPI.create(formData);
       toast.success("Member added successfully!");
       setShowAddModal(false);
-      setFormData({ email: "", first_name: "", last_name: "", phone: "", role: assignableRoles[0] || "RESIDENT", flat_number: "", wing: "", password: "" });
+      setFormData({ email: "", first_name: "", last_name: "", phone: "", role: "RESIDENT", flat_number: "", wing: "", password: "" });
       loadData();
     } catch (err: any) { toast.error(err.response?.data?.error || "Failed to add member"); }
   };
@@ -112,6 +116,14 @@ export default function MembersPage() {
     const matchRole = roleFilter === "ALL" || m.role === roleFilter;
     return matchSearch && matchRole;
   });
+
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const paginatedMembers = filtered.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  useEffect(() => { setCurrentPage(1); }, [searchTerm, roleFilter]);
 
   const isAdmin = ["ADMIN", "PLATFORM_ADMIN"].includes(user?.role || "");
   const creatorRole = (user?.role || "").toUpperCase();
@@ -137,7 +149,7 @@ export default function MembersPage() {
       </div>
 
       {/* Role Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 animate-slide-up stagger" style={{ animationDelay: "60ms" }}>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 stagger" style={{ animationDelay: "60ms" }}>
         {[
           { label: "Residents", count: members.filter(m => m.role === "RESIDENT").length, color: "bg-orange-50 border-orange-100", text: "text-orange-700" },
           { label: "Committee", count: members.filter(m => m.role === "COMMITTEE").length, color: "bg-blue-50 border-blue-100", text: "text-blue-700" },
@@ -145,7 +157,7 @@ export default function MembersPage() {
           { label: "Admin", count: members.filter(m => m.role === "ADMIN").length, color: "bg-violet-50 border-violet-100", text: "text-violet-700" },
         ].map((stat, i) => (
           <div key={i} className={`rounded-2xl border p-4 ${stat.color} animate-slide-up`}>
-            <p className="text-2xl font-bold text-gray-900">{stat.count}</p>
+            <p className="text-2xl font-bold" style={{ color: '#111827' }}>{stat.count}</p>
             <p className={`text-xs font-semibold mt-0.5 ${stat.text}`}>{stat.label}</p>
           </div>
         ))}
@@ -186,79 +198,87 @@ export default function MembersPage() {
           <p className="text-gray-400">No members found</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map((member, i) => (
-            <Link
-              key={member.id}
-              href={`/dashboard/members/${member.id}`}
-              className="block animate-slide-up"
-              style={{ animationDelay: `${Math.min(i * 40, 240)}ms` }}
-            >
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm card-hover overflow-hidden group cursor-pointer">
-              <div className="p-5">
-                <div className="flex items-start gap-4">
-                  <div className={`w-12 h-12 bg-gradient-to-br ${ROLE_GRADIENTS[member.role] || "from-indigo-500 to-purple-600"} rounded-2xl flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-md`}>
-                    {getInitials(member.first_name, member.last_name)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <h3 className="font-semibold text-gray-900 truncate">{member.first_name} {member.last_name}</h3>
-                      {isAdmin && (
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleDeactivate(member.id);
-                          }}
-                          className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-50 rounded-lg transition-all text-gray-400 hover:text-red-500 flex-shrink-0"
-                          title="Deactivate member"
-                        >
-                          <UserMinus className="w-3.5 h-3.5" />
-                        </button>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {paginatedMembers.map((member, i) => (
+              <Link
+                key={member.id}
+                href={`/dashboard/members/${member.id}`}
+                className="block animate-slide-up"
+                style={{ animationDelay: `${Math.min(i * 40, 240)}ms` }}
+              >
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm card-hover overflow-hidden group cursor-pointer">
+                  <div className="p-5">
+                    <div className="flex items-start gap-4">
+                      <div className={`w-12 h-12 bg-gradient-to-br ${ROLE_GRADIENTS[member.role] || "from-indigo-500 to-purple-600"} rounded-2xl flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-md`}>
+                        {getInitials(member.first_name, member.last_name)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <h3 className="font-semibold text-gray-900 truncate">{member.first_name} {member.last_name}</h3>
+                          {isAdmin && (
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleDeactivate(member.id);
+                              }}
+                              className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-50 rounded-lg transition-all text-gray-400 hover:text-red-500 flex-shrink-0"
+                              title="Deactivate member"
+                            >
+                              <UserMinus className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className={`text-xs px-2 py-0.5 rounded-lg font-semibold ${ROLE_BADGE[member.role] || "bg-gray-100 text-gray-600"}`}>
+                            {member.role.replace(/_/g, " ")}
+                          </span>
+                          <span className={`text-xs px-2 py-0.5 rounded-lg font-semibold ${member.is_active ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
+                            {member.is_active ? "Active" : "Inactive"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-4 space-y-2">
+                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <Mail className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                        <span className="truncate">{member.email}</span>
+                      </div>
+                      {member.phone && (
+                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                          <Phone className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                          <span>{member.phone}</span>
+                        </div>
+                      )}
+                      {member.flat_number && (
+                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                          <Home className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                          <span className="font-medium text-gray-700">
+                            {member.wing ? `Wing ${member.wing} – ` : ""}{member.flat_number}
+                          </span>
+                        </div>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className={`text-xs px-2 py-0.5 rounded-lg font-semibold ${ROLE_BADGE[member.role] || "bg-gray-100 text-gray-600"}`}>
-                        {member.role.replace(/_/g, " ")}
-                      </span>
-                      <span className={`text-xs px-2 py-0.5 rounded-lg font-semibold ${member.is_active ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
-                        {member.is_active ? "Active" : "Inactive"}
-                      </span>
-                    </div>
                   </div>
                 </div>
-
-                <div className="mt-4 space-y-2">
-                  <div className="flex items-center gap-2 text-xs text-gray-500">
-                    <Mail className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                    <span className="truncate">{member.email}</span>
-                  </div>
-                  {member.phone && (
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
-                      <Phone className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                      <span>{member.phone}</span>
-                    </div>
-                  )}
-                  {member.flat_number && (
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
-                      <Home className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                      <span className="font-medium text-gray-700">
-                        {member.wing ? `Wing ${member.wing} – ` : ""}{member.flat_number}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-            </Link>
-          ))}
+              </Link>
+            ))}
+          </div>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={filtered.length}
+            itemsPerPage={ITEMS_PER_PAGE}
+            onPageChange={setCurrentPage}
+          />
         </div>
       )}
 
       {/* Add Member Modal */}
       {showAddModal && (
         <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl animate-scale-in">
+          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-5">
               <div>
                 <h2 className="text-lg font-bold text-gray-900">Add New Member</h2>

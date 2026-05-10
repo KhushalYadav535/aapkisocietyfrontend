@@ -8,10 +8,13 @@ import {
   Building2, LayoutDashboard, Users, Receipt, MessageSquareWarning,
   Megaphone, UserCheck, CalendarDays, Settings, LogOut, Menu, X,
   Bell, BarChart3, Globe, ChevronRight, Sparkles, ShieldCheck, CalendarClock,
-  FileSpreadsheet, Fingerprint, BookOpen, ClipboardList
+  FileSpreadsheet, Fingerprint, BookOpen, ClipboardList, User, Moon, Sun,
+  Home as HomeIcon, Car, MessageSquare, Vote, Wrench, FolderOpen, HardHat,
+  ShieldAlert, QrCode, Phone, Package
 } from "lucide-react";
 import { getInitials } from "@/lib/utils";
 import { useLocale } from "@/context/LocaleContext";
+import { useTheme } from "@/context/ThemeContext";
 
 const normalizeRole = (role: string) =>
   String(role || "")
@@ -20,30 +23,88 @@ const normalizeRole = (role: string) =>
     .replace(/[\s-]+/g, "_");
 
 const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["ADMIN", "TREASURER", "COMMITTEE", "RESIDENT", "PLATFORM_ADMIN", "MAKER", "CHECKER"], section: "main" },
-  { href: "/dashboard/members", label: "Members", icon: Users, roles: ["ADMIN", "TREASURER", "COMMITTEE", "PLATFORM_ADMIN"], section: "management" },
-  { href: "/dashboard/properties", label: "Properties Setup", icon: Building2, roles: ["ADMIN"], section: "management" },
-  { href: "/dashboard/billing", label: "Billing & Payments", icon: Receipt, roles: ["ADMIN", "TREASURER", "MAKER", "CHECKER", "RESIDENT"], section: "management" },
-  { href: "/dashboard/complaints", label: "Complaints", icon: MessageSquareWarning, roles: ["ADMIN", "TREASURER", "COMMITTEE", "RESIDENT"], section: "management" },
-  { href: "/dashboard/notices", label: "Notices", icon: Megaphone, roles: ["ADMIN", "TREASURER", "COMMITTEE", "RESIDENT"], section: "management" },
-  { href: "/dashboard/visitors", label: "Visitors", icon: UserCheck, roles: ["ADMIN", "COMMITTEE", "RESIDENT", "GUARD"], section: "management" },
-  { href: "/dashboard/facilities", label: "Facilities", icon: CalendarDays, roles: ["ADMIN", "COMMITTEE", "RESIDENT"], section: "management" },
-  { href: "/dashboard/reports", label: "Reports", icon: BarChart3, roles: ["ADMIN", "TREASURER"], section: "analytics" },
-  { href: "/dashboard/tax", label: "Tax & Returns", icon: FileSpreadsheet, roles: ["ADMIN", "TREASURER"], section: "analytics" },
-  { href: "/dashboard/compliance", label: "Compliance Calendar", icon: CalendarClock, roles: ["ADMIN", "TREASURER", "COMMITTEE"], section: "analytics" },
-  { href: "/dashboard/notifications", label: "Notifications", icon: ShieldCheck, roles: ["ADMIN", "TREASURER", "COMMITTEE"], section: "analytics" },
-  { href: "/dashboard/accounting", label: "Accounting", icon: BookOpen, roles: ["ADMIN", "TREASURER", "MAKER", "CHECKER", "COMMITTEE", "PLATFORM_ADMIN"], section: "analytics" },
-  { href: "/dashboard/audit", label: "Audit Trail", icon: ClipboardList, roles: ["ADMIN", "TREASURER", "COMMITTEE", "PLATFORM_ADMIN"], section: "analytics" },
-  { href: "/dashboard/privacy", label: "Privacy & Consent", icon: Fingerprint, roles: ["ADMIN", "TREASURER", "COMMITTEE", "RESIDENT", "PLATFORM_ADMIN", "MAKER", "CHECKER"], section: "settings" },
-  { href: "/dashboard/societies", label: "Societies & Plans", icon: Globe, roles: ["PLATFORM_ADMIN"], section: "analytics" },
-  { href: "/dashboard/settings", label: "Settings", icon: Settings, roles: ["ADMIN", "PLATFORM_ADMIN"], section: "settings" },
+  // ── Main ────────────────────────────────────────────────────────────────────
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard,
+    roles: ["ADMIN", "TREASURER", "COMMITTEE", "RESIDENT", "PLATFORM_ADMIN", "MAKER", "CHECKER", "GUARD"], section: "main" },
+
+  // ── Management ──────────────────────────────────────────────────────────────
+  { href: "/dashboard/members", label: "Members", icon: Users,
+    roles: ["ADMIN", "TREASURER", "COMMITTEE", "PLATFORM_ADMIN"], section: "management" },
+  { href: "/dashboard/properties", label: "Properties Setup", icon: Building2,
+    roles: ["ADMIN", "PLATFORM_ADMIN"], section: "management" },
+  { href: "/dashboard/tenants", label: "Societies", icon: HomeIcon,
+    roles: ["PLATFORM_ADMIN"], section: "management" },
+  { href: "/dashboard/vehicles", label: "Vehicles & Parking", icon: Car,
+    roles: ["ADMIN", "COMMITTEE", "RESIDENT", "PLATFORM_ADMIN"], section: "management" },
+  { href: "/dashboard/billing", label: "Billing & Payments", icon: Receipt,
+    roles: ["ADMIN", "TREASURER", "MAKER", "CHECKER", "RESIDENT", "COMMITTEE", "PLATFORM_ADMIN"], section: "management" },
+  { href: "/dashboard/complaints", label: "Complaints", icon: MessageSquareWarning,
+    roles: ["ADMIN", "TREASURER", "COMMITTEE", "RESIDENT", "PLATFORM_ADMIN"], section: "management" },
+  { href: "/dashboard/notices", label: "Notices", icon: Megaphone,
+    roles: ["ADMIN", "TREASURER", "COMMITTEE", "RESIDENT", "GUARD", "MAKER", "CHECKER", "PLATFORM_ADMIN"], section: "management" },
+  { href: "/dashboard/visitors", label: "Visitors", icon: UserCheck,
+    roles: ["ADMIN", "COMMITTEE", "RESIDENT", "GUARD", "PLATFORM_ADMIN"], section: "management" },
+  { href: "/dashboard/staff", label: "Staff Attendance", icon: HardHat,
+    roles: ["ADMIN", "COMMITTEE", "PLATFORM_ADMIN"], section: "management" },
+  { href: "/dashboard/facilities", label: "Facilities", icon: CalendarDays,
+    roles: ["ADMIN", "COMMITTEE", "TREASURER", "RESIDENT", "PLATFORM_ADMIN"], section: "management" },
+
+  // ── Communication ───────────────────────────────────────────────────────────
+  { href: "/dashboard/messages", label: "Messages", icon: MessageSquare,
+    roles: ["ADMIN", "TREASURER", "COMMITTEE", "RESIDENT", "PLATFORM_ADMIN"], section: "communication" },
+  { href: "/dashboard/meetings", label: "Meetings & Polls", icon: Vote,
+    roles: ["ADMIN", "TREASURER", "COMMITTEE", "RESIDENT", "PLATFORM_ADMIN"], section: "communication" },
+
+  // ── Maintenance ─────────────────────────────────────────────────────────────
+  { href: "/dashboard/vendors", label: "Vendors", icon: Wrench,
+    roles: ["ADMIN", "COMMITTEE", "TREASURER", "RESIDENT", "PLATFORM_ADMIN"], section: "maintenance" },
+  { href: "/dashboard/documents", label: "Documents", icon: FolderOpen,
+    roles: ["ADMIN", "TREASURER", "COMMITTEE", "MAKER", "CHECKER", "PLATFORM_ADMIN"], section: "maintenance" },
+  { href: "/dashboard/assets", label: "Asset Management", icon: Package,
+    roles: ["ADMIN", "COMMITTEE", "TREASURER", "PLATFORM_ADMIN"], section: "maintenance" },
+
+  // ── Security & Safety ───────────────────────────────────────────────────────
+  { href: "/dashboard/sos", label: "SOS Alerts", icon: ShieldAlert,
+    roles: ["ADMIN", "COMMITTEE", "TREASURER", "RESIDENT", "GUARD", "PLATFORM_ADMIN"], section: "security" },
+  { href: "/dashboard/patrol", label: "Guard Patrolling", icon: QrCode,
+    roles: ["ADMIN", "COMMITTEE", "GUARD", "PLATFORM_ADMIN"], section: "security" },
+  { href: "/dashboard/emergency-contacts", label: "Emergency Contacts", icon: Phone,
+    roles: ["ADMIN", "COMMITTEE", "TREASURER", "RESIDENT", "GUARD", "MAKER", "CHECKER", "PLATFORM_ADMIN"], section: "security" },
+
+  // ── Analytics ───────────────────────────────────────────────────────────────
+  { href: "/dashboard/reports", label: "Reports", icon: BarChart3,
+    roles: ["ADMIN", "TREASURER", "COMMITTEE", "PLATFORM_ADMIN"], section: "analytics" },
+  { href: "/dashboard/tax", label: "Tax & Returns", icon: FileSpreadsheet,
+    roles: ["ADMIN", "TREASURER", "PLATFORM_ADMIN"], section: "analytics" },
+  { href: "/dashboard/compliance", label: "Compliance Calendar", icon: CalendarClock,
+    roles: ["ADMIN", "TREASURER", "COMMITTEE", "PLATFORM_ADMIN"], section: "analytics" },
+  { href: "/dashboard/notifications", label: "Notifications", icon: ShieldCheck,
+    roles: ["ADMIN", "TREASURER", "COMMITTEE", "PLATFORM_ADMIN"], section: "analytics" },
+  { href: "/dashboard/accounting", label: "Accounting", icon: BookOpen,
+    roles: ["ADMIN", "TREASURER", "MAKER", "CHECKER", "COMMITTEE", "PLATFORM_ADMIN"], section: "analytics" },
+  { href: "/dashboard/audit", label: "Audit Trail", icon: ClipboardList,
+    roles: ["ADMIN", "TREASURER", "CHECKER", "COMMITTEE", "PLATFORM_ADMIN"], section: "analytics" },
+
+  // ── System ──────────────────────────────────────────────────────────────────
+  { href: "/dashboard/societies", label: "Societies & Plans", icon: Globe,
+    roles: ["PLATFORM_ADMIN"], section: "settings" },
+  { href: "/dashboard/settings", label: "Settings", icon: Settings,
+    roles: ["ADMIN", "PLATFORM_ADMIN"], section: "settings" },
+  { href: "/dashboard/privacy", label: "Privacy & Consent", icon: Fingerprint,
+    roles: ["ADMIN", "TREASURER", "COMMITTEE", "RESIDENT", "PLATFORM_ADMIN", "MAKER", "CHECKER", "GUARD"], section: "settings" },
+  { href: "/dashboard/profile", label: "My Profile", icon: User,
+    roles: ["ADMIN", "TREASURER", "COMMITTEE", "RESIDENT", "PLATFORM_ADMIN", "MAKER", "CHECKER", "GUARD"], section: "settings" },
 ];
+
 
 const sections: Record<string, string> = {
   main: "",
   management: "Management",
   analytics: "Analytics",
   settings: "System",
+  communication: "Communication",
+  maintenance: "Maintenance",
+  security: "Security & Safety",
 };
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -52,6 +113,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter();
   const pathname = usePathname();
   const { locale, setLocale } = useLocale();
+  const { theme, toggleTheme } = useTheme();
   const userRole = normalizeRole(user?.role || "");
 
   useEffect(() => {
@@ -123,20 +185,32 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Mobile Overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 lg:hidden"
+          className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-40 lg:hidden animate-fade-in"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed lg:static inset-y-0 left-0 z-50 flex flex-col w-72 bg-[#0f172a] text-white transition-transform duration-300 ease-in-out ${
+      <aside className={`fixed lg:static inset-y-0 left-0 z-50 flex flex-col w-72 bg-[#0f172a] text-white transition-all duration-300 ease-in-out ${
         sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
       }`} style={{ boxShadow: '4px 0 40px rgba(0,0,0,0.3)' }}>
-        
+        {/* Mobile Header */}
+        <div className="flex items-center justify-between lg:hidden px-4 py-4 border-b border-white/8">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <Building2 className="w-4 h-4 text-white" />
+            </div>
+            <span className="text-sm font-bold text-white">AapkiSociety</span>
+          </div>
+          <button className="text-slate-400 hover:text-white p-2 hover:bg-white/10 rounded-lg transition-colors" onClick={() => setSidebarOpen(false)}>
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
         {/* Logo Area */}
         <div className="flex items-center gap-3 px-6 py-5 border-b border-white/8">
-          <div className="relative flex-shrink-0">
-            <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/40">
+          <div className="relative shrink-0">
+            <div className="w-10 h-10 bg-linear-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/40">
               <Building2 className="w-5.5 h-5.5 text-white" />
             </div>
             <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-emerald-400 rounded-full border-2 border-[#0f172a]" />
@@ -198,20 +272,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* User Section */}
         <div className="px-3 pb-4 border-t border-white/8 pt-3">
-          <div className="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-white/5 transition-colors">
-            <div className={`w-9 h-9 bg-gradient-to-br ${avatarGradient} rounded-xl flex items-center justify-center text-sm font-bold flex-shrink-0 shadow-md`}>
+          <Link
+            href="/dashboard/profile"
+            className="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-white/5 transition-colors"
+          >
+            <div className={`w-9 h-9 bg-gradient-to-br ${avatarGradient} rounded-xl flex items-center justify-center text-sm font-bold shrink-0 shadow-md`}>
               {getInitials(user?.first_name || "", user?.last_name || "")}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-white truncate">{user?.first_name} {user?.last_name}</p>
               <p className="text-xs text-slate-500 truncate">{user?.role?.replace(/_/g, " ")}</p>
             </div>
-          </div>
+          </Link>
           <button
             onClick={handleLogout}
             className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all w-full mt-1 group"
           >
-            <LogOut className="w-4.5 h-4.5 flex-shrink-0 group-hover:translate-x-0.5 transition-transform" />
+            <LogOut className="w-4.5 h-4.5 shrink-0 group-hover:translate-x-0.5 transition-transform" />
             <span>Sign Out</span>
           </button>
         </div>
@@ -239,6 +316,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </div>
             </div>
             <div className="flex items-center gap-3">
+              <button
+                onClick={toggleTheme}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-xl transition-colors"
+                title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+              >
+                {theme === 'light' ? (
+                  <Moon className="w-4.5 h-4.5 text-gray-500" />
+                ) : (
+                  <Sun className="w-4.5 h-4.5 text-gray-400" />
+                )}
+              </button>
               <button
                 onClick={() => setLocale(locale === "en" ? "hi" : "en")}
                 className="px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-gray-200 hover:bg-gray-50"

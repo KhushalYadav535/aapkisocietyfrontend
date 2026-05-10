@@ -6,6 +6,9 @@ import toast from "react-hot-toast";
 import { formatCurrency, formatDate, getStatusColor } from "@/lib/utils";
 import { Receipt, Plus, Search, CheckCircle, XCircle, IndianRupee, Zap, X, TrendingUp } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
+import Pagination from "@/components/Pagination";
+
+const ITEMS_PER_PAGE = 10;
 
 interface Bill { id: string; bill_number: string; member_id: string; amount: number; total_amount: number; paid_amount: number; status: string; bill_type: string; billing_period: string; due_date: string; created_at: string; }
 interface Payment { id: string; amount: number; payment_method: string; payment_reference?: string; status: string; payment_date: string; member_id: string; }
@@ -28,6 +31,7 @@ export default function BillingPage() {
   const [showGenerate, setShowGenerate] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const [createForm, setCreateForm] = useState({ member_id: "", amount: "", tax_amount: "", bill_type: "MAINTENANCE", billing_period: "", due_date: "", description: "" });
   const [genForm, setGenForm] = useState({ amount: "", billing_period: "", due_date: "", bill_type: "MAINTENANCE" });
@@ -91,6 +95,14 @@ export default function BillingPage() {
     const mf = statusFilter === "ALL" || b.status === statusFilter;
     return ms && mf;
   });
+
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const paginatedBills = filtered.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  useEffect(() => { setCurrentPage(1); }, [search, statusFilter]);
 
   const statuses = ["ALL", "PENDING", "PENDING_APPROVAL", "APPROVED", "PAID", "OVERDUE", "REJECTED"];
 
@@ -171,7 +183,7 @@ export default function BillingPage() {
                     <tr key={i}><td colSpan={8} className="px-4 py-3"><div className="h-4 skeleton rounded" /></td></tr>
                   )) : filtered.length === 0 ? (
                     <tr><td colSpan={8} className="text-center py-12 text-gray-400"><Receipt className="w-10 h-10 mx-auto mb-2 opacity-30" />{t("noBillsFound")}</td></tr>
-                  ) : filtered.map(bill => (
+                  ) : paginatedBills.map(bill => (
                     <tr key={bill.id} className="border-t border-gray-50 hover:bg-gray-50/60 transition-colors">
                       <td className="px-4 py-3 font-mono text-xs text-gray-600">{bill.bill_number}</td>
                       <td className="px-4 py-3 text-gray-700">{bill.bill_type}</td>
@@ -198,6 +210,13 @@ export default function BillingPage() {
                 </tbody>
               </table>
             </div>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={filtered.length}
+              itemsPerPage={ITEMS_PER_PAGE}
+              onPageChange={setCurrentPage}
+            />
           </div>
         </>
       )}
@@ -268,7 +287,7 @@ export default function BillingPage() {
       {/* Create Bill Modal */}
       {showCreate && (
         <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl animate-scale-in">
+          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-lg font-bold text-gray-900">{t("createBillTitle")}</h2>
               <button onClick={() => setShowCreate(false)} className="p-2 hover:bg-gray-100 rounded-xl"><X className="w-5 h-5 text-gray-500" /></button>
@@ -305,7 +324,7 @@ export default function BillingPage() {
       {/* Generate Monthly Modal */}
       {showGenerate && (
         <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-scale-in">
+          <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-lg font-bold text-gray-900">{t("generateMonthlyBillsTitle")}</h2>
               <button onClick={() => setShowGenerate(false)} className="p-2 hover:bg-gray-100 rounded-xl"><X className="w-5 h-5 text-gray-500" /></button>
@@ -334,7 +353,7 @@ export default function BillingPage() {
       {/* Record Payment Modal */}
       {showPayment && (
         <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-scale-in">
+          <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-lg font-bold text-gray-900">{t("recordPaymentTitle")}</h2>
               <button onClick={() => { setShowPayment(false); setSelectedBill(null); }} className="p-2 hover:bg-gray-100 rounded-xl"><X className="w-5 h-5 text-gray-500" /></button>
