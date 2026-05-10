@@ -60,9 +60,9 @@ export default function BillingPage() {
       const promises = [billingAPI.getAllBills(), billingAPI.getPayments(), billingAPI.getSummary()];
       if (isAdmin) {
         promises.push(mandateAPI.list());
-        if (tab === "Arrears Aging") promises.push(Promise.resolve({ data: { buckets: [] } }));
-        if (tab === "Defaulters") promises.push(billingAPI.getDefaulters().catch(() => ({ data: [] })));
-        if (tab === "Dunning") promises.push(billingAPI.getDunningHistory().catch(() => ({ data: [] })));
+        if (tab === "Arrears Aging") promises.push(Promise.resolve({ data: { buckets: [] }, status: 200, statusText: 'OK', headers: {}, config: {} } as any));
+        if (tab === "Defaulters") promises.push(billingAPI.getDefaulters().catch(() => ({ data: [], status: 200, statusText: 'OK', headers: {}, config: {} } as any)));
+        if (tab === "Dunning") promises.push(billingAPI.getDunningHistory().catch(() => ({ data: [], status: 200, statusText: 'OK', headers: {}, config: {} } as any)));
       }
       const [b, p, s, ...rest] = await Promise.all(promises);
       setBills(b.data.bills); setPayments(p.data.payments); setSummary(s.data.summary);
