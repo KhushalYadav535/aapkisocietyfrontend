@@ -10,11 +10,13 @@ import {
   Bell, BarChart3, Globe, ChevronRight, Sparkles, ShieldCheck, CalendarClock,
   FileSpreadsheet, Fingerprint, BookOpen, ClipboardList, User, Moon, Sun,
   Home as HomeIcon, Car, MessageSquare, Vote, Wrench, FolderOpen, HardHat,
-  ShieldAlert, QrCode, Phone, Package
+  ShieldAlert, QrCode, Phone, Package, Download
 } from "lucide-react";
 import { getInitials } from "@/lib/utils";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
+import { scrollerAPI } from "@/lib/api";
+import api from "@/lib/api";
 
 const normalizeRole = (role: string) =>
   String(role || "")
@@ -29,64 +31,70 @@ const navItems = [
 
   // ── Management ──────────────────────────────────────────────────────────────
   { href: "/dashboard/members", label: "Members", icon: Users,
-    roles: ["ADMIN", "TREASURER", "COMMITTEE", "PLATFORM_ADMIN"], section: "management" },
+    roles: ["ADMIN", "TREASURER", "COMMITTEE"], section: "management" },
   { href: "/dashboard/properties", label: "Properties Setup", icon: Building2,
-    roles: ["ADMIN", "PLATFORM_ADMIN"], section: "management" },
-  { href: "/dashboard/tenants", label: "Societies", icon: HomeIcon,
-    roles: ["PLATFORM_ADMIN"], section: "management" },
+    roles: ["ADMIN"], section: "management" },
+  { href: "/dashboard/property-listings", label: "Property Listings", icon: Building2,
+    roles: ["ADMIN", "TREASURER", "COMMITTEE", "RESIDENT"], section: "management" },
   { href: "/dashboard/vehicles", label: "Vehicles & Parking", icon: Car,
-    roles: ["ADMIN", "COMMITTEE", "RESIDENT", "PLATFORM_ADMIN"], section: "management" },
+    roles: ["ADMIN", "COMMITTEE", "RESIDENT"], section: "management" },
   { href: "/dashboard/billing", label: "Billing & Payments", icon: Receipt,
-    roles: ["ADMIN", "TREASURER", "MAKER", "CHECKER", "RESIDENT", "COMMITTEE", "PLATFORM_ADMIN"], section: "management" },
+    roles: ["ADMIN", "TREASURER", "MAKER", "CHECKER", "RESIDENT", "COMMITTEE"], section: "management" },
   { href: "/dashboard/complaints", label: "Complaints", icon: MessageSquareWarning,
-    roles: ["ADMIN", "TREASURER", "COMMITTEE", "RESIDENT", "PLATFORM_ADMIN"], section: "management" },
+    roles: ["ADMIN", "TREASURER", "COMMITTEE", "RESIDENT"], section: "management" },
   { href: "/dashboard/notices", label: "Notices", icon: Megaphone,
-    roles: ["ADMIN", "TREASURER", "COMMITTEE", "RESIDENT", "GUARD", "MAKER", "CHECKER", "PLATFORM_ADMIN"], section: "management" },
+    roles: ["ADMIN", "TREASURER", "COMMITTEE", "RESIDENT", "GUARD", "MAKER", "CHECKER"], section: "management" },
   { href: "/dashboard/visitors", label: "Visitors", icon: UserCheck,
-    roles: ["ADMIN", "COMMITTEE", "RESIDENT", "GUARD", "PLATFORM_ADMIN"], section: "management" },
+    roles: ["ADMIN", "COMMITTEE", "RESIDENT", "GUARD"], section: "management" },
   { href: "/dashboard/staff", label: "Staff Attendance", icon: HardHat,
-    roles: ["ADMIN", "COMMITTEE", "PLATFORM_ADMIN"], section: "management" },
+    roles: ["ADMIN", "COMMITTEE"], section: "management" },
   { href: "/dashboard/facilities", label: "Facilities", icon: CalendarDays,
-    roles: ["ADMIN", "COMMITTEE", "TREASURER", "RESIDENT", "PLATFORM_ADMIN"], section: "management" },
+    roles: ["ADMIN", "COMMITTEE", "TREASURER", "RESIDENT"], section: "management" },
 
   // ── Communication ───────────────────────────────────────────────────────────
+  { href: "/dashboard/scrollers", label: "Scrollers", icon: Globe,
+    roles: ["ADMIN", "TREASURER", "COMMITTEE", "RESIDENT", "PLATFORM_ADMIN"], section: "communication" },
   { href: "/dashboard/messages", label: "Messages", icon: MessageSquare,
     roles: ["ADMIN", "TREASURER", "COMMITTEE", "RESIDENT", "PLATFORM_ADMIN"], section: "communication" },
   { href: "/dashboard/meetings", label: "Meetings & Polls", icon: Vote,
-    roles: ["ADMIN", "TREASURER", "COMMITTEE", "RESIDENT", "PLATFORM_ADMIN"], section: "communication" },
+    roles: ["ADMIN", "TREASURER", "COMMITTEE", "RESIDENT"], section: "communication" },
 
   // ── Maintenance ─────────────────────────────────────────────────────────────
   { href: "/dashboard/vendors", label: "Vendors", icon: Wrench,
-    roles: ["ADMIN", "COMMITTEE", "TREASURER", "RESIDENT", "PLATFORM_ADMIN"], section: "maintenance" },
+    roles: ["ADMIN", "COMMITTEE", "TREASURER", "RESIDENT"], section: "maintenance" },
   { href: "/dashboard/documents", label: "Documents", icon: FolderOpen,
-    roles: ["ADMIN", "TREASURER", "COMMITTEE", "MAKER", "CHECKER", "PLATFORM_ADMIN"], section: "maintenance" },
+    roles: ["ADMIN", "TREASURER", "COMMITTEE", "MAKER", "CHECKER"], section: "maintenance" },
   { href: "/dashboard/assets", label: "Asset Management", icon: Package,
-    roles: ["ADMIN", "COMMITTEE", "TREASURER", "PLATFORM_ADMIN"], section: "maintenance" },
+    roles: ["ADMIN", "COMMITTEE", "TREASURER"], section: "maintenance" },
 
   // ── Security & Safety ───────────────────────────────────────────────────────
   { href: "/dashboard/sos", label: "SOS Alerts", icon: ShieldAlert,
-    roles: ["ADMIN", "COMMITTEE", "TREASURER", "RESIDENT", "GUARD", "PLATFORM_ADMIN"], section: "security" },
+    roles: ["ADMIN", "COMMITTEE", "TREASURER", "RESIDENT", "GUARD"], section: "security" },
   { href: "/dashboard/patrol", label: "Guard Patrolling", icon: QrCode,
-    roles: ["ADMIN", "COMMITTEE", "GUARD", "PLATFORM_ADMIN"], section: "security" },
+    roles: ["ADMIN", "COMMITTEE", "GUARD"], section: "security" },
   { href: "/dashboard/emergency-contacts", label: "Emergency Contacts", icon: Phone,
-    roles: ["ADMIN", "COMMITTEE", "TREASURER", "RESIDENT", "GUARD", "MAKER", "CHECKER", "PLATFORM_ADMIN"], section: "security" },
+    roles: ["ADMIN", "COMMITTEE", "TREASURER", "RESIDENT", "GUARD", "MAKER", "CHECKER"], section: "security" },
 
   // ── Analytics ───────────────────────────────────────────────────────────────
   { href: "/dashboard/reports", label: "Reports", icon: BarChart3,
     roles: ["ADMIN", "TREASURER", "COMMITTEE", "PLATFORM_ADMIN"], section: "analytics" },
+  { href: "/dashboard/reports/export", label: "Export Data", icon: Download,
+    roles: ["ADMIN", "TREASURER", "COMMITTEE", "PLATFORM_ADMIN"], section: "analytics" },
   { href: "/dashboard/tax", label: "Tax & Returns", icon: FileSpreadsheet,
-    roles: ["ADMIN", "TREASURER", "PLATFORM_ADMIN"], section: "analytics" },
+    roles: ["ADMIN", "TREASURER"], section: "analytics" },
   { href: "/dashboard/compliance", label: "Compliance Calendar", icon: CalendarClock,
-    roles: ["ADMIN", "TREASURER", "COMMITTEE", "PLATFORM_ADMIN"], section: "analytics" },
+    roles: ["ADMIN", "TREASURER", "COMMITTEE"], section: "analytics" },
   { href: "/dashboard/notifications", label: "Notifications", icon: ShieldCheck,
-    roles: ["ADMIN", "TREASURER", "COMMITTEE", "PLATFORM_ADMIN"], section: "analytics" },
+    roles: ["ADMIN", "TREASURER", "COMMITTEE"], section: "analytics" },
   { href: "/dashboard/accounting", label: "Accounting", icon: BookOpen,
-    roles: ["ADMIN", "TREASURER", "MAKER", "CHECKER", "COMMITTEE", "PLATFORM_ADMIN"], section: "analytics" },
+    roles: ["ADMIN", "TREASURER", "MAKER", "CHECKER", "COMMITTEE"], section: "analytics" },
   { href: "/dashboard/audit", label: "Audit Trail", icon: ClipboardList,
-    roles: ["ADMIN", "TREASURER", "CHECKER", "COMMITTEE", "PLATFORM_ADMIN"], section: "analytics" },
+    roles: ["ADMIN", "TREASURER", "CHECKER", "COMMITTEE"], section: "analytics" },
 
   // ── System ──────────────────────────────────────────────────────────────────
-  { href: "/dashboard/societies", label: "Societies & Plans", icon: Globe,
+  { href: "/dashboard/platform-admin", label: "Platform Admin", icon: Globe,
+    roles: ["PLATFORM_ADMIN"], section: "settings" },
+  { href: "/dashboard/societies", label: "Societies & Plans", icon: Building2,
     roles: ["PLATFORM_ADMIN"], section: "settings" },
   { href: "/dashboard/settings", label: "Settings", icon: Settings,
     roles: ["ADMIN", "PLATFORM_ADMIN"], section: "settings" },
@@ -115,6 +123,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { locale, setLocale } = useLocale();
   const { theme, toggleTheme } = useTheme();
   const userRole = normalizeRole(user?.role || "");
+
+  // ── Scroller Marquee State ──
+  const [scrollers, setScrollers] = useState<any[]>([]);
+  const [renewalBanner, setRenewalBanner] = useState<any>(null);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    scrollerAPI.getActive({}).then(res => {
+      setScrollers(res.data?.scrollers || []);
+    }).catch(() => {});
+    api.get('/notifications/v4/renewal-banner').then(res => {
+      setRenewalBanner(res.data?.banner || null);
+    }).catch(() => {});
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -353,6 +375,45 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
           </div>
         </header>
+
+        {/* Renewal Banner */}
+        {renewalBanner && (
+          <div className={`px-4 py-2.5 text-sm font-medium flex items-center justify-between ${
+            renewalBanner.type === 'error' ? 'bg-red-50 text-red-700 border-b border-red-100' :
+            renewalBanner.type === 'warning' ? 'bg-amber-50 text-amber-700 border-b border-amber-100' :
+            'bg-blue-50 text-blue-700 border-b border-blue-100'
+          }`}>
+            <span>{renewalBanner.title} — {renewalBanner.message}</span>
+            {renewalBanner.action && (
+              <Link href={renewalBanner.action} className="text-xs underline ml-2 whitespace-nowrap">View</Link>
+            )}
+          </div>
+        )}
+
+        {/* Scroller Marquee (SCR-005) */}
+        {scrollers.length > 0 && (
+          <div className="overflow-hidden border-b border-gray-100" style={{ background: 'linear-gradient(90deg, #0f172a 0%, #1e293b 100%)' }}>
+            <div
+              className="flex whitespace-nowrap py-2"
+              style={{ animation: `marquee ${scrollers.some((s: any) => s.scroll_speed === 'FAST') ? 15 : scrollers.some((s: any) => s.scroll_speed === 'SLOW') ? 50 : 30}s linear infinite` }}
+            >
+              {[...scrollers, ...scrollers].map((s: any, i: number) => {
+                const urgencyClass = s.urgency_level === 'URGENT'
+                  ? 'bg-red-500/20 text-red-300 border-red-500/30'
+                  : s.urgency_level === 'IMPORTANT'
+                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                  : 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30';
+                const dot = s.urgency_level === 'URGENT' ? 'bg-red-400' : s.urgency_level === 'IMPORTANT' ? 'bg-amber-400' : 'bg-indigo-400';
+                return (
+                  <span key={`${s.id}-${i}`} className={`inline-flex items-center gap-2 mx-6 px-3 py-1 rounded-full text-xs font-medium border ${urgencyClass}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${dot} animate-pulse`} />
+                    {s.message}
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Page Content */}
         <main className="flex-1 p-6 overflow-auto page-enter">

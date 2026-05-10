@@ -347,6 +347,18 @@ tr.table-row-hover {
   transition: background-color 0.15s ease;
 }
 
+/* Scroller Marquee */
+@keyframes marquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+}
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
 /* Page transition */
 .page-enter {
   animation: slideInUp 0.3s ease-out;

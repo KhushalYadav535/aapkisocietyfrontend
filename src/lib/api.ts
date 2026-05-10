@@ -79,6 +79,11 @@ export const billingAPI = {
   getPayments: () => api.get('/billing/payments'),
   recordPayment: (data: any) => api.post('/billing/payments', data),
   getSummary: () => api.get('/billing/summary'),
+  getArrearsAging: () => api.get('/billing/arrears-aging'),
+  getDefaulters: () => api.get('/billing/defaulters'),
+  getDunningHistory: () => api.get('/billing/dunning-history'),
+  getDunningConfig: () => api.get('/billing/dunning-config'),
+  sendReminder: (data: any) => api.post('/billing/send-reminder', data),
 };
 
 export const mandateAPI = {
@@ -103,6 +108,14 @@ export const notificationAPI = {
   send: (data: any) => api.post('/notifications', data),
 };
 
+export const notificationV4API = {
+  list: (params?: any) => api.get('/notifications/v4', { params }),
+  create: (data: any) => api.post('/notifications/v4', data),
+  markRead: (id: string) => api.put(`/notifications/v4/${id}/read`),
+  markAllRead: () => api.put('/notifications/v4/read-all'),
+  getRenewalBanner: () => api.get('/notifications/v4/renewal-banner'),
+};
+
 export const privacyAPI = {
   getConsent: () => api.get('/privacy/consent'),
   updateConsent: (data: any) => api.put('/privacy/consent', data),
@@ -113,6 +126,10 @@ export const taxAPI = {
   getReturns: () => api.get('/tax/returns'),
   exportGst: (data: any) => api.post('/tax/gst/export', data),
   exportTds: (data: any) => api.post('/tax/tds/export', data),
+  getGSTR1View: (params?: any) => api.get('/tax/gstr-1', { params }),
+  getGSTR3BView: (params?: any) => api.get('/tax/gstr-3b', { params }),
+  getGSTReconciliation: (params?: any) => api.get('/tax/gst-reconciliation', { params }),
+  getGSTR9View: (params?: any) => api.get('/tax/gstr-9', { params }),
 };
 
 // Complaint APIs
@@ -184,6 +201,9 @@ export const accountingAPI = {
   getVoucherEntries:(id: string) => api.get(`/accounting/vouchers/${id}/entries`),
   getTrialBalance:  (params?: any) => api.get('/accounting/trial-balance', { params }),
   getLedger:        (accountId: string, params?: any) => api.get(`/accounting/ledger/${accountId}`, { params }),
+  getIncomeStatement: (params?: any) => api.get('/accounting/income-statement', { params }),
+  getBalanceSheet:    (params?: any) => api.get('/accounting/balance-sheet', { params }),
+  getBankReconciliation: (params?: any) => api.get('/accounting/bank-reconciliation', { params }),
 };
 
 // Audit Log APIs
@@ -326,4 +346,91 @@ export const assetAPI = {
 // Extended Reports APIs
 export const extendedReportsAPI = {
   getDefaulterAging: () => api.get('/reports/defaulters'),
+  getTrialBalance: (params?: any) => api.get('/reports/trial-balance', { params }),
+  getIncomeExpenditure: (params?: any) => api.get('/reports/income-expenditure', { params }),
+  getBalanceSheet: (params?: any) => api.get('/reports/balance-sheet', { params }),
+  getCashFlow: (params?: any) => api.get('/reports/cash-flow', { params }),
+  getStaffAttendance: (params?: any) => api.get('/reports/staff-attendance', { params }),
+  getFacilityUsage: (params?: any) => api.get('/reports/facility-usage', { params }),
+  getMembers: (params?: any) => api.get('/reports/members', { params }),
+  getMaintenanceDue: (params?: any) => api.get('/reports/maintenance-due', { params }),
+  getInterest: (params?: any) => api.get('/reports/interest', { params }),
+  getReceiptsPayments: (params?: any) => api.get('/reports/receipts-payments', { params }),
+  getFundSummary: (params?: any) => api.get('/reports/fund-summary', { params }),
+  getBudgetVariance: (params?: any) => api.get('/reports/budget-variance', { params }),
+};
+
+// Subscription plans (PLATFORM_ADMIN) — stored in platform.plans
+export const plansAPI = {
+  list: () => api.get('/plans'),
+  create: (data: { name: string; code: string; price?: number; features?: string[] | string; color?: string }) =>
+    api.post('/plans', data),
+  update: (id: string, data: { name?: string; price?: number; features?: string[] | string; color?: string }) =>
+    api.put(`/plans/${id}`, data),
+  remove: (id: string) => api.delete(`/plans/${id}`),
+};
+
+// Platform Admin APIs
+export const platformAPI = {
+  getAllSocieties: (params?: any) => api.get('/platform/societies', { params }),
+  getSocietyById: (id: string) => api.get(`/platform/societies/${id}`),
+  registerSociety: (data: any) => api.post('/platform/societies/register', data),
+  getKYCPending: (params?: any) => api.get('/platform/societies/kyc-queue', { params }),
+  submitKYC: (data: any) => api.post('/platform/kyc/submit', data),
+  approveKYC: (society_id: string, comment?: string) => api.post('/platform/kyc/approve', { society_id, comment }),
+  rejectKYC: (society_id: string, reason: string) => api.post('/platform/kyc/reject', { society_id, reason }),
+  updateSubscription: (society_id: string, action: string, reason?: string) => api.post('/platform/subscription/update', { society_id, action, reason }),
+  /** Manual renewal: set renewal_date (YYYY-MM-DD) or omit and use extend_months (default 12). OFFBOARDED → ACTIVE. */
+  renewSubscription: (
+    society_id: string,
+    data: { renewal_date?: string; extend_months?: number; reason?: string }
+  ) => api.post('/platform/subscription/renew', { society_id, ...data }),
+  updateFeatureFlags: (society_id: string, features: string[]) => api.post('/platform/features/update', { society_id, features }),
+  getStats: () => api.get('/platform/stats'),
+  getPlans: () => api.get('/platform/plans'),
+  getRenewals: (params?: any) => api.get('/platform/renewals', { params }),
+  requestReUpload: (society_id: string, remarks: string) => api.post('/platform/kyc/reupload', { society_id, remarks }),
+  saveConfiguration: (data: any) => api.post('/platform/configuration', data),
+  getOnboardingProgress: (id: string) => api.get(`/platform/onboarding/${id}`),
+  activateTrial: (society_id: string, trial_days?: number) => api.post('/platform/trial/activate', { society_id, trial_days }),
+  calculatePricing: (params: { plan: string; total_units: number; billing_cycle?: string }) => api.get('/platform/pricing', { params }),
+  importMembers: (data: { members: any[]; society_id?: string }) => api.post('/platform/import/members', data),
+  importFlats: (data: { flats: any[]; society_id?: string }) => api.post('/platform/import/flats', data),
+};
+
+// Property Listing APIs
+export const propertyListingAPI = {
+  getListings: (params?: any) => api.get('/properties/listings', { params }),
+  getApprovalQueue: () => api.get('/properties/listings/approval-queue'),
+  create: (data: any) => api.post('/properties/listings', data),
+  approve: (listing_id: string, comment?: string) => api.post(`/properties/listings/${listing_id}/approve`, { comment }),
+  reject: (listing_id: string, reason: string) => api.post(`/properties/listings/${listing_id}/reject`, { reason }),
+  close: (listing_id: string, closure_type: 'SOLD' | 'RENTED') => api.post(`/properties/listings/${listing_id}/close`, { closure_type }),
+  renew: (listing_id: string) => api.post(`/properties/listings/${listing_id}/renew`),
+  getRevenue: (params?: any) => api.get('/properties/listings/revenue', { params }),
+  toggleVisibility: (listing_id: string, visibility: 'PUBLIC' | 'PRIVATE') => api.put(`/properties/listings/${listing_id}/visibility`, { visibility }),
+  getSocietyRevenue: (params?: any) => api.get('/properties/listings/society-revenue', { params }),
+};
+
+// Scroller APIs
+export const scrollerAPI = {
+  /** @param params.include_all — platform admins: list all platform scrollers (incl. scheduled / paused) */
+  getActive: (params?: { include_all?: string | number }) => api.get('/scrollers/platform', { params }),
+  createPlatform: (data: any) => api.post('/scrollers/platform', data),
+  createSociety: (data: any) => api.post('/scrollers/society', data),
+  update: (level: string, scroller_id: string, data: any) => api.put(`/scrollers/${level}/${scroller_id}`, data),
+  remove: (level: string, scroller_id: string) => api.delete(`/scrollers/${level}/${scroller_id}`),
+  trackImpression: (scroller_id: string) => api.post('/scrollers/platform/impression', { scroller_id }),
+};
+
+// Export APIs
+export const exportAPI = {
+  tallyExport: (data: any) => api.post('/export/tally', data, { responseType: 'blob' }),
+  tallyTdsExport: (data: any) => api.post('/export/tally/tds', data, { responseType: 'blob' }),
+  tallyValidation: (data: { xml_content: string }) => api.post('/export/tally/validate', data),
+  excelExport: (data: any) => api.post('/export/excel', data, { responseType: 'blob' }),
+  multiSheetExcel: (data: any) => api.post('/export/excel/multi-sheet', data, { responseType: 'blob' }),
+  pdfExport: (data: any) => api.post('/export/pdf', data, { responseType: 'blob' }),
+  recordHistory: (data: any) => api.post('/export/history', data),
+  getHistory: () => api.get('/export/history'),
 };

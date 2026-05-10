@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useLocale } from "@/context/LocaleContext";
-import { dashboardAPI, billingAPI } from "@/lib/api";
+import { dashboardAPI, billingAPI, platformAPI } from "@/lib/api";
 import { formatCurrency, formatDate, getStatusColor } from "@/lib/utils";
 import Link from "next/link";
 import {
@@ -67,7 +67,10 @@ export default function DashboardPage() {
   const [billingSummary, setBillingSummary] = useState<any>(null);
   const [complaintStats, setComplaintStats] = useState<any>(null);
   const [collectionData, setCollectionData] = useState<any[]>([]);
+  const [renewalStats, setRenewalStats] = useState<{ due_in_days: number; total_amount: number; renewals_due: number } | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const role = String(user?.role || "").toUpperCase();
 
   useEffect(() => { loadData(); }, []);
 
@@ -97,6 +100,20 @@ export default function DashboardPage() {
         const billingRes = await billingAPI.getSummary();
         setBillingSummary(billingRes.data.summary);
       } catch {}
+
+      // Load renewal stats for admin/treasurer
+      if (['ADMIN', 'TREASURER', 'PLATFORM_ADMIN'].includes(role)) {
+        try {
+          const renewalRes = await platformAPI.getRenewals({ days: 30 });
+          if (renewalRes.data?.renewals) {
+            setRenewalStats({
+              due_in_days: 30,
+              total_amount: renewalRes.data.renewals.reduce((s: number, r: any) => s + (r.amount_due || 0), 0),
+              renewals_due: renewalRes.data.renewals.length,
+            });
+          }
+        } catch {}
+      }
     } catch (error) {
       console.error("Failed to load dashboard data:", error);
     } finally {
@@ -119,10 +136,10 @@ export default function DashboardPage() {
     );
   }
 
-  const role = String(user?.role || "").toUpperCase();
   const isResident = role === "RESIDENT";
   const isGuard = role === "GUARD";
   const isMakerChecker = ["MAKER", "CHECKER"].includes(role);
+  const isAdminOrTreasurer = ["ADMIN", "TREASURER", "PLATFORM_ADMIN"].includes(role);
 
   const statCards = [
     // Guard-specific: focus on visitors and safety
@@ -163,6 +180,46 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      {/* Renewal Alert Banner */}
+      {isAdminOrTreasurer && renewalStats && renewalStats.renewals_due > 0 && (
+        <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-4 flex items-center gap-4 animate-slide-up">
+          <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center shrink-0">
+            <AlertTriangle className="w-5 h-5 text-amber-600" />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-amber-800">Renewal Alert</p>
+            <p className="text-xs text-amber-600 mt-0.5">
+              {renewalStats.renewals_due} societies due for renewal in {renewalStats.due_in_days} days —
+              total outstanding: {formatCurrency(renewalStats.total_amount)}
+            </p>
+          </div>
+          <button onClick={() => window.location.href = '/dashboard/platform-admin'}
+            className="text-xs font-semibold text-amber-700 bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-lg transition-colors">
+            Review Renewals
+          </button>
+        </div>
+      )}
+
+      {/* Grace Window Alert */}
+      {isAdminOrTreasurer && billingSummary && billingSummary.overdue_bills > 0 && (
+        <div className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 rounded-2xl p-4 flex items-center gap-4 animate-slide-up">
+          <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center shrink-0">
+            <Clock className="w-5 h-5 text-red-600" />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-red-800">Dunning Alert</p>
+            <p className="text-xs text-red-600 mt-0.5">
+              {billingSummary.overdue_bills} overdue bills —
+              total outstanding: {formatCurrency(billingSummary.outstanding)}
+            </p>
+          </div>
+          <button onClick={() => window.location.href = '/dashboard/billing'}
+            className="text-xs font-semibold text-red-700 bg-red-100 hover:bg-red-200 px-3 py-1.5 rounded-lg transition-colors">
+            View Defaulters
+          </button>
+        </div>
+      )}
+
       {/* Welcome Banner */}
       <div className="relative bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-700 rounded-2xl p-6 text-white overflow-hidden animate-slide-up shadow-xl shadow-indigo-500/20">
         {/* Decorative blobs */}

@@ -1,435 +1,533 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import api, { planAPI } from "@/lib/api";
+import { platformAPI } from "@/lib/api";
+import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
 import { useLocale } from "@/context/LocaleContext";
 import toast from "react-hot-toast";
-import { Globe, Plus, Search, Building2, Users, CheckCircle2, X, MapPin, Calendar, CreditCard, Trash2, ShieldAlert, PlayCircle } from "lucide-react";
+import {
+  Globe, Plus, Search, Building2, Users, CheckCircle2, X, MapPin, Calendar,
+  CreditCard, Trash2, ShieldAlert, PlayCircle, Clock, Upload, FileText,
+  CheckCircle, ArrowRight, AlertTriangle, Loader2
+} from "lucide-react";
 
 interface Society {
   id: string; name: string; registration_number: string; address: string;
   city: string; state: string; total_units: number; total_wings: number;
   status: string; subscription_plan: string; subscription_status: string;
-  active_modules?: string[];
+  onboarding_state: string; kyc_documents?: any;
+  renewal_date?: string; contact_name: string; contact_email: string; contact_phone: string;
   created_at: string;
 }
 
-interface Plan {
-  id: string; name: string; code: string; price: number;
-  features: string[]; color: string; created_at: string;
-}
+const ONBOARDING_STEPS = [
+  { key: 'REGISTRATION_FORM', label: 'Registration', desc: 'Form submitted' },
+  { key: 'EMAIL_VERIFICATION', label: 'Email Verified', desc: 'Verification pending' },
+  { key: 'KYC_PENDING', label: 'KYC Pending', desc: 'Documents submitted' },
+  { key: 'KYC_UNDER_REVIEW', label: 'KYC Under Review', desc: 'Admin review' },
+  { key: 'SCHEMA_PROVISIONED', label: 'Setup Complete', desc: 'Schema created' },
+  { key: 'ACTIVE', label: 'Active', desc: 'Fully operational' },
+];
 
-const availableModules = ["MEMBERS", "BILLING", "COMPLAINTS", "NOTICES", "VISITORS", "FACILITIES", "REPORTS"];
+const PLAN_COLORS: Record<string, string> = {
+  CORE: 'bg-blue-100 text-blue-700',
+  COMPLIANCE: 'bg-amber-100 text-amber-700',
+  AI_PRO: 'bg-violet-100 text-violet-700',
+};
+
+const STATUS_COLORS: Record<string, string> = {
+  ACTIVE: 'bg-emerald-100 text-emerald-700',
+  SUSPENDED: 'bg-red-100 text-red-700',
+  PENDING: 'bg-amber-100 text-amber-700',
+  REGISTRATION_FORM: 'bg-blue-100 text-blue-700',
+  KYC_PENDING: 'bg-amber-100 text-amber-700',
+  KYC_UNDER_REVIEW: 'bg-purple-100 text-purple-700',
+  KYC_APPROVED: 'bg-emerald-100 text-emerald-700',
+  TRIAL_ACTIVE: 'bg-cyan-100 text-cyan-700',
+};
 
 export default function SocietiesPage() {
+  const { user } = useAuth();
   const { t } = useLocale();
-  const [tab, setTab] = useState("Societies");
+  const [tab, setTab] = useState<'societies' | 'plans' | 'onboarding'>('societies');
   const [societies, setSocieties] = useState<Society[]>([]);
-  const [plans, setPlans] = useState<Plan[]>([]);
+  const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  
-  // Society Modals
-  const [showAddSociety, setShowAddSociety] = useState(false);
-  const [showEditSociety, setShowEditSociety] = useState<Society | null>(null);
-  const [societyForm, setSocietyForm] = useState({
-    name: "", registration_number: "", address: "", city: "Mumbai",
-    state: "Maharashtra", pincode: "", total_units: "", total_wings: "",
-    subscription_plan: "CORE", active_modules: ["MEMBERS", "BILLING"] as string[]
-  });
 
-  // Plan Modals
-  const [showAddPlan, setShowAddPlan] = useState(false);
-  const [planForm, setPlanForm] = useState({
-    name: "", code: "", price: "", features: [] as string[], color: "bg-blue-100 text-blue-700"
+  // Public registration
+  const [showRegister, setShowRegister] = useState(false);
+  const [regForm, setRegForm] = useState({
+    name: '', registration_number: '', address: '', city: 'Mumbai',
+    state: 'Maharashtra', pincode: '', total_units: '', total_wings: '',
+    contact_name: '', contact_email: '', contact_phone: '', plan: 'CORE',
   });
+  const [registering, setRegistering] = useState(false);
+
+  type PlanCatalogEntry = { name: string; pricePerUnit: number; features: string[] };
+  const [planCatalog, setPlanCatalog] = useState<Record<string, PlanCatalogEntry>>({});
+
+  // KYC submission
+  const [showKYC, setShowKYC] = useState<Society | null>(null);
+  const [kycForm, setKycForm] = useState({
+    reg_certificate: '', bye_laws: '', committee_resolution: '',
+    bank_details: '', pan_cert: '', gst_cert: '',
+  });
+  const [submittingKYC, setSubmittingKYC] = useState(false);
+
+  // Subscription actions
+  const [actionModal, setActionModal] = useState<{ society: Society; action: string } | null>(null);
+  const [actionReason, setActionReason] = useState('');
+
+  const role = String(user?.role || '').toUpperCase();
+  const isPlatformAdmin = role === 'PLATFORM_ADMIN';
+  const isPublic = !user; // for registration page
 
   useEffect(() => { loadData(); }, []);
+
+  useEffect(() => {
+    if (!isPlatformAdmin) return;
+    platformAPI.getPlans().then((res) => setPlanCatalog(res.data.plans || {})).catch(() => setPlanCatalog({}));
+  }, [isPlatformAdmin]);
+
+  useEffect(() => {
+    const keys = Object.keys(planCatalog);
+    if (!keys.length) return;
+    setRegForm((f) => ({ ...f, plan: keys.includes(f.plan) ? f.plan : keys[0] }));
+  }, [planCatalog]);
 
   const loadData = async () => {
     setLoading(true);
     try {
-      const [socRes, planRes] = await Promise.all([
-        api.get("/societies"),
-        planAPI.getAll()
+      const [socRes, statsRes] = await Promise.all([
+        platformAPI.getAllSocieties(),
+        isPlatformAdmin ? platformAPI.getStats() : Promise.resolve({ data: {} }),
       ]);
-      setSocieties(socRes.data.societies);
-      setPlans(planRes.data.plans);
-    } catch { toast.error(t("failedToLoadData")); }
+      setSocieties(socRes.data.societies || []);
+      if (statsRes.data) setStats(statsRes.data);
+    } catch (err: any) { toast.error(err?.response?.data?.error || 'Failed to load'); }
     finally { setLoading(false); }
   };
 
-  const getPlanLabel = (code: string) => plans.find(p => p.code === code)?.name || code;
-  const getPlanColor = (code: string) => plans.find(p => p.code === code)?.color || "bg-gray-100 text-gray-600";
-
-  // Society Handlers
-  const handleCreateSociety = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    setRegistering(true);
     try {
-      await api.post("/societies", {
-        ...societyForm,
-        total_units: parseInt(societyForm.total_units) || 0,
-        total_wings: parseInt(societyForm.total_wings) || 0,
+      await platformAPI.registerSociety({
+        ...regForm,
+        total_units: parseInt(regForm.total_units) || 0,
+        total_wings: parseInt(regForm.total_wings) || 0,
       });
-      toast.success(t("societyCreatedSuccessfully"));
-      setShowAddSociety(false);
-      setSocietyForm({ name: "", registration_number: "", address: "", city: "Mumbai", state: "Maharashtra", pincode: "", total_units: "", total_wings: "", subscription_plan: plans[0]?.code || "CORE", active_modules: ["MEMBERS", "BILLING"] });
+      toast.success('Registration submitted! Check email to verify.');
+      setShowRegister(false);
+      setRegForm({ name: '', registration_number: '', address: '', city: 'Mumbai', state: 'Maharashtra', pincode: '', total_units: '', total_wings: '', contact_name: '', contact_email: '', contact_phone: '', plan: 'CORE' });
       loadData();
-    } catch (err: any) {
-      toast.error(err.response?.data?.error || t("failedToCreateSociety"));
-    }
+    } catch (err: any) { toast.error(err?.response?.data?.error || 'Registration failed'); }
+    finally { setRegistering(false); }
   };
 
-  const handleEditSociety = async (e: React.FormEvent) => {
+  const handleSubmitKYC = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!showEditSociety) return;
+    if (!showKYC) return;
+    setSubmittingKYC(true);
     try {
-      await api.put(`/societies/${showEditSociety.id}`, {
-        subscription_plan: societyForm.subscription_plan,
-        active_modules: societyForm.active_modules
-      });
-      toast.success(t("societyPlanUpdated"));
-      setShowEditSociety(null);
+      await platformAPI.submitKYC({ society_id: showKYC.id, documents: kycForm });
+      toast.success('KYC submitted for review');
+      setShowKYC(null);
       loadData();
-    } catch (err: any) {
-      toast.error(err.response?.data?.error || t("failedToUpdateSociety"));
-    }
+    } catch (err: any) { toast.error(err?.response?.data?.error || 'KYC submission failed'); }
+    finally { setSubmittingKYC(false); }
   };
 
-  const toggleSocietyModule = (mod: string) => {
-    setSocietyForm(prev => ({
-      ...prev,
-      active_modules: prev.active_modules.includes(mod) 
-        ? prev.active_modules.filter(m => m !== mod)
-        : [...prev.active_modules, mod]
-    }));
-  };
-
-  const handleSuspendSociety = async (id: string, currentStatus: string) => {
-    const action = currentStatus === "ACTIVE" ? "suspend" : "reactivate";
-    if (!window.confirm(`Are you sure you want to ${action} this society?`)) return;
+  const handleSubscriptionAction = async () => {
+    if (!actionModal) return;
     try {
-      await api.put(`/societies/${id}/${action}`);
-      toast.success(`Society ${action}d successfully`);
+      await platformAPI.updateSubscription(actionModal.society.id, actionModal.action, actionReason || undefined);
+      toast.success(`Society ${actionModal.action.toLowerCase()}d`);
+      setActionModal(null);
+      setActionReason('');
       loadData();
-    } catch (err: any) {
-      toast.error(err.response?.data?.error || `Failed to ${action} society`);
-    }
+    } catch (err: any) { toast.error(err?.response?.data?.error || 'Action failed'); }
   };
 
-  const handleDeleteSociety = async (id: string) => {
-    if (!window.confirm("WARNING: This will permanently delete the society and all its data. Proceed?")) return;
+  const handleApproveKYC = async (id: string) => {
     try {
-      await api.delete(`/societies/${id}`);
-      toast.success("Society deleted permanently");
+      await platformAPI.approveKYC(id);
+      toast.success('KYC approved');
       loadData();
-    } catch (err: any) {
-      toast.error(err.response?.data?.error || "Failed to delete society");
-    }
+    } catch (err: any) { toast.error(err?.response?.data?.error || 'Approval failed'); }
   };
-
-  // Plan Handlers
-  const handleCreatePlan = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleRejectKYC = async (id: string) => {
+    const reason = prompt('Rejection reason:');
+    if (!reason) return;
     try {
-      await planAPI.create({
-        ...planForm, price: parseFloat(planForm.price) || 0
-      });
-      toast.success(t("planCreatedSuccessfully"));
-      setShowAddPlan(false);
-      setPlanForm({ name: "", code: "", price: "", features: [], color: "bg-blue-100 text-blue-700" });
+      await platformAPI.rejectKYC(id, reason);
+      toast.success('KYC rejected');
       loadData();
-    } catch (err: any) {
-      toast.error(err.response?.data?.error || t("failedToCreatePlan"));
-    }
+    } catch (err: any) { toast.error(err?.response?.data?.error || 'Rejection failed'); }
   };
 
-  const handleDeletePlan = async (id: string) => {
-    if (!window.confirm(t("confirmDeletePlan"))) return;
-    try {
-      await planAPI.delete(id);
-      toast.success(t("planDeleted"));
-      loadData();
-    } catch { toast.error(t("failedToDeletePlan")); }
+  const getOnboardingStepIndex = (state: string) => {
+    return ONBOARDING_STEPS.findIndex(s => s.key === state) || 0;
   };
 
-  const togglePlanFeature = (mod: string) => {
-    setPlanForm(prev => ({
-      ...prev,
-      features: prev.features.includes(mod) 
-        ? prev.features.filter(m => m !== mod)
-        : [...prev.features, mod]
-    }));
+  const getStepStatus = (state: string, stepKey: string) => {
+    const currentIdx = getOnboardingStepIndex(state);
+    const stepIdx = ONBOARDING_STEPS.findIndex(s => s.key === stepKey);
+    if (stepIdx < currentIdx) return 'completed';
+    if (stepIdx === currentIdx) return 'active';
+    return 'pending';
   };
 
-  const filteredSocieties = societies.filter(s =>
-    `${s.name} ${s.city} ${s.registration_number}`.toLowerCase().includes(search.toLowerCase())
+  const filtered = societies.filter(s =>
+    `${s.name} ${s.city} ${s.registration_number} ${s.contact_email}`.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between animate-slide-up">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Globe className="w-6 h-6 text-indigo-500" /> {t("societiesTitle")}
+            <Globe className="w-6 h-6 text-indigo-500" /> Societies & Onboarding
           </h1>
-          <p className="text-gray-400 text-sm mt-1">{t("societiesSubtitle")}</p>
+          <p className="text-sm text-gray-500 mt-0.5">
+            {isPlatformAdmin ? 'Manage society onboarding, KYC, and subscriptions' : 'Browse and manage societies'}
+          </p>
         </div>
-        <div className="flex gap-2">
-          {tab === "Societies" ? (
-            <button onClick={() => setShowAddSociety(true)} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl font-medium text-sm transition-all shadow-lg shadow-indigo-200">
-              <Plus className="w-4 h-4" /> {t("addSociety")}
-            </button>
-          ) : (
-            <button onClick={() => setShowAddPlan(true)} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl font-medium text-sm transition-all shadow-lg shadow-indigo-200">
-              <Plus className="w-4 h-4" /> {t("addPlan")}
-            </button>
-          )}
-        </div>
+        {isPlatformAdmin && (
+          <button onClick={() => setShowRegister(true)}
+            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-indigo-700 shadow-lg shadow-indigo-200">
+            <Plus className="w-4 h-4" /> New Registration
+          </button>
+        )}
       </div>
 
-      <div className="flex gap-1 bg-gray-100 p-1 rounded-xl w-fit">
-        {[
-          { id: "Societies", label: t("societies") },
-          { id: "Plans", label: t("plans") }
-        ].map(item => (
-          <button
-            key={item.id}
-            onClick={() => setTab(item.id)}
-            className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${tab === item.id ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
-          >
-            {item.label}
+      {/* Stats */}
+      {isPlatformAdmin && stats && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { label: 'Total Societies', value: stats.total || 0, color: 'indigo' },
+            { label: 'Active', value: stats.active || 0, color: 'emerald' },
+            { label: 'Pending KYC', value: stats.kyc_pending || 0, color: 'amber' },
+            { label: 'Renewals Due', value: stats.renewals_due || 0, color: 'rose' },
+          ].map((c, i) => (
+            <div key={i} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
+              <p className="text-xs text-gray-400">{c.label}</p>
+              <p className={`text-2xl font-bold text-${c.color}-600 mt-1`}>{c.value}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Tabs */}
+      <div className="flex gap-2 border-b border-gray-200">
+        {['societies', 'plans', 'onboarding'].map(tb => (
+          <button key={tb} onClick={() => setTab(tb as any)}
+            className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+              tab === tb ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-gray-500'
+            }`}>
+            {tb.charAt(0).toUpperCase() + tb.slice(1)}
           </button>
         ))}
       </div>
 
-      {/* Stats Row */}
-      {tab === "Societies" && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-slide-up stagger" style={{ animationDelay: "80ms" }}>
-          {[
-            { label: t("totalSocieties"), value: societies.length, icon: Building2, color: "from-indigo-500 to-indigo-600" },
-            { label: t("active"), value: societies.filter(s => s.status === "ACTIVE").length, icon: CheckCircle2, color: "from-emerald-500 to-green-600" },
-            { label: t("totalUnits"), value: societies.reduce((sum, s) => sum + (s.total_units || 0), 0), icon: Users, color: "from-blue-500 to-blue-600" },
-            { label: t("activePlans"), value: plans.length, icon: CreditCard, color: "from-violet-500 to-purple-600" },
-          ].map((card, i) => {
-            const Icon = card.icon;
-            return (
-              <div key={i} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm card-hover animate-slide-up">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-gray-400 font-medium">{card.label}</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">{card.value}</p>
-                  </div>
-                  <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${card.color} flex items-center justify-center shadow-md`}>
-                    <Icon className="w-5 h-5 text-white" />
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Content */}
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[...Array(6)].map((_, i) => <div key={i} className="h-48 skeleton rounded-2xl" />)}
         </div>
-      ) : tab === "Societies" ? (
+      ) : tab === 'societies' ? (
         <>
-          <div className="relative animate-slide-up" style={{ animationDelay: "120ms" }}>
+          <div className="relative">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder={t("searchSocieties")} />
+            <input value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl bg-white text-sm focus:ring-2 focus:ring-indigo-500" placeholder="Search societies..." />
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 stagger">
-            {filteredSocieties.map((society, i) => (
-              <div key={society.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm card-hover overflow-hidden animate-slide-up">
-                <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-4 relative overflow-hidden">
-                  <div className="absolute right-0 top-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/4" />
-                  <div className="relative z-10 flex items-start justify-between">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filtered.map(s => (
+              <div key={s.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className={`p-4 border-b ${s.subscription_plan === 'AI_PRO' ? 'bg-gradient-to-r from-violet-500 to-fuchsia-600' : s.subscription_plan === 'COMPLIANCE' ? 'bg-gradient-to-r from-amber-500 to-orange-600' : 'bg-gradient-to-r from-blue-500 to-indigo-600'} text-white`}>
+                  <div className="flex items-start justify-between">
                     <div>
-                      <h3 className="font-semibold text-white text-sm leading-tight">{society.name}</h3>
-                      <p className="text-indigo-200 text-xs mt-0.5">{society.registration_number || "—"}</p>
+                      <h3 className="font-semibold text-white leading-tight">{s.name}</h3>
+                      <p className="text-white/70 text-xs mt-0.5">{s.registration_number || 'Unregistered'}</p>
                     </div>
-                    <span className={`text-xs px-2 py-1 rounded-lg font-medium cursor-pointer hover:opacity-80 transition-opacity ${getPlanColor(society.subscription_plan)}`} onClick={() => {
-                      setSocietyForm({ ...societyForm, subscription_plan: society.subscription_plan || (plans[0]?.code || "CORE"), active_modules: society.active_modules || [] });
-                      setShowEditSociety(society);
-                    }}>
-                      {getPlanLabel(society.subscription_plan)} ✏️
+                    <span className={`text-[10px] px-2 py-1 rounded-lg font-medium bg-white/20 text-white`}>
+                      {s.subscription_plan}
                     </span>
                   </div>
                 </div>
                 <div className="p-4 space-y-2.5">
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <MapPin className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                    <span className="truncate">{society.city}, {society.state}</span>
-                  </div>
-                  {society.address && (
-                    <p className="text-xs text-gray-400 truncate pl-5">{society.address}</p>
-                  )}
+                  <div className="flex items-center gap-2 text-sm text-gray-600"><MapPin className="w-3.5 h-3.5 text-gray-400" /><span>{s.city}, {s.state}</span></div>
                   <div className="flex items-center gap-4 pt-1">
-                    <div className="text-center">
-                      <p className="text-lg font-bold text-gray-900">{society.total_units || 0}</p>
-                      <p className="text-xs text-gray-400">{t("units")}</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-lg font-bold text-gray-900">{society.total_wings || 0}</p>
-                      <p className="text-xs text-gray-400">{t("totalWings")}</p>
-                    </div>
+                    <div className="text-center"><p className="text-lg font-bold text-gray-900">{s.total_units || 0}</p><p className="text-xs text-gray-400">Units</p></div>
+                    <div className="text-center"><p className="text-lg font-bold text-gray-900">{s.total_wings || 0}</p><p className="text-xs text-gray-400">Wings</p></div>
                     <div className="ml-auto">
-                      <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${society.status === "ACTIVE" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
-                        {society.status}
+                      <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${STATUS_COLORS[s.subscription_status] || 'bg-gray-100 text-gray-600'}`}>
+                        {s.subscription_status?.replace(/_/g, ' ')}
                       </span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 text-xs text-gray-400 pt-1 border-t border-gray-50">
-                    <Calendar className="w-3 h-3" />
-                    {t("registered")}: {new Date(society.created_at).toLocaleDateString("en-IN", { month: "short", year: "numeric" })}
-                  </div>
+                  {/* Onboarding Progress */}
+                  {isPlatformAdmin && s.onboarding_state && s.onboarding_state !== 'ACTIVE' && (
+                    <div className="pt-2 border-t border-gray-50">
+                      <p className="text-xs font-medium text-gray-500 mb-2">Onboarding Progress</p>
+                      <div className="flex items-center gap-1">
+                        {ONBOARDING_STEPS.map((step, i) => {
+                          const status = getStepStatus(s.onboarding_state, step.key);
+                          return (
+                            <div key={i} className={`flex-1 h-1.5 rounded-full ${status === 'completed' ? 'bg-emerald-500' : status === 'active' ? 'bg-indigo-500' : 'bg-gray-200'}`}
+                              title={`${step.label} (${step.desc})`} />
+                          );
+                        })}
+                      </div>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {ONBOARDING_STEPS.find(st => st.key === s.onboarding_state)?.label || s.onboarding_state?.replace(/_/g, ' ')}
+                      </p>
+                    </div>
+                  )}
+                  {/* Renewal */}
+                  {s.renewal_date && (
+                    <div className="flex items-center gap-2 text-xs text-amber-600 bg-amber-50 rounded-lg px-2 py-1.5">
+                      <Calendar className="w-3.5 h-3.5" />
+                      Renewal due: {new Date(s.renewal_date).toLocaleDateString()}
+                    </div>
+                  )}
                   <div className="flex items-center gap-2 pt-2">
-                    <button onClick={() => handleSuspendSociety(society.id, society.status)} className={`flex-1 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${society.status === "ACTIVE" ? "text-orange-600 border-orange-200 hover:bg-orange-50" : "text-emerald-600 border-emerald-200 hover:bg-emerald-50"}`}>
-                      {society.status === "ACTIVE" ? <span className="flex items-center justify-center gap-1"><ShieldAlert className="w-3.5 h-3.5" /> Suspend</span> : <span className="flex items-center justify-center gap-1"><PlayCircle className="w-3.5 h-3.5" /> Reactivate</span>}
-                    </button>
-                    <button onClick={() => handleDeleteSociety(society.id)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {isPlatformAdmin && ['PENDING', 'REGISTRATION_FORM', 'KYC_PENDING'].includes(s.onboarding_state) && (
+                      <button onClick={() => setShowKYC(s)} className="flex-1 py-1.5 text-xs font-semibold bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 border border-blue-200">
+                        Submit KYC
+                      </button>
+                    )}
+                    {isPlatformAdmin && ['SUSPENDED', 'REGISTRATION_FORM'].includes(s.subscription_status) && (
+                      <button onClick={() => setActionModal({ society: s, action: 'ACTIVATE' })}
+                        className="flex-1 py-1.5 text-xs font-semibold bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 border border-emerald-200">
+                        Activate
+                      </button>
+                    )}
+                    {isPlatformAdmin && s.subscription_status === 'ACTIVE' && (
+                      <button onClick={() => setActionModal({ society: s, action: 'SUSPEND' })}
+                        className="flex-1 py-1.5 text-xs font-semibold bg-red-50 text-red-700 rounded-lg hover:bg-red-100 border border-red-200">
+                        Suspend
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
             ))}
-            {filteredSocieties.length === 0 && (
-              <div className="col-span-full text-center py-16 text-gray-300">
-                <Building2 className="w-14 h-14 mx-auto mb-3 opacity-40" />
-                <p className="text-gray-400">{t("noSocietiesFound")}</p>
+            {filtered.length === 0 && (
+              <div className="col-span-full text-center py-16 text-gray-400">
+                <Building2 className="w-14 h-14 mx-auto mb-3 opacity-40" /><p>No societies found</p>
               </div>
             )}
           </div>
         </>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {plans.map(p => (
-            <div key={p.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 card-hover">
-              <div className="flex justify-between items-start">
-                <span className={`text-xs px-2.5 py-1 rounded-lg font-semibold ${p.color}`}>{p.name}</span>
-                <button onClick={() => handleDeletePlan(p.id)} className="text-gray-400 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
+      ) : tab === 'plans' && isPlatformAdmin ? (
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm space-y-4">
+          <p className="text-sm text-gray-600">
+            Plans and prices for new society registration. To create or edit billing tiers, use{' '}
+            <Link href="/dashboard/platform-admin" className="text-indigo-600 font-medium hover:underline">
+              Platform Admin → Plans
+            </Link>
+            .
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {Object.entries(planCatalog).map(([code, p]) => (
+              <div key={code} className="rounded-xl border border-gray-100 p-4 bg-gray-50/50">
+                <div className="font-semibold text-gray-900">{p.name}</div>
+                <div className="text-sm text-indigo-600 font-medium mt-1">₹{p.pricePerUnit} / unit / month</div>
+                <div className="text-xs text-gray-500 mt-2 font-mono">{code}</div>
+                <p className="text-xs text-gray-500 mt-2 line-clamp-3">{(p.features || []).join(', ')}</p>
               </div>
-              <p className="text-3xl font-bold text-gray-900 mt-4">₹{p.price}<span className="text-sm text-gray-400 font-normal">/mo</span></p>
-              <div className="mt-4 space-y-2">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{t("includedModules")}</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {p.features?.map(f => (
-                    <span key={f} className="text-xs bg-gray-50 border border-gray-100 px-2 py-1 rounded-md text-gray-600">{f.replace("_"," ")}</span>
-                  ))}
-                  {(!p.features || p.features.length === 0) && <span className="text-xs text-gray-400">{t("noSpecificFeatures")}</span>}
+            ))}
+          </div>
+          {!Object.keys(planCatalog).length && (
+            <p className="text-sm text-gray-400 text-center py-8">Loading plans…</p>
+          )}
+        </div>
+      ) : tab === 'onboarding' && isPlatformAdmin ? (
+        <div className="space-y-4">
+          <h3 className="font-semibold text-gray-900">KYC Approval Queue</h3>
+          {societies.filter(s => ['KYC_PENDING', 'KYC_UNDER_REVIEW'].includes(s.onboarding_state)).length === 0 ? (
+            <div className="py-12 text-center text-gray-400">
+              <CheckCircle2 className="w-12 h-12 mx-auto mb-3 opacity-30" /><p>No pending KYC reviews</p>
+            </div>
+          ) : (
+            societies.filter(s => ['KYC_PENDING', 'KYC_UNDER_REVIEW'].includes(s.onboarding_state)).map(s => (
+              <div key={s.id} className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <h3 className="font-bold text-gray-900">{s.name}</h3>
+                    <p className="text-xs text-gray-400 mt-0.5">{s.contact_email} | {s.contact_phone}</p>
+                  </div>
+                  <span className="text-xs bg-amber-50 text-amber-700 px-2.5 py-1 rounded-lg border border-amber-200">
+                    {s.onboarding_state?.replace(/_/g, ' ')}
+                  </span>
+                </div>
+                <div className="grid grid-cols-3 gap-3 mb-4 text-sm">
+                  <div><span className="text-gray-400">City:</span> {s.city}</div>
+                  <div><span className="text-gray-400">Units:</span> {s.total_units}</div>
+                  <div><span className="text-gray-400">Plan:</span> {s.subscription_plan}</div>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => handleApproveKYC(s.id)}
+                    className="flex-1 bg-emerald-600 text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-emerald-700">
+                    Approve KYC
+                  </button>
+                  <button onClick={() => handleRejectKYC(s.id)}
+                    className="flex-1 bg-red-50 text-red-600 py-2.5 rounded-xl text-sm font-semibold hover:bg-red-100 border border-red-200">
+                    Reject
+                  </button>
                 </div>
               </div>
-            </div>
-          ))}
-          {plans.length === 0 && (
-            <div className="col-span-full text-center py-16 text-gray-300">
-              <CreditCard className="w-14 h-14 mx-auto mb-3 opacity-40" />
-              <p className="text-gray-400">{t("noPlansYet")}</p>
-            </div>
+            ))
           )}
+        </div>
+      ) : (
+        <div className="py-12 text-center text-gray-400">
+          <Globe className="w-12 h-12 mx-auto mb-3 opacity-30" /><p>Select a tab</p>
         </div>
       )}
 
-      {/* Add Society Modal */}
-      {showAddSociety && (
+      {/* Public Registration Modal */}
+      {showRegister && (
         <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl w-full max-w-lg p-6 shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-5">
-              <div><h2 className="text-lg font-bold text-gray-900">{t("addNewSociety")}</h2></div>
-              <button onClick={() => setShowAddSociety(false)} className="p-2 hover:bg-gray-100 rounded-xl transition-colors"><X className="w-5 h-5 text-gray-500" /></button>
+              <div><h2 className="text-lg font-bold text-gray-900">Register Your Society</h2><p className="text-xs text-gray-400 mt-0.5">Fill in the details to get started</p></div>
+              <button onClick={() => setShowRegister(false)} className="p-2 hover:bg-gray-100 rounded-xl"><X className="w-5 h-5 text-gray-500" /></button>
             </div>
-            <form onSubmit={handleCreateSociety} className="space-y-4">
-              <div><label className="block text-xs font-semibold text-gray-600 mb-1.5">{t("societyName")} *</label><input value={societyForm.name} onChange={e => setSocietyForm(p => ({ ...p, name: e.target.value }))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Sunrise Heights CHS" required /></div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><label className="block text-xs font-semibold text-gray-600 mb-1.5">{t("registrationNumber")}</label><input value={societyForm.registration_number} onChange={e => setSocietyForm(p => ({ ...p, registration_number: e.target.value }))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" /></div>
-                <div><label className="block text-xs font-semibold text-gray-600 mb-1.5">{t("pinCode")}</label><input value={societyForm.pincode} onChange={e => setSocietyForm(p => ({ ...p, pincode: e.target.value }))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" /></div>
+            <form onSubmit={handleRegister} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Society Name *</label>
+                <input value={regForm.name} onChange={e => setRegForm({ ...regForm, name: e.target.value })} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" placeholder="Sunrise Heights CHS Ltd" required />
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div><label className="block text-xs font-semibold text-gray-600 mb-1.5">{t("city")}</label><input value={societyForm.city} onChange={e => setSocietyForm(p => ({ ...p, city: e.target.value }))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" /></div>
-                <div><label className="block text-xs font-semibold text-gray-600 mb-1.5">{t("plan")}</label><select value={societyForm.subscription_plan} onChange={e => setSocietyForm(p => ({ ...p, subscription_plan: e.target.value }))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50">{plans.map(p => <option key={p.code} value={p.code}>{p.name}</option>)}</select></div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><label className="block text-xs font-semibold text-gray-600 mb-1.5">{t("totalUnits")}</label><input type="number" value={societyForm.total_units} onChange={e => setSocietyForm(p => ({ ...p, total_units: e.target.value }))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" /></div>
-                <div><label className="block text-xs font-semibold text-gray-600 mb-1.5">{t("totalWings")}</label><input type="number" value={societyForm.total_wings} onChange={e => setSocietyForm(p => ({ ...p, total_wings: e.target.value }))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" /></div>
+                <div><label className="block text-xs font-semibold text-gray-600 mb-1.5">Reg. Number</label><input value={regForm.registration_number} onChange={e => setRegForm({ ...regForm, registration_number: e.target.value })} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm" /></div>
+                <div><label className="block text-xs font-semibold text-gray-600 mb-1.5">Pincode</label><input value={regForm.pincode} onChange={e => setRegForm({ ...regForm, pincode: e.target.value })} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm" /></div>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5">{t("activeModules")}</label>
-                <div className="flex flex-wrap gap-2">
-                  {availableModules.map(mod => (
-                    <button key={mod} type="button" onClick={() => toggleSocietyModule(mod)} className={`px-2.5 py-1 text-xs rounded-lg border font-medium transition-colors ${societyForm.active_modules.includes(mod) ? "bg-indigo-50 border-indigo-200 text-indigo-700" : "bg-white border-gray-200 text-gray-500 hover:border-indigo-300"}`}>{mod.replace("_"," ")}</button>
-                  ))}
-                </div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Address</label>
+                <textarea value={regForm.address} onChange={e => setRegForm({ ...regForm, address: e.target.value })} rows={2} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm" placeholder="Flat/Building, Street, Area" />
               </div>
-              <div className="flex gap-3 pt-2"><button type="button" onClick={() => setShowAddSociety(false)} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-600 font-medium hover:bg-gray-50">{t("cancel")}</button><button type="submit" className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold shadow-lg shadow-indigo-200">{t("createSociety")}</button></div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><label className="block text-xs font-semibold text-gray-600 mb-1.5">City *</label><input value={regForm.city} onChange={e => setRegForm({ ...regForm, city: e.target.value })} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm" /></div>
+                <div><label className="block text-xs font-semibold text-gray-600 mb-1.5">State *</label><input value={regForm.state} onChange={e => setRegForm({ ...regForm, state: e.target.value })} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm" /></div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><label className="block text-xs font-semibold text-gray-600 mb-1.5">Contact Name *</label><input value={regForm.contact_name} onChange={e => setRegForm({ ...regForm, contact_name: e.target.value })} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm" required /></div>
+                <div><label className="block text-xs font-semibold text-gray-600 mb-1.5">Phone *</label><input type="tel" value={regForm.contact_phone} onChange={e => setRegForm({ ...regForm, contact_phone: e.target.value })} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm" required /></div>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Email *</label>
+                <input type="email" value={regForm.contact_email} onChange={e => setRegForm({ ...regForm, contact_email: e.target.value })} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm" required />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><label className="block text-xs font-semibold text-gray-600 mb-1.5">Total Units</label><input type="number" value={regForm.total_units} onChange={e => setRegForm({ ...regForm, total_units: e.target.value })} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm" /></div>
+                <div><label className="block text-xs font-semibold text-gray-600 mb-1.5">Total Wings</label><input type="number" value={regForm.total_wings} onChange={e => setRegForm({ ...regForm, total_wings: e.target.value })} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm" /></div>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Select Plan *</label>
+                {Object.keys(planCatalog).length === 0 ? (
+                  <p className="text-sm text-amber-700 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2">
+                    No plans loaded. Add plans under Platform Admin, or refresh the page.
+                  </p>
+                ) : (
+                  <div className={`grid gap-2 ${Object.keys(planCatalog).length <= 3 ? 'grid-cols-3' : 'grid-cols-2 sm:grid-cols-3'}`}>
+                    {Object.entries(planCatalog).map(([code, p]) => (
+                      <button key={code} type="button" onClick={() => setRegForm({ ...regForm, plan: code })}
+                        className={`p-3 rounded-xl border text-center transition-all ${regForm.plan === code ? 'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-500' : 'border-gray-200 hover:border-indigo-200'}`}>
+                        <p className="text-xs font-bold text-gray-900">{p.name}</p>
+                        <p className="text-[10px] text-gray-500 mt-0.5">₹{p.pricePerUnit}/unit/mo</p>
+                        <p className="text-[9px] text-gray-400 font-mono mt-0.5">{code}</p>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={() => setShowRegister(false)} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium hover:bg-gray-50">Cancel</button>
+                <button type="submit" disabled={registering}
+                  className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold disabled:opacity-50 flex items-center justify-center gap-2">
+                  {registering ? <><Loader2 className="w-4 h-4 animate-spin" /> Submitting...</> : 'Register Society'}
+                </button>
+              </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* Edit Plan & Modules Modal for Society */}
-      {showEditSociety && (
+      {/* KYC Submission Modal */}
+      {showKYC && (
         <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl w-full max-w-lg p-6 shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-5">
-              <div><h2 className="text-lg font-bold text-gray-900">{t("managePlanModules")}</h2><p className="text-xs text-gray-400 mt-0.5">{showEditSociety.name}</p></div>
-              <button onClick={() => setShowEditSociety(null)} className="p-2 hover:bg-gray-100 rounded-xl"><X className="w-5 h-5 text-gray-500" /></button>
+              <div><h2 className="text-lg font-bold text-gray-900">Submit KYC Documents</h2><p className="text-xs text-gray-400 mt-0.5">{showKYC.name}</p></div>
+              <button onClick={() => setShowKYC(null)} className="p-2 hover:bg-gray-100 rounded-xl"><X className="w-5 h-5 text-gray-500" /></button>
             </div>
-            <form onSubmit={handleEditSociety} className="space-y-4">
-              <div><label className="block text-xs font-semibold text-gray-600 mb-1.5">{t("subscriptionPlan")}</label><select value={societyForm.subscription_plan} onChange={e => setSocietyForm(p => ({ ...p, subscription_plan: e.target.value }))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50">{plans.map(p => <option key={p.code} value={p.code}>{p.name}</option>)}</select></div>
-              <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5">{t("activeModules")}</label>
-                <div className="flex flex-wrap gap-2">
-                  {availableModules.map(mod => (
-                    <button key={mod} type="button" onClick={() => toggleSocietyModule(mod)} className={`px-2.5 py-1 text-xs rounded-lg border font-medium transition-colors ${societyForm.active_modules.includes(mod) ? "bg-indigo-50 border-indigo-200 text-indigo-700" : "bg-white border-gray-200 text-gray-500 hover:border-indigo-300"}`}>{mod.replace("_"," ")}</button>
-                  ))}
-                </div>
+            <form onSubmit={handleSubmitKYC} className="space-y-4">
+              <div className="bg-amber-50 rounded-xl p-3 border border-amber-200 text-xs text-amber-700">
+                <p className="font-semibold">Required Documents</p>
+                <p className="mt-0.5">Upload document URLs or reference numbers. For full verification, please provide:</p>
+                <ul className="mt-1 space-y-0.5 list-disc list-inside text-amber-600">
+                  <li>Registration Certificate</li>
+                  <li>Bye-Laws / Society Rules</li>
+                  <li>Committee Resolution</li>
+                  <li>Bank Account Details</li>
+                  <li>PAN Certificate</li>
+                  <li>GST Registration (if applicable)</li>
+                </ul>
               </div>
-              <div className="flex gap-3 pt-2"><button type="button" onClick={() => setShowEditSociety(null)} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-600 font-medium hover:bg-gray-50">{t("cancel")}</button><button type="submit" className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold shadow-lg shadow-indigo-200">{t("saveChanges")}</button></div>
+              {[
+                { key: 'reg_certificate', label: 'Registration Certificate', placeholder: 'Reg. Cert. Number or URL' },
+                { key: 'bye_laws', label: 'Bye-Laws', placeholder: 'Document reference' },
+                { key: 'committee_resolution', label: 'Committee Resolution', placeholder: 'Resolution number' },
+                { key: 'bank_details', label: 'Bank Account Details', placeholder: 'A/c No., Bank, IFSC' },
+                { key: 'pan_cert', label: 'PAN Certificate', placeholder: 'PAN Number' },
+                { key: 'gst_cert', label: 'GST Certificate', placeholder: 'GSTIN (if registered)' },
+              ].map(f => (
+                <div key={f.key}>
+                  <label className="block text-xs font-semibold text-gray-600 mb-1.5">{f.label}</label>
+                  <input value={kycForm[f.key as keyof typeof kycForm]} onChange={e => setKycForm({ ...kycForm, [f.key]: e.target.value })}
+                    placeholder={f.placeholder} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500" />
+                </div>
+              ))}
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={() => setShowKYC(null)} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium hover:bg-gray-50">Cancel</button>
+                <button type="submit" disabled={submittingKYC}
+                  className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold disabled:opacity-50 flex items-center justify-center gap-2">
+                  {submittingKYC ? <><Loader2 className="w-4 h-4 animate-spin" /> Submitting...</> : 'Submit KYC'}
+                </button>
+              </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* Add Plan Modal */}
-      {showAddPlan && (
+      {/* Subscription Action Modal */}
+      {actionModal && (
         <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl animate-scale-in">
             <div className="flex items-center justify-between mb-5">
-              <div><h2 className="text-lg font-bold text-gray-900">{t("createSubscriptionPlan")}</h2></div>
-              <button onClick={() => setShowAddPlan(false)} className="p-2 hover:bg-gray-100 rounded-xl"><X className="w-5 h-5 text-gray-500" /></button>
+              <h2 className="text-lg font-bold text-gray-900">{actionModal.action} Society</h2>
+              <button onClick={() => setActionModal(null)} className="p-2 hover:bg-gray-100 rounded-xl"><X className="w-5 h-5 text-gray-500" /></button>
             </div>
-            <form onSubmit={handleCreatePlan} className="space-y-4">
-              <div><label className="block text-xs font-semibold text-gray-600 mb-1.5">{t("planName")} *</label><input value={planForm.name} onChange={e => setPlanForm(p => ({ ...p, name: e.target.value, code: e.target.value.toUpperCase().replace(/\s+/g,"_") }))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="AI Pro" required /></div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><label className="block text-xs font-semibold text-gray-600 mb-1.5">{t("planCodeUnique")}</label><input value={planForm.code} onChange={e => setPlanForm(p => ({ ...p, code: e.target.value.toUpperCase() }))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50" placeholder="AI_PRO" required /></div>
-                <div><label className="block text-xs font-semibold text-gray-600 mb-1.5">{t("monthlyPrice")}</label><input type="number" value={planForm.price} onChange={e => setPlanForm(p => ({ ...p, price: e.target.value }))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="999" required /></div>
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5">{t("includedFeatures")}</label>
-                <div className="flex flex-wrap gap-2">
-                  {availableModules.map(mod => (
-                    <button key={mod} type="button" onClick={() => togglePlanFeature(mod)} className={`px-2.5 py-1 text-xs rounded-lg border font-medium transition-colors ${planForm.features.includes(mod) ? "bg-indigo-50 border-indigo-200 text-indigo-700" : "bg-white border-gray-200 text-gray-500 hover:border-indigo-300"}`}>{mod.replace("_"," ")}</button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5">{t("badgeColor")}</label>
-                <select value={planForm.color} onChange={e => setPlanForm(p => ({ ...p, color: e.target.value }))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                  <option value="bg-blue-100 text-blue-700">Blue (Standard)</option>
-                  <option value="bg-violet-100 text-violet-700">Violet (Pro)</option>
-                  <option value="bg-amber-100 text-amber-700">Amber (Enterprise)</option>
-                  <option value="bg-emerald-100 text-emerald-700">Green (Growth)</option>
-                  <option value="bg-gray-100 text-gray-600">Gray (Core)</option>
-                </select>
-              </div>
-              <div className="flex gap-3 pt-2"><button type="button" onClick={() => setShowAddPlan(false)} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-600 font-medium hover:bg-gray-50">{t("cancel")}</button><button type="submit" className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold shadow-lg shadow-indigo-200">{t("createPlan")}</button></div>
-            </form>
+            <p className="text-sm text-gray-600 mb-4">
+              Are you sure you want to <strong>{actionModal.action.toLowerCase()}</strong> <strong>{actionModal.society.name}</strong>?
+              {actionModal.action === 'SUSPEND' && ' A dual-approval process will be initiated for discontinuation.'}
+            </p>
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1.5">Reason / Notes</label>
+              <textarea value={actionReason} onChange={e => setActionReason(e.target.value)} rows={2}
+                className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500"
+                placeholder="Optional reason or notes..." />
+            </div>
+            <div className="flex gap-3 pt-4">
+              <button onClick={() => setActionModal(null)} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium hover:bg-gray-50">Cancel</button>
+              <button onClick={handleSubscriptionAction}
+                className={`flex-1 py-2.5 text-white rounded-xl text-sm font-semibold ${actionModal.action === 'SUSPEND' ? 'bg-red-600 hover:bg-red-700' : 'bg-emerald-600 hover:bg-emerald-700'}`}>
+                Confirm {actionModal.action}
+              </button>
+            </div>
           </div>
         </div>
       )}
