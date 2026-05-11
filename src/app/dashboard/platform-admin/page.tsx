@@ -189,7 +189,7 @@ export default function PlatformDashboardPage() {
       if (action === 'approve') {
         await platformAPI.approveKYC(society_id, 'Approved by platform admin');
       } else {
-        await platformAPI.rejectKYC(society_id, reason);
+        await platformAPI.rejectKYC(society_id, reason!);
       }
       toast.success(`KYC ${action}d`);
       loadData();
@@ -481,7 +481,7 @@ export default function PlatformDashboardPage() {
                   </button>
                   <button onClick={() => {
                     const reason = prompt('Enter rejection reason (required):');
-                    if (reason) handleKYCAction(s.id, 'reject', reason);
+                    if (reason) handleKYCAction(s.id, 'reject', reason ?? '');
                   }}
                     className="flex-1 bg-red-50 text-red-600 py-2 rounded-xl text-sm font-semibold hover:bg-red-100 transition-colors">
                     Reject

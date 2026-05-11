@@ -289,7 +289,7 @@ export default function BillingPage() {
 
       {tab === "Arrears Aging" && (
         <div className="space-y-4">
-          {arrears?.buckets?.length > 0 ? (
+          {arrears && arrears.buckets && arrears.buckets.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
               {arrears.buckets.map((b: ArrearsBucket, i: number) => (
                 <div key={i} className={`rounded-2xl p-4 border ${AGING_COLORS[i] || 'bg-gray-50 border-gray-200'}`}>
