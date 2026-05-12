@@ -8,7 +8,7 @@ import { formatCurrency, formatDate, getStatusColor } from "@/lib/utils";
 import {
   Receipt, Plus, Search, CheckCircle, XCircle, IndianRupee, Zap, X,
   TrendingUp, AlertTriangle, Clock, Send, Users, FileText, Download,
-  FileSpreadsheet, FilePlus, Layers, ArrowRight
+  FileSpreadsheet, FilePlus, Layers, ArrowRight, Settings
 } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import Pagination from "@/components/Pagination";
