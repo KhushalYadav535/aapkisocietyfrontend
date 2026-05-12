@@ -7,20 +7,23 @@ import toast from "react-hot-toast";
 import { formatCurrency, formatDate, getStatusColor } from "@/lib/utils";
 import {
   Receipt, Plus, Search, CheckCircle, XCircle, IndianRupee, Zap, X,
-  TrendingUp, AlertTriangle, Clock, Send, Users, FileText
+  TrendingUp, AlertTriangle, Clock, Send, Users, FileText, Download,
+  FileSpreadsheet, FilePlus, Layers, ArrowRight
 } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import Pagination from "@/components/Pagination";
+import Link from "next/link";
 
 const ITEMS_PER_PAGE = 10;
 
-interface Bill { id: string; bill_number: string; member_id: string; amount: number; total_amount: number; paid_amount: number; status: string; bill_type: string; billing_period: string; due_date: string; created_at: string; }
+interface Bill { id: string; bill_number: string; member_id: string; amount: number; total_amount: number; paid_amount: number; status: string; bill_type: string; billing_period: string; due_date: string; created_at: string; items?: any[]; }
 interface Payment { id: string; amount: number; payment_method: string; payment_reference?: string; status: string; payment_date: string; member_id: string; }
 interface Defaulter { member_id: string; member_name: string; flat_number: string; wing: string; total_outstanding: number; oldest_bill_date: string; days_overdue: number; bill_count: number; }
 interface ArrearsBucket { label: string; days_from: number; days_to: number; total_amount: number; bill_count: number; oldest_date: string | null; }
 interface DunningRecord { id: string; member_id: string; bill_id: string; member_name: string; bill_number: string; reminder_date: string; reminder_type: string; status: string; }
+interface BillingHead { id: string; name: string; default_amount: number; tax_rate: number; head_type: string; frequency: string; is_active: boolean; }
 
-const TABS = ["Bills", "Payments", "Mandates", "Arrears Aging", "Defaulters", "Dunning"];
+const TABS = ["Bills", "Payments", "Mandates", "Arrears Aging", "Defaulters", "Dunning", "Generate"];
 
 export default function BillingPage() {
   const { user } = useAuth();
@@ -38,12 +41,17 @@ export default function BillingPage() {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [showCreate, setShowCreate] = useState(false);
   const [showGenerate, setShowGenerate] = useState(false);
+  const [showGenerateHeads, setShowGenerateHeads] = useState(false);
+  const [showCreateWithHeads, setShowCreateWithHeads] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [billingHeads, setBillingHeads] = useState<BillingHead[]>([]);
 
   const [createForm, setCreateForm] = useState({ member_id: "", amount: "", tax_amount: "", bill_type: "MAINTENANCE", billing_period: "", due_date: "", description: "" });
   const [genForm, setGenForm] = useState({ amount: "", billing_period: "", due_date: "", bill_type: "MAINTENANCE" });
+  const [genHeadsForm, setGenHeadsForm] = useState({ billing_period: "", due_date: "", include_arrears: false, selected_heads: [] as string[] });
+  const [createWithHeadsForm, setCreateWithHeadsForm] = useState({ member_id: "", billing_period: "", due_date: "", selected_heads: [] as string[], custom_items: [] as { name: string; amount: string; tax_rate: string }[] });
   const [payForm, setPayForm] = useState({ bill_id: "", amount: "", payment_method: "UPI", payment_reference: "" });
   const [reminderBillId, setReminderBillId] = useState("");
   const [reminderType, setReminderType] = useState<'EMAIL' | 'SMS' | 'APP'>('APP');
@@ -106,6 +114,150 @@ export default function BillingPage() {
     try { await mandateAPI.updateStatus(id, status); load(); } catch { toast.error(t("failedToUpdateMandate")); }
   };
 
+  const loadBillingHeads = async () => {
+    try {
+      const res = await billingAPI.getAllHeads();
+      setBillingHeads(res.data.heads || []);
+    } catch { console.error("Failed to load billing heads"); }
+  };
+
+  const handleGenerateWithHeads = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (genHeadsForm.selected_heads.length === 0) {
+      toast.error("Please select at least one billing head");
+      return;
+    }
+    try {
+      const res = await billingAPI.generateBulkWithHeads({
+        head_ids: genHeadsForm.selected_heads,
+        billing_period: genHeadsForm.billing_period,
+        due_date: genHeadsForm.due_date || null,
+        include_arrears: genHeadsForm.include_arrears
+      });
+      toast.success(res.data.message);
+      setShowGenerateHeads(false);
+      setGenHeadsForm({ billing_period: "", due_date: "", include_arrears: false, selected_heads: [] });
+      load();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Failed to generate bills");
+    }
+  };
+
+  const handleCreateWithHeads = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!createWithHeadsForm.member_id) {
+      toast.error("Please select a member");
+      return;
+    }
+    if (createWithHeadsForm.selected_heads.length === 0 && createWithHeadsForm.custom_items.length === 0) {
+      toast.error("Please select billing heads or add custom items");
+      return;
+    }
+    try {
+      await billingAPI.generateWithHeads({
+        member_id: createWithHeadsForm.member_id,
+        head_ids: createWithHeadsForm.selected_heads,
+        custom_items: createWithHeadsForm.custom_items.map(i => ({
+          name: i.name,
+          amount: parseFloat(i.amount) || 0,
+          tax_rate: parseFloat(i.tax_rate) || 0
+        })),
+        billing_period: createWithHeadsForm.billing_period,
+        due_date: createWithHeadsForm.due_date || null
+      });
+      toast.success("Bill created with billing heads");
+      setShowCreateWithHeads(false);
+      setCreateWithHeadsForm({ member_id: "", billing_period: "", due_date: "", selected_heads: [], custom_items: [] });
+      load();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Failed to create bill");
+    }
+  };
+
+  const handleExportExcel = async () => {
+    try {
+      const res = await billingAPI.exportExcel();
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'billing-report.xlsx');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch { toast.error("Failed to export Excel"); }
+  };
+
+  const handleExportPDF = async () => {
+    try {
+      const res = await billingAPI.exportPDF();
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'billing-report.pdf');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch { toast.error("Failed to export PDF"); }
+  };
+
+  const handleDownloadBillPDF = async (billId: string) => {
+    try {
+      const res = await billingAPI.generatePDF(billId);
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Bill-${billId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch { toast.error("Failed to download PDF"); }
+  };
+
+  useEffect(() => {
+    if (showGenerateHeads || showCreateWithHeads) {
+      loadBillingHeads();
+    }
+  }, [showGenerateHeads, showCreateWithHeads]);
+
+  const toggleHeadSelection = (headId: string, isHeadsForm: boolean) => {
+    if (isHeadsForm) {
+      setGenHeadsForm(prev => ({
+        ...prev,
+        selected_heads: prev.selected_heads.includes(headId)
+          ? prev.selected_heads.filter(id => id !== headId)
+          : [...prev.selected_heads, headId]
+      }));
+    } else {
+      setCreateWithHeadsForm(prev => ({
+        ...prev,
+        selected_heads: prev.selected_heads.includes(headId)
+          ? prev.selected_heads.filter(id => id !== headId)
+          : [...prev.selected_heads, headId]
+      }));
+    }
+  };
+
+  const addCustomItem = () => {
+    setCreateWithHeadsForm(prev => ({
+      ...prev,
+      custom_items: [...prev.custom_items, { name: "", amount: "0", tax_rate: "0" }]
+    }));
+  };
+
+  const removeCustomItem = (index: number) => {
+    setCreateWithHeadsForm(prev => ({
+      ...prev,
+      custom_items: prev.custom_items.filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateCustomItem = (index: number, field: string, value: string) => {
+    setCreateWithHeadsForm(prev => ({
+      ...prev,
+      custom_items: prev.custom_items.map((item, i) => i === index ? { ...item, [field]: value } : item)
+    }));
+  };
+
   const filtered = bills.filter(b => {
     const ms = `${b.bill_number} ${b.bill_type} ${b.billing_period}`.toLowerCase().includes(search.toLowerCase());
     const mf = statusFilter === "ALL" || b.status === statusFilter;
@@ -127,12 +279,31 @@ export default function BillingPage() {
           <p className="text-gray-400 text-sm mt-1">{t("billingSubtitle")}</p>
         </div>
         {canCreate && tab === "Bills" && (
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            <Link href="/dashboard/billing/heads" className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-purple-200">
+              <Layers className="w-4 h-4" /> Billing Heads
+            </Link>
+            <button onClick={() => setShowGenerateHeads(true)} className="flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-4 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-violet-200">
+              <FilePlus className="w-4 h-4" /> Generate with Heads
+            </button>
             <button onClick={() => setShowGenerate(true)} className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-emerald-200">
               <Zap className="w-4 h-4" /> {t("generateMonthly")}
             </button>
             <button onClick={() => setShowCreate(true)} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-indigo-200">
               <Plus className="w-4 h-4" /> {t("createBill")}
+            </button>
+            <button onClick={() => setShowCreateWithHeads(true)} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-blue-200">
+              <FileText className="w-4 h-4" /> Create with Heads
+            </button>
+          </div>
+        )}
+        {canCreate && tab === "Generate" && (
+          <div className="flex gap-2">
+            <button onClick={handleExportExcel} className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-green-200">
+              <FileSpreadsheet className="w-4 h-4" /> Export Excel
+            </button>
+            <button onClick={handleExportPDF} className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-red-200">
+              <Download className="w-4 h-4" /> Export PDF
             </button>
           </div>
         )}
@@ -390,6 +561,85 @@ export default function BillingPage() {
         </div>
       )}
 
+      {tab === "Generate" && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Generate with Heads Card */}
+            <div className="bg-gradient-to-br from-violet-50 to-purple-50 rounded-2xl p-6 border border-violet-200">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-violet-600 rounded-xl flex items-center justify-center">
+                  <Layers className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Bulk Generate with Heads</h3>
+                  <p className="text-xs text-gray-500">Generate bills using billing heads</p>
+                </div>
+              </div>
+              <p className="text-sm text-gray-600 mb-4">Create bills for all members using predefined billing heads with amounts and tax rates.</p>
+              <button onClick={() => setShowGenerateHeads(true)} className="w-full py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-medium text-sm">
+                Generate Bulk Bills
+              </button>
+            </div>
+
+            {/* Create Individual with Heads Card */}
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-200">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
+                  <FileText className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Individual Bill with Heads</h3>
+                  <p className="text-xs text-gray-500">Create bill for single member</p>
+                </div>
+              </div>
+              <p className="text-sm text-gray-600 mb-4">Create a single bill for a specific member using billing heads or custom line items.</p>
+              <button onClick={() => setShowCreateWithHeads(true)} className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium text-sm">
+                Create Individual Bill
+              </button>
+            </div>
+
+            {/* Export Reports Card */}
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-200">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center">
+                  <Download className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Export Reports</h3>
+                  <p className="text-xs text-gray-500">Download billing data</p>
+                </div>
+              </div>
+              <p className="text-sm text-gray-600 mb-4">Export billing reports to Excel or PDF for accounting and record keeping.</p>
+              <div className="flex gap-2">
+                <button onClick={handleExportExcel} className="flex-1 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl font-medium text-sm">
+                  Excel
+                </button>
+                <button onClick={handleExportPDF} className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium text-sm">
+                  PDF
+                </button>
+              </div>
+            </div>
+
+            {/* Billing Heads Link Card */}
+            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-200">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-purple-600 rounded-xl flex items-center justify-center">
+                  <Settings className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Manage Billing Heads</h3>
+                  <p className="text-xs text-gray-500">Configure charge categories</p>
+                </div>
+              </div>
+              <p className="text-sm text-gray-600 mb-4">Add, edit, or delete billing heads that define charges for maintenance, parking, etc.</p>
+              <Link href="/dashboard/billing/heads" className="w-full flex items-center justify-center gap-2 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-medium text-sm">
+                Go to Billing Heads <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Create Bill Modal */}
       {showCreate && (
         <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
@@ -484,6 +734,193 @@ export default function BillingPage() {
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setShowPayment(false)} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium hover:bg-gray-50">{t("cancel")}</button>
                 <button type="submit" className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold">{t("recordPayment")}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Generate Bulk Bills with Heads Modal */}
+      {showGenerateHeads && (
+        <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-lg p-6 shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-lg font-bold text-gray-900">Generate Bulk Bills with Heads</h2>
+              <button onClick={() => setShowGenerateHeads(false)} className="p-2 hover:bg-gray-100 rounded-xl"><X className="w-5 h-5 text-gray-500" /></button>
+            </div>
+            <form onSubmit={handleGenerateWithHeads} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">Billing Period *</label>
+                <input
+                  type="text"
+                  value={genHeadsForm.billing_period}
+                  onChange={(e) => setGenHeadsForm({ ...genHeadsForm, billing_period: e.target.value })}
+                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="e.g., May 2026"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">Due Date</label>
+                <input
+                  type="date"
+                  value={genHeadsForm.due_date}
+                  onChange={(e) => setGenHeadsForm({ ...genHeadsForm, due_date: e.target.value })}
+                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="include_arrears"
+                  checked={genHeadsForm.include_arrears}
+                  onChange={(e) => setGenHeadsForm({ ...genHeadsForm, include_arrears: e.target.checked })}
+                  className="w-4 h-4 rounded border-gray-300"
+                />
+                <label htmlFor="include_arrears" className="text-sm text-gray-600">Include outstanding arrears</label>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-2">Select Billing Heads *</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-48 overflow-y-auto border border-gray-200 rounded-xl p-2">
+                  {billingHeads.length === 0 ? (
+                    <p className="text-sm text-gray-400 col-span-2 text-center py-4">No billing heads found. Please create billing heads first.</p>
+                  ) : (
+                    billingHeads.map((head) => (
+                      <label key={head.id} className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={genHeadsForm.selected_heads.includes(head.id)}
+                          onChange={() => toggleHeadSelection(head.id, true)}
+                          className="w-4 h-4 rounded border-gray-300"
+                        />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-900">{head.name}</p>
+                          <p className="text-xs text-gray-500">₹{head.default_amount} + {head.tax_rate}% tax</p>
+                        </div>
+                      </label>
+                    ))
+                  )}
+                </div>
+              </div>
+              {genHeadsForm.selected_heads.length > 0 && (
+                <div className="bg-violet-50 p-3 rounded-xl">
+                  <p className="text-xs text-violet-600 font-medium">
+                    {genHeadsForm.selected_heads.length} head(s) selected
+                  </p>
+                </div>
+              )}
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={() => setShowGenerateHeads(false)} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium hover:bg-gray-50">Cancel</button>
+                <button type="submit" className="flex-1 py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-sm font-semibold">Generate Bills</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Create Individual Bill with Heads Modal */}
+      {showCreateWithHeads && (
+        <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl w-full max-w-lg p-6 shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-lg font-bold text-gray-900">Create Bill with Heads</h2>
+              <button onClick={() => setShowCreateWithHeads(false)} className="p-2 hover:bg-gray-100 rounded-xl"><X className="w-5 h-5 text-gray-500" /></button>
+            </div>
+            <form onSubmit={handleCreateWithHeads} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">Member ID *</label>
+                <input
+                  type="text"
+                  value={createWithHeadsForm.member_id}
+                  onChange={(e) => setCreateWithHeadsForm({ ...createWithHeadsForm, member_id: e.target.value })}
+                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="Enter member UUID"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">Billing Period *</label>
+                <input
+                  type="text"
+                  value={createWithHeadsForm.billing_period}
+                  onChange={(e) => setCreateWithHeadsForm({ ...createWithHeadsForm, billing_period: e.target.value })}
+                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder="e.g., May 2026"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">Due Date</label>
+                <input
+                  type="date"
+                  value={createWithHeadsForm.due_date}
+                  onChange={(e) => setCreateWithHeadsForm({ ...createWithHeadsForm, due_date: e.target.value })}
+                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-2">Select Billing Heads</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-32 overflow-y-auto border border-gray-200 rounded-xl p-2">
+                  {billingHeads.map((head) => (
+                    <label key={head.id} className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded-lg cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={createWithHeadsForm.selected_heads.includes(head.id)}
+                        onChange={() => toggleHeadSelection(head.id, false)}
+                        className="w-4 h-4 rounded border-gray-300"
+                      />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-gray-900">{head.name}</p>
+                        <p className="text-xs text-gray-500">₹{head.default_amount}</p>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-xs font-semibold text-gray-600">Custom Line Items</label>
+                  <button type="button" onClick={addCustomItem} className="text-xs text-blue-600 hover:text-blue-700">+ Add Item</button>
+                </div>
+                {createWithHeadsForm.custom_items.map((item, idx) => (
+                  <div key={idx} className="flex gap-2 mb-2 items-end">
+                    <div className="flex-1">
+                      <input
+                        type="text"
+                        value={item.name}
+                        onChange={(e) => updateCustomItem(idx, 'name', e.target.value)}
+                        className="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-xs"
+                        placeholder="Item name"
+                      />
+                    </div>
+                    <div className="w-20">
+                      <input
+                        type="number"
+                        value={item.amount}
+                        onChange={(e) => updateCustomItem(idx, 'amount', e.target.value)}
+                        className="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-xs"
+                        placeholder="Amount"
+                      />
+                    </div>
+                    <div className="w-16">
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={item.tax_rate}
+                        onChange={(e) => updateCustomItem(idx, 'tax_rate', e.target.value)}
+                        className="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-xs"
+                        placeholder="Tax%"
+                      />
+                    </div>
+                    <button type="button" onClick={() => removeCustomItem(idx)} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={() => setShowCreateWithHeads(false)} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-medium hover:bg-gray-50">Cancel</button>
+                <button type="submit" className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold">Create Bill</button>
               </div>
             </form>
           </div>

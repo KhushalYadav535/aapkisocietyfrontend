@@ -84,6 +84,30 @@ export const billingAPI = {
   getDunningHistory: () => api.get('/billing/dunning-history'),
   getDunningConfig: () => api.get('/billing/dunning-config'),
   sendReminder: (data: any) => api.post('/billing/send-reminder', data),
+
+  // Billing Heads
+  getAllHeads: () => api.get('/billing/heads'),
+  getHeadById: (id: string) => api.get(`/billing/heads/${id}`),
+  createHead: (data: any) => api.post('/billing/heads', data),
+  updateHead: (id: string, data: any) => api.put(`/billing/heads/${id}`, data),
+  deleteHead: (id: string) => api.delete(`/billing/heads/${id}`),
+
+  // Duplicate Bill Prevention
+  checkDuplicate: (data: any) => api.post('/billing/check-duplicate', data),
+
+  // Generate Bills with Heads
+  generateBulkWithHeads: (data: any) => api.post('/billing/generate-bulk', data),
+  generateWithHeads: (data: any) => api.post('/billing/generate-with-heads', data),
+
+  // Arrears
+  getMemberArrears: (memberId: string) => api.get(`/billing/member-arrears/${memberId}`),
+  getArrearsSummary: () => api.get('/billing/arrears-summary'),
+
+  // Export
+  exportExcel: (params?: any) => api.get('/billing/export/excel', { params, responseType: 'blob' as const }),
+  exportArrearsExcel: (params?: any) => api.get('/billing/export/arrears-excel', { params, responseType: 'blob' as const }),
+  exportPDF: (params?: any) => api.get('/billing/export/pdf', { params, responseType: 'blob' as const }),
+  generatePDF: (id: string) => api.get(`/billing/bills/${id}/pdf`, { responseType: 'blob' as const }),
 };
 
 export const mandateAPI = {
