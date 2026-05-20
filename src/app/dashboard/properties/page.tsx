@@ -4,15 +4,41 @@ import { useState, useEffect } from "react";
 import { societyAPI } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import toast from "react-hot-toast";
-import { Building, Plus, X, Home, Building2, AlignJustify } from "lucide-react";
+import { Building, Plus, X, Home, Building2, AlignJustify, Info } from "lucide-react";
 
 interface Wing { id: string; name: string; total_floors: number; flats_per_floor: number; created_at: string; }
-interface Flat { id: string; wing_id: string; flat_number: string; floor_number: number; area_sqft: number; flat_type: string; is_occupied: number; }
+interface Flat { 
+  id: string; wing_id: string; flat_number: string; floor_number: number; 
+  area_sqft: number; flat_type: string; is_occupied: number; 
+  unit_category?: string; unit_subtype?: string; occupancy_type?: string; 
+  ownership_type?: string; rera_unit_id?: string; super_builtup_area?: number; 
+  carpet_area?: number; uds_sqft?: number; maintenance_slab?: string; 
+  vastu_facing?: string; meter_numbers?: string; gst_applicable?: number; 
+  occupancy_certificate_status?: string;
+}
+
+const defaultFlatForm = { 
+  wing_id: "", flat_number: "", floor_number: "", area_sqft: "", 
+  flat_type: "2 BHK", unit_category: "Residential", unit_subtype: "Standard",
+  occupancy_type: "Owner Occupied", ownership_type: "Freehold", rera_unit_id: "",
+  super_builtup_area: "", carpet_area: "", uds_sqft: "", maintenance_slab: "",
+  vastu_facing: "", meter_numbers: "", gst_applicable: false, occupancy_certificate_status: ""
+};
 
 export default function PropertiesPage() {
   const { user } = useAuth();
   const [wings, setWings] = useState<Wing[]>([]);
   const [flats, setFlats] = useState<Flat[]>([]);
+  const [masters, setMasters] = useState<{
+    unit_category_master: any[];
+    unit_type_master: any[];
+    unit_subtype_master: any[];
+    occupancy_type_master: any[];
+    ownership_type_master: any[];
+  }>({
+    unit_category_master: [], unit_type_master: [], unit_subtype_master: [],
+    occupancy_type_master: [], ownership_type_master: []
+  });
   const [loading, setLoading] = useState(true);
 
   // Modals
@@ -20,7 +46,7 @@ export default function PropertiesPage() {
   const [wingForm, setWingForm] = useState({ name: "", total_floors: "", flats_per_floor: "" });
 
   const [showAddFlat, setShowAddFlat] = useState(false);
-  const [flatForm, setFlatForm] = useState({ wing_id: "", flat_number: "", floor_number: "", area_sqft: "", flat_type: "2BHK" });
+  const [flatForm, setFlatForm] = useState(defaultFlatForm);
 
   useEffect(() => {
     if (user?.society_id) loadData();
@@ -30,12 +56,16 @@ export default function PropertiesPage() {
     if (!user?.society_id) return;
     setLoading(true);
     try {
-      const [wRes, fRes] = await Promise.all([
+      const [wRes, fRes, mRes] = await Promise.all([
         societyAPI.getWings(user.society_id),
-        societyAPI.getFlats(user.society_id)
+        societyAPI.getFlats(user.society_id),
+        societyAPI.getHomeTypeMasters()
       ]);
       setWings(wRes.data.wings || []);
       setFlats(fRes.data.flats || []);
+      if (mRes.data) {
+        setMasters(mRes.data);
+      }
     } catch { toast.error("Failed to load property data"); }
     finally { setLoading(false); }
   };
@@ -63,11 +93,14 @@ export default function PropertiesPage() {
       await societyAPI.addFlat(user.society_id, {
         ...flatForm,
         floor_number: parseInt(flatForm.floor_number) || 0,
-        area_sqft: parseInt(flatForm.area_sqft) || 0,
+        area_sqft: parseInt(flatForm.carpet_area) || parseInt(flatForm.super_builtup_area) || parseInt(flatForm.area_sqft) || 0,
+        super_builtup_area: parseInt(flatForm.super_builtup_area) || 0,
+        carpet_area: parseInt(flatForm.carpet_area) || 0,
+        uds_sqft: parseInt(flatForm.uds_sqft) || 0,
       });
       toast.success("Flat added!");
       setShowAddFlat(false);
-      setFlatForm({ wing_id: "", flat_number: "", floor_number: "", area_sqft: "", flat_type: "2BHK" });
+      setFlatForm(defaultFlatForm);
       loadData();
     } catch { toast.error("Failed to add flat"); }
   };
@@ -122,10 +155,22 @@ export default function PropertiesPage() {
                   ) : (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                       {wingFlats.map(f => (
-                        <div key={f.id} className={`p-3 rounded-xl border flex flex-col items-center justify-center transition-all ${f.is_occupied ? "bg-emerald-50 border-emerald-100 hover:border-emerald-300" : "bg-white border-gray-200 hover:border-indigo-300 hover:shadow-md"}`}>
+                        <div key={f.id} className={`group relative p-3 rounded-xl border flex flex-col items-center justify-center transition-all ${f.is_occupied ? "bg-emerald-50 border-emerald-100 hover:border-emerald-300" : "bg-white border-gray-200 hover:border-indigo-300 hover:shadow-md"}`}>
+                          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="relative group/tooltip">
+                              <Info className="w-4 h-4 text-gray-400 hover:text-indigo-500 cursor-pointer" />
+                              <div className="absolute z-10 hidden group-hover/tooltip:block w-48 bg-gray-900 text-white text-xs rounded-lg p-2 right-0 bottom-6 shadow-xl">
+                                {f.unit_category && <p><strong>Category:</strong> {f.unit_category}</p>}
+                                {f.occupancy_type && <p><strong>Occupancy:</strong> {f.occupancy_type}</p>}
+                                {f.rera_unit_id && <p><strong>RERA:</strong> {f.rera_unit_id}</p>}
+                                {f.carpet_area && <p><strong>Carpet:</strong> {f.carpet_area} sqft</p>}
+                                {f.vastu_facing && <p><strong>Vastu:</strong> {f.vastu_facing}</p>}
+                              </div>
+                            </div>
+                          </div>
                           <Home className={`w-5 h-5 mb-1 ${f.is_occupied ? "text-emerald-500" : "text-gray-400"}`} />
                           <span className="font-bold text-gray-900">{f.flat_number}</span>
-                          <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">{f.flat_type}</span>
+                          <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide truncate w-full text-center">{f.unit_category ? `${f.unit_category} - ${f.flat_type}` : f.flat_type}</span>
                         </div>
                       ))}
                     </div>
@@ -154,22 +199,139 @@ export default function PropertiesPage() {
         </div>
       )}
 
-      {/* Add Flat Modal */}
+      {/* Add Flat Modal - Extended for Master Types */}
       {showAddFlat && (
         <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-5"><div><h2 className="text-lg font-bold text-gray-900">Add Flat</h2></div><button onClick={() => setShowAddFlat(false)} className="p-2 hover:bg-gray-100 rounded-xl"><X className="w-5 h-5 text-gray-500" /></button></div>
-            <form onSubmit={handleAddFlat} className="space-y-4">
-              <div><label className="block text-xs font-semibold text-gray-600 mb-1.5">Select Wing *</label><select required value={flatForm.wing_id} onChange={e=>setFlatForm(p=>({...p,wing_id:e.target.value}))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50">{wings.map(w=><option key={w.id} value={w.id}>Wing {w.name}</option>)}</select></div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><label className="block text-xs font-semibold text-gray-600 mb-1.5">Flat Number *</label><input required value={flatForm.flat_number} onChange={e=>setFlatForm(p=>({...p,flat_number:e.target.value}))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="101" /></div>
-                <div><label className="block text-xs font-semibold text-gray-600 mb-1.5">Floor</label><input type="number" value={flatForm.floor_number} onChange={e=>setFlatForm(p=>({...p,floor_number:e.target.value}))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="1" /></div>
+          <div className="bg-white rounded-2xl w-full max-w-4xl p-6 shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-5 border-b pb-4">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Add Flat / Unit</h2>
+                <p className="text-sm text-gray-500 mt-1">Configure real estate properties with comprehensive master attributes</p>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><label className="block text-xs font-semibold text-gray-600 mb-1.5">Flat Type</label><select value={flatForm.flat_type} onChange={e=>setFlatForm(p=>({...p,flat_type:e.target.value}))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50">{["1BHK","2BHK","3BHK","4BHK","Penthouse","Shop"].map(t=><option key={t} value={t}>{t}</option>)}</select></div>
-                <div><label className="block text-xs font-semibold text-gray-600 mb-1.5">Area (Sq.ft)</label><input type="number" value={flatForm.area_sqft} onChange={e=>setFlatForm(p=>({...p,area_sqft:e.target.value}))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="1000" /></div>
+              <button onClick={() => setShowAddFlat(false)} className="p-2 hover:bg-gray-100 rounded-xl"><X className="w-5 h-5 text-gray-500" /></button>
+            </div>
+            <form onSubmit={handleAddFlat} className="space-y-6">
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                {/* Left Column: Basic Details */}
+                <div className="space-y-4">
+                  <h3 className="text-sm font-bold text-indigo-600 uppercase tracking-wider mb-2">Basic Information</h3>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1.5">Select Wing *</label>
+                      <select required value={flatForm.wing_id} onChange={e=>setFlatForm(p=>({...p,wing_id:e.target.value}))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50">
+                        {wings.map(w=><option key={w.id} value={w.id}>Wing {w.name}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1.5">Floor</label>
+                      <input type="number" value={flatForm.floor_number} onChange={e=>setFlatForm(p=>({...p,floor_number:e.target.value}))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="1" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1.5">Flat Number *</label>
+                    <input required value={flatForm.flat_number} onChange={e=>setFlatForm(p=>({...p,flat_number:e.target.value}))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="101" />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1.5">Unit Category</label>
+                      <select value={flatForm.unit_category} onChange={e=>setFlatForm(p=>({...p,unit_category:e.target.value}))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50">
+                        {masters.unit_category_master.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1.5">Unit Type</label>
+                      <select value={flatForm.flat_type} onChange={e=>setFlatForm(p=>({...p,flat_type:e.target.value}))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50">
+                        {masters.unit_type_master.filter(t => !flatForm.unit_category || t.category_id === flatForm.unit_category).map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1.5">Subtype / Parking</label>
+                      <select value={flatForm.unit_subtype} onChange={e=>setFlatForm(p=>({...p,unit_subtype:e.target.value}))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50">
+                        {masters.unit_subtype_master.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1.5">Occupancy Type</label>
+                      <select value={flatForm.occupancy_type} onChange={e=>setFlatForm(p=>({...p,occupancy_type:e.target.value}))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50">
+                        {masters.occupancy_type_master.map(o => <option key={o.id} value={o.name}>{o.name}</option>)}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1.5">Ownership Type</label>
+                    <select value={flatForm.ownership_type} onChange={e=>setFlatForm(p=>({...p,ownership_type:e.target.value}))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50">
+                      {masters.ownership_type_master.map(o => <option key={o.id} value={o.name}>{o.name}</option>)}
+                    </select>
+                  </div>
+
+                </div>
+
+                {/* Right Column: Technical & India Specific Details */}
+                <div className="space-y-4">
+                  <h3 className="text-sm font-bold text-indigo-600 uppercase tracking-wider mb-2">Technical Details</h3>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1.5">Carpet Area (Sq.ft)</label>
+                      <input type="number" value={flatForm.carpet_area} onChange={e=>setFlatForm(p=>({...p,carpet_area:e.target.value}))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="1000" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1.5">Super Built-up (Sq.ft)</label>
+                      <input type="number" value={flatForm.super_builtup_area} onChange={e=>setFlatForm(p=>({...p,super_builtup_area:e.target.value}))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="1250" />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1.5">UDS (Sq.ft)</label>
+                      <input type="number" value={flatForm.uds_sqft} onChange={e=>setFlatForm(p=>({...p,uds_sqft:e.target.value}))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="400" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1.5">Vastu Facing</label>
+                      <select value={flatForm.vastu_facing} onChange={e=>setFlatForm(p=>({...p,vastu_facing:e.target.value}))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50">
+                        <option value="">None</option>
+                        {['East', 'West', 'North', 'South', 'North-East', 'North-West', 'South-East', 'South-West'].map(v=><option key={v} value={v}>{v}</option>)}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1.5">RERA Unit ID</label>
+                    <input value={flatForm.rera_unit_id} onChange={e=>setFlatForm(p=>({...p,rera_unit_id:e.target.value}))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="P518000XXXXX" />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1.5">Meter Numbers</label>
+                      <input value={flatForm.meter_numbers} onChange={e=>setFlatForm(p=>({...p,meter_numbers:e.target.value}))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Elec: M123, Water: W456" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1.5">Maintenance Slab</label>
+                      <input value={flatForm.maintenance_slab} onChange={e=>setFlatForm(p=>({...p,maintenance_slab:e.target.value}))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="e.g. SLAB_A" />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 mt-4">
+                    <input type="checkbox" id="gst_applicable" checked={flatForm.gst_applicable} onChange={e=>setFlatForm(p=>({...p,gst_applicable:e.target.checked}))} className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" />
+                    <label htmlFor="gst_applicable" className="text-sm font-semibold text-gray-700">GST Applicable on Maintenance (For Commercial/Large properties)</label>
+                  </div>
+
+                </div>
               </div>
-              <div className="flex gap-3 pt-2"><button type="button" onClick={()=>setShowAddFlat(false)} className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-gray-50">Cancel</button><button type="submit" className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold">Save Flat</button></div>
+              
+              <div className="flex gap-3 pt-6 border-t border-gray-100">
+                <button type="button" onClick={()=>setShowAddFlat(false)} className="flex-1 py-3 border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-gray-50 font-semibold">Cancel</button>
+                <button type="submit" className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold">Save Unit</button>
+              </div>
             </form>
           </div>
         </div>

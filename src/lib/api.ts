@@ -205,6 +205,7 @@ export const societyAPI = {
   addWing: (id: string, data: any) => api.post(`/societies/${id}/wings`, data),
   getFlats: (id: string) => api.get(`/societies/${id}/flats`),
   addFlat: (id: string, data: any) => api.post(`/societies/${id}/flats`, data),
+  getHomeTypeMasters: () => api.get(`/societies/masters/home-types`),
 };
 
 export const planAPI = {
