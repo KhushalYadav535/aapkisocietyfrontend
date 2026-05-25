@@ -11,7 +11,7 @@ import {
   Bell, BarChart3, Globe, ChevronRight, Sparkles, ShieldCheck, CalendarClock,
   FileSpreadsheet, Fingerprint, BookOpen, ClipboardList, User, Moon, Sun,
   Home as HomeIcon, Car, MessageSquare, Vote, Wrench, FolderOpen, HardHat,
-  ShieldAlert, QrCode, Phone, Package, Download
+  ShieldAlert, QrCode, Phone, Package, Download, LayoutGrid
 } from "lucide-react";
 import { getInitials } from "@/lib/utils";
 import { useLocale } from "@/context/LocaleContext";
@@ -93,7 +93,7 @@ const navItems = [
   // ── System ──────────────────────────────────────────────────────────────────
   { href: "/dashboard/platform-admin", label: "Platform Admin", icon: Globe,
     roles: ["PLATFORM_ADMIN"], section: "settings" },
-  { href: "/dashboard/societies", label: "Societies & Plans", icon: Building2,
+  { href: "/dashboard/societies", label: "Societies & Plans", icon: LayoutGrid,
     roles: ["PLATFORM_ADMIN"], section: "settings" },
   { href: "/dashboard/settings", label: "Settings", icon: Settings,
     roles: ["ADMIN", "PLATFORM_ADMIN"], section: "settings" },
