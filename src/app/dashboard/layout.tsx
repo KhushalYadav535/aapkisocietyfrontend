@@ -325,7 +325,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </button>
               {/* Breadcrumb */}
               <div className="hidden sm:flex items-center gap-2 text-sm text-gray-500">
-                <Building2 className="w-4 h-4 text-indigo-400" />
+                <LayoutDashboard className="w-4 h-4 text-indigo-400" />
                 <ChevronRight className="w-3.5 h-3.5" />
                 <span className="text-gray-800 font-medium capitalize">
                   {pathname.split("/").filter(Boolean).slice(-1)[0]?.replace(/-/g, " ") || "Dashboard"}
