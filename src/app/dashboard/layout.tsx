@@ -4,8 +4,9 @@ import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
+import { Logo } from "@/components/Logo";
 import {
-  Building2, LayoutDashboard, Users, Receipt, MessageSquareWarning,
+  LayoutDashboard, Users, Receipt, MessageSquareWarning,
   Megaphone, UserCheck, CalendarDays, Settings, LogOut, Menu, X,
   Bell, BarChart3, Globe, ChevronRight, Sparkles, ShieldCheck, CalendarClock,
   FileSpreadsheet, Fingerprint, BookOpen, ClipboardList, User, Moon, Sun,
@@ -32,10 +33,8 @@ const navItems = [
   // ── Management ──────────────────────────────────────────────────────────────
   { href: "/dashboard/members", label: "Members", icon: Users,
     roles: ["ADMIN", "TREASURER", "COMMITTEE"], section: "management" },
-  { href: "/dashboard/properties", label: "Properties Setup", icon: Building2,
+  { href: "/dashboard/properties", label: "Properties Setup", icon: Wrench,
     roles: ["ADMIN"], section: "management" },
-  { href: "/dashboard/property-listings", label: "Property Listings", icon: Building2,
-    roles: ["ADMIN", "TREASURER", "COMMITTEE", "RESIDENT"], section: "management" },
   { href: "/dashboard/vehicles", label: "Vehicles & Parking", icon: Car,
     roles: ["ADMIN", "COMMITTEE", "RESIDENT"], section: "management" },
   { href: "/dashboard/billing", label: "Billing & Payments", icon: Receipt,
@@ -161,8 +160,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return (
       <div className="min-h-screen flex items-center justify-center bg-mesh">
         <div className="text-center">
-          <div className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-float shadow-2xl shadow-indigo-500/30">
-            <Building2 className="w-9 h-9 text-white" />
+          <div className="mb-4 flex justify-center">
+            <Logo size="md" showText={false} />
           </div>
           <div className="flex items-center gap-2 text-gray-400 text-sm">
             <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
@@ -218,10 +217,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       }`} style={{ boxShadow: '4px 0 40px rgba(0,0,0,0.3)' }}>
         {/* Mobile Header */}
         <div className="flex items-center justify-between lg:hidden px-4 py-4 border-b border-white/8">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <Building2 className="w-4 h-4 text-white" />
-            </div>
+          <div className="flex items-center gap-2 h-10">
+            <Logo size="sm" showText={false} href="/dashboard" />
             <span className="text-sm font-bold text-white">AapkiSociety</span>
           </div>
           <button className="text-slate-400 hover:text-white p-2 hover:bg-white/10 rounded-lg transition-colors" onClick={() => setSidebarOpen(false)}>
@@ -232,9 +229,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Logo Area */}
         <div className="flex items-center gap-3 px-6 py-5 border-b border-white/8">
           <div className="relative shrink-0">
-            <div className="w-10 h-10 bg-linear-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/40">
-              <Building2 className="w-5.5 h-5.5 text-white" />
-            </div>
+            <Logo size="sm" showText={false} href="/dashboard" />
             <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-emerald-400 rounded-full border-2 border-[#0f172a]" />
           </div>
           <div className="flex-1 overflow-hidden">

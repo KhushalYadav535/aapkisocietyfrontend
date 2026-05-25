@@ -4,8 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import toast from "react-hot-toast";
-import { Building2, Mail, Lock, User, Phone, ArrowRight } from "lucide-react";
+import { Mail, Lock, User, Phone, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { Logo } from "@/components/Logo";
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -40,11 +41,8 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen flex items-center justify-center px-6 py-12 bg-gradient-to-br from-gray-50 to-indigo-50">
       <div className="w-full max-w-lg">
-        <div className="flex items-center gap-3 mb-8 justify-center">
-          <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center">
-            <Building2 className="w-7 h-7 text-white" />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900">AapkiSociety</h1>
+        <div className="flex justify-center mb-8">
+          <Logo size="md" showText={true} href="/" />
         </div>
 
         <div className="bg-white rounded-2xl shadow-xl shadow-gray-200/50 p-8">
