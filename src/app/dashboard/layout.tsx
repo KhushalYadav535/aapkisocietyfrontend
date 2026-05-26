@@ -156,22 +156,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (!allowed) router.replace("/dashboard");
   }, [loading, isAuthenticated, pathname, router, userRole]);
 
-  if (loading || !isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-mesh">
-        <div className="text-center">
-          <div className="mb-4 flex justify-center">
-            <Logo size="md" showText={false} />
-          </div>
-          <div className="flex items-center gap-2 text-gray-400 text-sm">
-            <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-            Loading your dashboard...
-          </div>
-        </div>
-      </div>
-    );
-  }
-
+  // ── All hooks/memos MUST be declared before any early return (Rules of Hooks) ─
   const filteredNav = useMemo(
     () => navItems.filter(item => item.roles.map(normalizeRole).includes(userRole)),
     [userRole]
@@ -209,6 +194,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     () => roleColors[userRole] || "from-indigo-500 to-purple-600",
     [userRole]
   );
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  if (loading || !isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-mesh">
+        <div className="text-center">
+          <div className="mb-4 flex justify-center">
+            <Logo size="md" showText={false} />
+          </div>
+          <div className="flex items-center gap-2 text-gray-400 text-sm">
+            <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+            Loading your dashboard...
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex bg-mesh">
