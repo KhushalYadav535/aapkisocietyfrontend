@@ -53,6 +53,10 @@ export const authAPI = {
 
 // Dashboard APIs
 export const dashboardAPI = {
+  // ⚡ OPTIMIZED: Combined endpoint (4 requests → 1)
+  getOverview: () => api.get('/dashboard/overview'),
+  
+  // Individual endpoints (backward compatibility)
   getStats: () => api.get('/dashboard/stats'),
   getRecentActivities: () => api.get('/dashboard/recent-activities'),
   getCollectionSummary: () => api.get('/dashboard/collection-summary'),

@@ -89,18 +89,15 @@ export default function DashboardPage() {
 
   const loadData = useCallback(async () => {
     try {
-      const [statsRes, activitiesRes, complaintRes, collectionRes] = await Promise.all([
-        dashboardAPI.getStats(),
-        dashboardAPI.getRecentActivities(),
-        dashboardAPI.getComplaintStats(),
-        dashboardAPI.getCollectionSummary(),
-      ]);
-      setStats(statsRes.data.stats);
-      setActivities(activitiesRes.data.activities);
-      setComplaintStats(complaintRes.data.complaint_stats);
+      // ⚡ OPTIMIZED: Single combined request instead of 4 separate ones
+      const overviewRes = await dashboardAPI.getOverview();
+      
+      setStats(overviewRes.data.stats);
+      setActivities(overviewRes.data.activities);
+      setComplaintStats(overviewRes.data.complaint_stats);
 
       // Transform collection data for chart
-      const raw = collectionRes.data.collection_summary || [];
+      const raw = overviewRes.data.collection_summary || [];
       const now = new Date();
       const chartData = raw.map((item: any, i: number) => {
         const d = new Date(now);
@@ -109,12 +106,13 @@ export default function DashboardPage() {
       });
       setCollectionData(chartData);
 
+      // Lazy load: Billing summary (optional, admin only)
       try {
         const billingRes = await billingAPI.getSummary();
         setBillingSummary(billingRes.data.summary);
       } catch {}
 
-      // Load renewal stats for admin/treasurer
+      // Lazy load: Renewal stats (optional, admin/treasurer only)
       if (['ADMIN', 'TREASURER', 'PLATFORM_ADMIN'].includes(role)) {
         try {
           const renewalRes = await platformAPI.getRenewals({ days: 30 });
