@@ -65,7 +65,7 @@ export const dashboardAPI = {
 
 // Member APIs
 export const memberAPI = {
-  getAll: () => api.get('/members'),
+  getAll: (params?: { page?: number; limit?: number }) => api.get('/members', { params }),
   getById: (id: string) => api.get(`/members/${id}`),
   create: (data: any) => api.post('/members', data),
   update: (id: string, data: any) => api.put(`/members/${id}`, data),
@@ -74,13 +74,13 @@ export const memberAPI = {
 
 // Billing APIs
 export const billingAPI = {
-  getAllBills: () => api.get('/billing/bills'),
+  getAllBills: (params?: { page?: number; limit?: number }) => api.get('/billing/bills', { params }),
   getBillById: (id: string) => api.get(`/billing/bills/${id}`),
   createBill: (data: any) => api.post('/billing/bills', data),
   approveBill: (id: string) => api.put(`/billing/bills/${id}/approve`),
   rejectBill: (id: string) => api.put(`/billing/bills/${id}/reject`),
   generateMonthly: (data: any) => api.post('/billing/generate-monthly', data),
-  getPayments: () => api.get('/billing/payments'),
+  getPayments: (params?: { page?: number; limit?: number }) => api.get('/billing/payments', { params }),
   recordPayment: (data: any) => api.post('/billing/payments', data),
   getSummary: () => api.get('/billing/summary'),
   getArrearsAging: () => api.get('/billing/arrears-aging'),

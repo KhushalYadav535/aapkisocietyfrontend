@@ -86,51 +86,55 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   const role = String(user?.role || "").toUpperCase();
+  const isAdminOrTreasurer = ["ADMIN", "TREASURER", "PLATFORM_ADMIN"].includes(role);
 
   const loadData = useCallback(async () => {
     try {
-      // ⚡ OPTIMIZED: Single combined request instead of 4 separate ones
-      const overviewRes = await dashboardAPI.getOverview();
-      
-      setStats(overviewRes.data.stats);
-      setActivities(overviewRes.data.activities);
-      setComplaintStats(overviewRes.data.complaint_stats);
+      // ⚡ OPTIMIZED: Fire all API calls in parallel instead of sequentially
+      const [overviewResult, billingResult, renewalResult] = await Promise.allSettled([
+        dashboardAPI.getOverview(),
+        billingAPI.getSummary(),
+        isAdminOrTreasurer ? platformAPI.getRenewals({ days: 30 }) : Promise.resolve(null),
+      ]);
 
-      // Transform collection data for chart
-      const raw = overviewRes.data.collection_summary || [];
-      const now = new Date();
-      const chartData = raw.map((item: any, i: number) => {
-        const d = new Date(now);
-        d.setMonth(d.getMonth() - (5 - i));
-        return { month: MONTHS[d.getMonth()], amount: item.total || 0 };
-      });
-      setCollectionData(chartData);
+      // Process overview data
+      if (overviewResult.status === 'fulfilled') {
+        const data = overviewResult.value.data;
+        setStats(data.stats);
+        setActivities(data.activities);
+        setComplaintStats(data.complaint_stats);
 
-      // Lazy load: Billing summary (optional, admin only)
-      try {
-        const billingRes = await billingAPI.getSummary();
-        setBillingSummary(billingRes.data.summary);
-      } catch {}
+        // Transform collection data for chart
+        const raw = data.collection_summary || [];
+        const now = new Date();
+        const chartData = raw.map((item: any, i: number) => {
+          const d = new Date(now);
+          d.setMonth(d.getMonth() - (5 - i));
+          return { month: MONTHS[d.getMonth()], amount: item.total || 0 };
+        });
+        setCollectionData(chartData);
+      }
 
-      // Lazy load: Renewal stats (optional, admin/treasurer only)
-      if (['ADMIN', 'TREASURER', 'PLATFORM_ADMIN'].includes(role)) {
-        try {
-          const renewalRes = await platformAPI.getRenewals({ days: 30 });
-          if (renewalRes.data?.renewals) {
-            setRenewalStats({
-              due_in_days: 30,
-              total_amount: renewalRes.data.renewals.reduce((s: number, r: any) => s + (r.amount_due || 0), 0),
-              renewals_due: renewalRes.data.renewals.length,
-            });
-          }
-        } catch {}
+      // Process billing summary
+      if (billingResult.status === 'fulfilled' && billingResult.value?.data?.summary) {
+        setBillingSummary(billingResult.value.data.summary);
+      }
+
+      // Process renewal stats
+      if (renewalResult.status === 'fulfilled' && renewalResult.value?.data?.renewals) {
+        const renewals = renewalResult.value.data.renewals;
+        setRenewalStats({
+          due_in_days: 30,
+          total_amount: renewals.reduce((s: number, r: any) => s + (r.amount_due || 0), 0),
+          renewals_due: renewals.length,
+        });
       }
     } catch (error) {
       console.error("Failed to load dashboard data:", error);
     } finally {
       setLoading(false);
     }
-  }, [role]);
+  }, [role, isAdminOrTreasurer]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -139,7 +143,6 @@ export default function DashboardPage() {
   const isResident = role === "RESIDENT";
   const isGuard = role === "GUARD";
   const isMakerChecker = ["MAKER", "CHECKER"].includes(role);
-  const isAdminOrTreasurer = ["ADMIN", "TREASURER", "PLATFORM_ADMIN"].includes(role);
 
   const statCards = useMemo(() => [
     // Guard-specific: focus on visitors and safety
