@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { memberAPI, societyAPI } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
@@ -110,25 +110,25 @@ export default function MembersPage() {
     } catch { toast.error("Failed to deactivate"); }
   };
 
-  const roles = ["ALL", ...Array.from(new Set(members.map(m => m.role)))];
-  const filtered = members.filter(m => {
+  const roles = useMemo(() => ["ALL", ...Array.from(new Set(members.map(m => m.role)))], [members]);
+  const filtered = useMemo(() => members.filter(m => {
     const matchSearch = `${m.first_name} ${m.last_name} ${m.email} ${m.flat_number} ${m.wing}`.toLowerCase().includes(searchTerm.toLowerCase());
     const matchRole = roleFilter === "ALL" || m.role === roleFilter;
     return matchSearch && matchRole;
-  });
+  }), [members, searchTerm, roleFilter]);
 
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
-  const paginatedMembers = filtered.slice(
+  const paginatedMembers = useMemo(() => filtered.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
-  );
+  ), [filtered, currentPage]);
 
   useEffect(() => { setCurrentPage(1); }, [searchTerm, roleFilter]);
 
-  const isAdmin = ["ADMIN", "PLATFORM_ADMIN"].includes(user?.role || "");
+  const isAdmin = useMemo(() => ["ADMIN", "PLATFORM_ADMIN"].includes(user?.role || ""), [user?.role]);
   const creatorRole = (user?.role || "").toUpperCase();
   const assignableRoles = ASSIGNABLE_ROLES_BY_CREATOR[creatorRole] || ["RESIDENT"];
-  const activeCount = members.filter(m => m.is_active).length;
+  const activeCount = useMemo(() => members.filter(m => m.is_active).length, [members]);
 
   return (
     <div className="space-y-6">

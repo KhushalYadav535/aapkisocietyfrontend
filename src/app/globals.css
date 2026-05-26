@@ -253,13 +253,13 @@ html.dark *::-webkit-scrollbar-thumb:hover {
   animation: float 3s ease-in-out infinite;
 }
 
-/* Staggered children */
-.stagger > *:nth-child(1) { animation-delay: 0.05s; opacity: 0; animation-fill-mode: forwards; }
-.stagger > *:nth-child(2) { animation-delay: 0.1s; opacity: 0; animation-fill-mode: forwards; }
-.stagger > *:nth-child(3) { animation-delay: 0.15s; opacity: 0; animation-fill-mode: forwards; }
-.stagger > *:nth-child(4) { animation-delay: 0.2s; opacity: 0; animation-fill-mode: forwards; }
-.stagger > *:nth-child(5) { animation-delay: 0.25s; opacity: 0; animation-fill-mode: forwards; }
-.stagger > *:nth-child(6) { animation-delay: 0.3s; opacity: 0; animation-fill-mode: forwards; }
+/* Staggered children — animation-fill-mode: both ensures elements start at opacity:0 and end visible */
+.stagger > *:nth-child(1) { animation: slideInUp 0.4s ease-out 0.05s both; }
+.stagger > *:nth-child(2) { animation: slideInUp 0.4s ease-out 0.10s both; }
+.stagger > *:nth-child(3) { animation: slideInUp 0.4s ease-out 0.15s both; }
+.stagger > *:nth-child(4) { animation: slideInUp 0.4s ease-out 0.20s both; }
+.stagger > *:nth-child(5) { animation: slideInUp 0.4s ease-out 0.25s both; }
+.stagger > *:nth-child(6) { animation: slideInUp 0.4s ease-out 0.30s both; }
 
 /* Gradient text */
 .gradient-text {
@@ -364,7 +364,18 @@ tr.table-row-hover {
   animation: slideInUp 0.3s ease-out;
 }
 
-/* Smooth theme transition */
-* {
-  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+/* Targeted transitions — only on interactive elements to avoid painting every DOM node */
+button,
+a,
+[role="button"],
+input,
+select,
+textarea,
+.card-hover {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+/* Sidebar links get a slightly faster transition for snappiness */
+nav a {
+  transition: background-color 0.15s ease, color 0.15s ease;
 }

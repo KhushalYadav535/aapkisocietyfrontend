@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
@@ -172,24 +172,30 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
-  const filteredNav = navItems.filter(item => item.roles.map(normalizeRole).includes(userRole));
+  const filteredNav = useMemo(
+    () => navItems.filter(item => item.roles.map(normalizeRole).includes(userRole)),
+    [userRole]
+  );
 
   const handleLogout = () => {
     logout();
     router.push("/login");
   };
 
-  const isActive = (href: string) => {
+  const isActive = useCallback((href: string) => {
     if (href === "/dashboard") return pathname === "/dashboard";
     return pathname.startsWith(href);
-  };
+  }, [pathname]);
 
   // Group nav by section
-  const groupedNav = filteredNav.reduce((acc, item) => {
-    if (!acc[item.section]) acc[item.section] = [];
-    acc[item.section].push(item);
-    return acc;
-  }, {} as Record<string, typeof navItems>);
+  const groupedNav = useMemo(() =>
+    filteredNav.reduce((acc, item) => {
+      if (!acc[item.section]) acc[item.section] = [];
+      acc[item.section].push(item);
+      return acc;
+    }, {} as Record<string, typeof navItems>),
+    [filteredNav]
+  );
 
   const roleColors: Record<string, string> = {
     ADMIN: "from-indigo-500 to-purple-600",
@@ -199,7 +205,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     PLATFORM_ADMIN: "from-violet-600 to-fuchsia-600",
     GUARD: "from-slate-500 to-gray-600",
   };
-  const avatarGradient = roleColors[userRole] || "from-indigo-500 to-purple-600";
+  const avatarGradient = useMemo(
+    () => roleColors[userRole] || "from-indigo-500 to-purple-600",
+    [userRole]
+  );
 
   return (
     <div className="min-h-screen flex bg-mesh">
@@ -388,25 +397,32 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Scroller Marquee (SCR-005) */}
         {scrollers.length > 0 && (
           <div className="overflow-hidden border-b border-gray-100" style={{ background: 'linear-gradient(90deg, #0f172a 0%, #1e293b 100%)' }}>
-            <div
-              className="flex whitespace-nowrap py-2"
-              style={{ animation: `marquee ${scrollers.some((s: any) => s.scroll_speed === 'FAST') ? 15 : scrollers.some((s: any) => s.scroll_speed === 'SLOW') ? 50 : 30}s linear infinite` }}
-            >
-              {[...scrollers, ...scrollers].map((s: any, i: number) => {
-                const urgencyClass = s.urgency_level === 'URGENT'
-                  ? 'bg-red-500/20 text-red-300 border-red-500/30'
-                  : s.urgency_level === 'IMPORTANT'
-                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
-                  : 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30';
-                const dot = s.urgency_level === 'URGENT' ? 'bg-red-400' : s.urgency_level === 'IMPORTANT' ? 'bg-amber-400' : 'bg-indigo-400';
-                return (
-                  <span key={`${s.id}-${i}`} className={`inline-flex items-center gap-2 mx-6 px-3 py-1 rounded-full text-xs font-medium border ${urgencyClass}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${dot} animate-pulse`} />
-                    {s.message}
-                  </span>
-                );
-              })}
-            </div>
+            {(() => {
+              const doubled = [...scrollers, ...scrollers];
+              const speed = scrollers.some((s: any) => s.scroll_speed === 'FAST') ? 15
+                : scrollers.some((s: any) => s.scroll_speed === 'SLOW') ? 50 : 30;
+              return (
+                <div
+                  className="flex whitespace-nowrap py-2"
+                  style={{ animation: `marquee ${speed}s linear infinite` }}
+                >
+                  {doubled.map((s: any, i: number) => {
+                    const urgencyClass = s.urgency_level === 'URGENT'
+                      ? 'bg-red-500/20 text-red-300 border-red-500/30'
+                      : s.urgency_level === 'IMPORTANT'
+                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                      : 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30';
+                    const dot = s.urgency_level === 'URGENT' ? 'bg-red-400' : s.urgency_level === 'IMPORTANT' ? 'bg-amber-400' : 'bg-indigo-400';
+                    return (
+                      <span key={`${s.id}-${i}`} className={`inline-flex items-center gap-2 mx-6 px-3 py-1 rounded-full text-xs font-medium border ${urgencyClass}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${dot} animate-pulse`} />
+                        {s.message}
+                      </span>
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
         )}
 

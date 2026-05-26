@@ -1,20 +1,34 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo, memo } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useLocale } from "@/context/LocaleContext";
 import { dashboardAPI, billingAPI, platformAPI } from "@/lib/api";
 import { formatCurrency, formatDate, getStatusColor } from "@/lib/utils";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import {
   Users, Receipt, MessageSquareWarning, UserCheck, IndianRupee,
   TrendingUp, Megaphone, ArrowUpRight, Clock, CheckCircle2, XCircle,
   Building2, Zap, AlertTriangle, Activity, QrCode, ShieldAlert
 } from "lucide-react";
-import {
-  AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend
-} from "recharts";
+
+// Lazy-load recharts — ~400KB bundle, only needed client-side after paint
+const {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid,
+  Tooltip, ResponsiveContainer, PieChart, Pie, Cell
+} = {
+  AreaChart: dynamic(() => import('recharts').then(m => ({ default: m.AreaChart })), { ssr: false }),
+  Area: dynamic(() => import('recharts').then(m => ({ default: m.Area })), { ssr: false }),
+  XAxis: dynamic(() => import('recharts').then(m => ({ default: m.XAxis })), { ssr: false }),
+  YAxis: dynamic(() => import('recharts').then(m => ({ default: m.YAxis })), { ssr: false }),
+  CartesianGrid: dynamic(() => import('recharts').then(m => ({ default: m.CartesianGrid })), { ssr: false }),
+  Tooltip: dynamic(() => import('recharts').then(m => ({ default: m.Tooltip })), { ssr: false }),
+  ResponsiveContainer: dynamic(() => import('recharts').then(m => ({ default: m.ResponsiveContainer })), { ssr: false }),
+  PieChart: dynamic(() => import('recharts').then(m => ({ default: m.PieChart })), { ssr: false }),
+  Pie: dynamic(() => import('recharts').then(m => ({ default: m.Pie })), { ssr: false }),
+  Cell: dynamic(() => import('recharts').then(m => ({ default: m.Cell })), { ssr: false }),
+};
 
 interface Stats {
   total_members: number; total_flats: number; pending_complaints: number;
@@ -23,8 +37,9 @@ interface Stats {
 }
 
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const PIE_COLORS = ["#f59e0b", "#3b82f6", "#10b981", "#6b7280"];
 
-function StatCard({ label, value, icon: Icon, gradient, delay = 0 }: any) {
+const StatCard = memo(function StatCard({ label, value, icon: Icon, gradient, delay = 0 }: any) {
   return (
     <div
       className="bg-white rounded-2xl p-5 border border-gray-100 card-hover animate-slide-up shadow-sm"
@@ -41,9 +56,9 @@ function StatCard({ label, value, icon: Icon, gradient, delay = 0 }: any) {
       </div>
     </div>
   );
-}
+});
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = memo(function CustomTooltip({ active, payload, label }: any) {
   if (active && payload && payload.length) {
     return (
       <div className="bg-white rounded-xl shadow-xl border border-gray-100 p-3 text-sm">
@@ -57,7 +72,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     );
   }
   return null;
-};
+});
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -72,9 +87,7 @@ export default function DashboardPage() {
 
   const role = String(user?.role || "").toUpperCase();
 
-  useEffect(() => { loadData(); }, []);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const [statsRes, activitiesRes, complaintRes, collectionRes] = await Promise.all([
         dashboardAPI.getStats(),
@@ -119,7 +132,9 @@ export default function DashboardPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [role]);
+
+  useEffect(() => { loadData(); }, [loadData]);
 
   if (loading) {
     return (
@@ -141,7 +156,7 @@ export default function DashboardPage() {
   const isMakerChecker = ["MAKER", "CHECKER"].includes(role);
   const isAdminOrTreasurer = ["ADMIN", "TREASURER", "PLATFORM_ADMIN"].includes(role);
 
-  const statCards = [
+  const statCards = useMemo(() => [
     // Guard-specific: focus on visitors and safety
     ...(isGuard ? [
       { label: "Today's Visitors", value: stats?.today_visitors || 0, icon: UserCheck, gradient: "from-violet-500 to-purple-600" },
@@ -161,22 +176,25 @@ export default function DashboardPage() {
       ...(!isResident ? [{ label: t("todayVisitors"), value: stats?.today_visitors || 0, icon: UserCheck, gradient: "from-violet-500 to-purple-600" }] : []),
       { label: t("activeNotices"), value: stats?.active_notices || 0, icon: Megaphone, gradient: "from-indigo-500 to-indigo-600" },
     ] : []),
-  ];
+  ], [isGuard, isMakerChecker, isResident, stats, t]);
 
 
-  const PIE_COLORS = ["#f59e0b", "#3b82f6", "#10b981", "#6b7280"];
-  const pieData = complaintStats
+  const pieData = useMemo(() => complaintStats
     ? [
         { name: "Open", value: complaintStats.open },
         { name: "In Progress", value: complaintStats.in_progress },
         { name: "Resolved", value: complaintStats.resolved },
         { name: "Closed", value: complaintStats.closed },
       ].filter(d => d.value > 0)
-    : [];
+    : [],
+    [complaintStats]
+  );
 
-  const totalComplaints = complaintStats
+  const totalComplaints = useMemo(() => complaintStats
     ? complaintStats.open + complaintStats.in_progress + complaintStats.resolved + complaintStats.closed
-    : 0;
+    : 0,
+    [complaintStats]
+  );
 
   return (
     <div className="space-y-6">
