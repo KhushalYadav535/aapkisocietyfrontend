@@ -134,21 +134,8 @@ export default function DashboardPage() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  if (loading) {
-    return (
-      <div className="space-y-6 animate-fade-in">
-        <div className="h-36 skeleton rounded-2xl" />
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-          {[...Array(6)].map((_, i) => <div key={i} className="h-28 skeleton rounded-2xl" />)}
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="h-64 skeleton rounded-2xl lg:col-span-2" />
-          <div className="h-64 skeleton rounded-2xl" />
-        </div>
-      </div>
-    );
-  }
-
+  // ── Derived state ─────────────────────────────────────────────────────────
+  // These MUST be defined before any early return to satisfy Rules of Hooks.
   const isResident = role === "RESIDENT";
   const isGuard = role === "GUARD";
   const isMakerChecker = ["MAKER", "CHECKER"].includes(role);
@@ -176,7 +163,6 @@ export default function DashboardPage() {
     ] : []),
   ], [isGuard, isMakerChecker, isResident, stats, t]);
 
-
   const pieData = useMemo(() => complaintStats
     ? [
         { name: "Open", value: complaintStats.open },
@@ -193,6 +179,22 @@ export default function DashboardPage() {
     : 0,
     [complaintStats]
   );
+  // ─────────────────────────────────────────────────────────────────────────
+
+  if (loading) {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <div className="h-36 skeleton rounded-2xl" />
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+          {[...Array(6)].map((_, i) => <div key={i} className="h-28 skeleton rounded-2xl" />)}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="h-64 skeleton rounded-2xl lg:col-span-2" />
+          <div className="h-64 skeleton rounded-2xl" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
