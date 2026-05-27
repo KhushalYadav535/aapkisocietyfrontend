@@ -106,9 +106,11 @@ export default function VehiclesPage() {
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><Car className="w-6 h-6 text-indigo-500" /> Vehicles & Parking</h1>
           <p className="text-gray-400 text-sm mt-1">{vehicles.length} registered vehicles · {slots.filter(s => s.is_available).length} slots available</p>
         </div>
-        <button onClick={() => setShowAdd(true)} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-indigo-200 hover:-translate-y-0.5 transition-all">
-          <Plus className="w-4 h-4" /> Register Vehicle
-        </button>
+        {isAdmin && (
+          <button onClick={() => setShowAdd(true)} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-indigo-200 hover:-translate-y-0.5 transition-all">
+            <Plus className="w-4 h-4" /> Register Vehicle
+          </button>
+        )}
       </div>
 
       <div className="flex border-b border-gray-200">
@@ -139,7 +141,7 @@ export default function VehiclesPage() {
                         <p className="text-xs text-gray-500">{v.vehicle_type}</p>
                       </div>
                     </div>
-                    <button onClick={() => handleDelete(v.id)} className="text-gray-300 hover:text-red-500 transition-colors p-1"><Trash2 className="w-4 h-4" /></button>
+                    {isAdmin && <button onClick={() => handleDelete(v.id)} className="text-gray-300 hover:text-red-500 transition-colors p-1"><Trash2 className="w-4 h-4" /></button>}
                   </div>
                   <div className="mt-3 pt-3 border-t border-gray-50 space-y-1">
                     {v.make_model && <p className="text-sm text-gray-600">{v.make_model}</p>}
