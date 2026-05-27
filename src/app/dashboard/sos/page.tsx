@@ -38,14 +38,14 @@ interface SOSAlert {
 }
 
 export default function SOSPage() {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const [alerts, setAlerts] = useState<SOSAlert[]>([]);
   const [loading, setLoading] = useState(true);
   const [showRaise, setShowRaise] = useState(false);
   const [form, setForm] = useState({ alert_type: "GENERAL", description: "" });
   const [statusFilter, setStatusFilter] = useState("ALL");
 
-  const isAdmin = ["ADMIN", "COMMITTEE", "GUARD", "PLATFORM_ADMIN"].includes(user?.role || "");
+  const isAdmin = hasPermission('SOS_RESPOND');
 
   const load = useCallback(async () => {
     setLoading(true);

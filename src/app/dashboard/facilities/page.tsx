@@ -15,7 +15,7 @@ const TYPE_ICONS: Record<string,string> = { HALL:"🏛️", POOL:"🏊", GYM:"�
 const TABS = ["Facilities", "My Bookings"];
 
 export default function FacilitiesPage() {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const { t } = useLocale();
   const [tab, setTab] = useState("Facilities");
   const [facilities, setFacilities] = useState<Facility[]>([]);
@@ -26,7 +26,7 @@ export default function FacilitiesPage() {
   const [bookForm, setBookForm] = useState({ booking_date: "", start_time: "", end_time: "", purpose: "" });
   const [addForm, setAddForm] = useState({ name: "", type: "HALL", capacity: "", rate_per_hour: "", rate_per_day: "", description: "", rules: "" });
 
-  const isAdmin = ["ADMIN","COMMITTEE","PLATFORM_ADMIN"].includes(user?.role || "");
+  const isAdmin = hasPermission('FACILITY_MANAGE');
 
   useEffect(() => { loadFacilities(); }, []);
 

@@ -19,7 +19,7 @@ const ROLE_GRADIENTS: Record<string, string> = {
 };
 
 export default function ProfilePage() {
-  const { user, setUser } = useAuth();
+  const { user, setUser, hasPermission } = useAuth();
   const [editing, setEditing] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -110,7 +110,7 @@ export default function ProfilePage() {
             </div>
             <div className="flex-1 text-center sm:text-left mt-2 sm:mt-0">
               <h2 className="text-xl font-bold text-gray-900">{user?.first_name} {user?.last_name}</h2>
-              <p className="text-gray-500 text-sm">{user?.role?.replace(/_/g, " ")}</p>
+              <p className="text-gray-500 text-sm">{(user?.role || 'Member')}</p>
             </div>
             {!editing && (
               <button
@@ -191,7 +191,7 @@ export default function ProfilePage() {
               <label className="flex items-center gap-2 text-xs font-semibold text-gray-500 mb-1.5">
                 <Shield className="w-3.5 h-3.5" /> Role
               </label>
-              <p className="px-3 py-2.5 bg-gray-50 rounded-xl text-sm text-gray-900 font-medium">{user?.role?.replace(/_/g, " ")}</p>
+              <p className="px-3 py-2.5 bg-gray-50 rounded-xl text-sm text-gray-900 font-medium">{(user?.role || 'Member')}</p>
             </div>
           </div>
 

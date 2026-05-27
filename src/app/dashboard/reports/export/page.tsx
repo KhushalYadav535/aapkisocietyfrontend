@@ -10,7 +10,7 @@ type ExportType = 'billing' | 'collection' | 'visitors' | 'complaints' | 'tally'
 type DateRange = 'this_month' | 'last_month' | 'this_quarter' | 'this_year' | 'custom';
 
 export default function ExportPage() {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const [exportType, setExportType] = useState<ExportType>('billing');
   const [dateRange, setDateRange] = useState<DateRange>('this_month');
   const [startDate, setStartDate] = useState('');

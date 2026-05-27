@@ -26,7 +26,7 @@ const defaultFlatForm = {
 };
 
 export default function PropertiesPage() {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const [wings, setWings] = useState<Wing[]>([]);
   const [flats, setFlats] = useState<Flat[]>([]);
   const [masters, setMasters] = useState<{

@@ -16,7 +16,7 @@ interface Totals { total_outstanding: number; bucket_0_30: number; bucket_31_60:
 const fmt = (n: number) => `₹${Number(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 0 })}`;
 
 export default function DefaulterAgingPage() {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const [defaulters, setDefaulters] = useState<Defaulter[]>([]);
   const [totals, setTotals] = useState<Totals | null>(null);
   const [loading, setLoading] = useState(true);

@@ -48,7 +48,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function SocietiesPage() {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const { t } = useLocale();
   const [tab, setTab] = useState<'societies' | 'plans' | 'onboarding'>('societies');
   const [societies, setSocieties] = useState<Society[]>([]);

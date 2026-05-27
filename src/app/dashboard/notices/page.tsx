@@ -39,7 +39,7 @@ const PRIORITY_COLORS: Record<string, string> = {
 };
 
 export default function NoticesPage() {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const { t } = useLocale();
   const [notices, setNotices] = useState<Notice[]>([]);
   const [loading, setLoading] = useState(true);
@@ -98,7 +98,7 @@ export default function NoticesPage() {
 
   useEffect(() => { setCurrentPage(1); }, [searchTerm, catFilter]);
 
-  const isAdmin = ["ADMIN", "COMMITTEE", "TREASURER", "PLATFORM_ADMIN"].includes(user?.role || "");
+  const isAdmin = hasPermission('NOTICE_CREATE');
 
   return (
     <div className="space-y-6">

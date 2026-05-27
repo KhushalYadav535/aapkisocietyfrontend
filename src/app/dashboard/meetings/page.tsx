@@ -13,7 +13,7 @@ const MEETING_TYPES = ["AGM", "EXTRAORDINARY", "COMMITTEE", "TOWN_HALL", "OTHER"
 const STATUS_COLORS: Record<string, string> = { SCHEDULED: "bg-blue-100 text-blue-700", IN_PROGRESS: "bg-amber-100 text-amber-700", COMPLETED: "bg-emerald-100 text-emerald-700", CANCELLED: "bg-red-100 text-red-700" };
 
 export default function MeetingsPage() {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const [meetings, setMeetings] = useState<any[]>([]);
   const [polls, setPolls] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -27,7 +27,7 @@ export default function MeetingsPage() {
   const [meetingForm, setMeetingForm] = useState({ title: "", description: "", meeting_type: "AGM", meeting_date: "", start_time: "", end_time: "", location: "", is_online: false, meeting_link: "" });
   const [pollForm, setPollForm] = useState({ meeting_id: "", title: "", description: "", poll_type: "OPEN", options: ["", ""], end_date: "" });
   const [currentPage, setCurrentPage] = useState(1);
-  const isCommittee = ["ADMIN", "COMMITTEE"].includes(user?.role || "");
+  const isCommittee = hasPermission('MEETING_MANAGE');
 
   useEffect(() => { load(); }, []);
 

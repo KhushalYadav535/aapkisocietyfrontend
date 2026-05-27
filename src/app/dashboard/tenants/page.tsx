@@ -8,7 +8,7 @@ import { formatDate } from "@/lib/utils";
 import { Home, Plus, Search, X, CheckCircle, XCircle, Clock, UserCheck } from "lucide-react";
 
 export default function TenantsPage() {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const [tenants, setTenants] = useState<any[]>([]);
   const [wings, setWings] = useState<any[]>([]);
   const [flats, setFlats] = useState<any[]>([]);
@@ -17,7 +17,7 @@ export default function TenantsPage() {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({ flat_id: "", tenant_name: "", tenant_email: "", tenant_phone: "", lease_start: "", lease_end: "", rent_amount: "" });
-  const isAdmin = ["ADMIN", "COMMITTEE", "PLATFORM_ADMIN"].includes(user?.role || "");
+  const isAdmin = hasPermission('TENANT_MANAGE');
 
   useEffect(() => { load(); }, []);
 

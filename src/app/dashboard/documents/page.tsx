@@ -12,7 +12,7 @@ const ITEMS_PER_PAGE = 12;
 const CATEGORIES = ['AGREEMENT', 'RECEIPT', 'COMPLIANCE', 'MAINTENANCE', 'INSURANCE', 'PERMIT', 'OTHER'];
 
 export default function DocumentsPage() {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const [documents, setDocuments] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

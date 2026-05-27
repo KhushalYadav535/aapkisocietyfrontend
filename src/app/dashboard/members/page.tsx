@@ -57,7 +57,7 @@ function InputField({ label, ...props }: any) {
 }
 
 export default function MembersPage() {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const { t } = useLocale();
   const [members, setMembers] = useState<Member[]>([]);
   const [wings, setWings] = useState<any[]>([]);
@@ -125,7 +125,7 @@ export default function MembersPage() {
 
   useEffect(() => { setCurrentPage(1); }, [searchTerm, roleFilter]);
 
-  const isAdmin = useMemo(() => ["ADMIN", "PLATFORM_ADMIN"].includes(user?.role || ""), [user?.role]);
+  const isAdmin = useMemo(() => hasPermission('USER_CREATE'), [user?.role]);
   const creatorRole = (user?.role || "").toUpperCase();
   const assignableRoles = ASSIGNABLE_ROLES_BY_CREATOR[creatorRole] || ["RESIDENT"];
   const activeCount = useMemo(() => members.filter(m => m.is_active).length, [members]);

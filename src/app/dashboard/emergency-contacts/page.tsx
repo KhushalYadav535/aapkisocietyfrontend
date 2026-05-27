@@ -23,7 +23,7 @@ interface Contact {
 const EMPTY_FORM = { category: "FIRE", name: "", phone: "", alternate_phone: "", notes: "", display_order: 0 };
 
 export default function EmergencyContactsPage() {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -31,7 +31,7 @@ export default function EmergencyContactsPage() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [catFilter, setCatFilter] = useState("ALL");
 
-  const isAdmin = ["ADMIN", "COMMITTEE", "PLATFORM_ADMIN"].includes(user?.role || "");
+  const isAdmin = hasPermission('EMERGENCY_MANAGE');
 
   useEffect(() => { load(); }, []);
 

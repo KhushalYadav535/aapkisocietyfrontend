@@ -19,7 +19,7 @@ interface Asset {
 const EMPTY_FORM = { asset_name: "", category: "Generator", location: "", make_model: "", serial_number: "", purchase_date: "", purchase_amount: "", warranty_expiry: "", amc_vendor: "", amc_expiry: "", amc_amount: "", next_service_due: "", status: "ACTIVE", notes: "" };
 
 export default function AssetsPage() {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const [assets, setAssets] = useState<Asset[]>([]);
   const [amcAlerts, setAmcAlerts] = useState<Asset[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,7 +32,7 @@ export default function AssetsPage() {
   const [qrInput, setQrInput] = useState("");
   const [qrResult, setQrResult] = useState<any>(null);
 
-  const isAdmin = ["ADMIN", "COMMITTEE", "PLATFORM_ADMIN"].includes(user?.role || "");
+  const isAdmin = hasPermission('ASSET_MANAGE');
 
   useEffect(() => { loadAll(); }, []);
 

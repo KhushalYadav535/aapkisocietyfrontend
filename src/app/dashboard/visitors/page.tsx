@@ -23,7 +23,7 @@ interface Visitor {
 }
 
 export default function VisitorsPage() {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const { t } = useLocale();
   const [visitors, setVisitors] = useState<Visitor[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,7 +33,7 @@ export default function VisitorsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [form, setForm] = useState({ visitor_name: "", visitor_phone: "", purpose: "", vehicle_number: "" });
 
-  const isAdmin = ["ADMIN", "COMMITTEE", "PLATFORM_ADMIN"].includes(user?.role || "");
+  const isAdmin = hasPermission('VISITOR_MANAGE');
 
   useEffect(() => { load(); }, []);
   const load = async () => {

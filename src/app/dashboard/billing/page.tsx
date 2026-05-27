@@ -26,7 +26,7 @@ interface BillingHead { id: string; name: string; default_amount: number; tax_ra
 const TABS = ["Bills", "Payments", "Mandates", "Arrears Aging", "Defaulters", "Dunning", "Generate"];
 
 export default function BillingPage() {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const { t } = useLocale();
   const [tab, setTab] = useState("Bills");
   const [bills, setBills] = useState<Bill[]>([]);
@@ -56,9 +56,9 @@ export default function BillingPage() {
   const [reminderBillId, setReminderBillId] = useState("");
   const [reminderType, setReminderType] = useState<'EMAIL' | 'SMS' | 'APP'>('APP');
 
-  const isAdmin = ["ADMIN", "TREASURER", "MAKER", "CHECKER", "PLATFORM_ADMIN"].includes(user?.role || "");
-  const canApprove = ["ADMIN", "TREASURER", "CHECKER"].includes(user?.role || "");
-  const canCreate = ["ADMIN", "TREASURER", "MAKER"].includes(user?.role || "");
+  const isAdmin = hasPermission('BILL_APPROVE');
+  const canApprove = hasPermission('BILL_APPROVE');
+  const canCreate = hasPermission('BILL_APPROVE');
 
   useEffect(() => { load(); }, [tab]);
 

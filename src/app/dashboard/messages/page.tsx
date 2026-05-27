@@ -11,7 +11,7 @@ import Pagination from "@/components/Pagination";
 const ITEMS_PER_PAGE = 20;
 
 export default function MessagesPage() {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const [conversations, setConversations] = useState<any[]>([]);
   const [messages, setMessages] = useState<any[]>([]);
   const [members, setMembers] = useState<any[]>([]);

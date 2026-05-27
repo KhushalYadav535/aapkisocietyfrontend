@@ -13,7 +13,7 @@ const URGENCY_COLORS: Record<string, { bg: string; border: string; badge: string
 };
 
 export default function ScrollersPage() {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const [scrollers, setScrollers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);

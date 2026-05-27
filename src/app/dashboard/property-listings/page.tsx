@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 
 export default function PropertyListingsPage() {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const [listings, setListings] = useState<any[]>([]);
   const [approvalQueue, setApprovalQueue] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

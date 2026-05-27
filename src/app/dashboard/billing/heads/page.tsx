@@ -36,7 +36,7 @@ const FREQUENCIES = [
 ];
 
 export default function BillingHeadsPage() {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const { t } = useLocale();
   const [heads, setHeads] = useState<BillingHead[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,7 +48,7 @@ export default function BillingHeadsPage() {
     name: "", description: "", default_amount: "", tax_rate: "0", head_type: "MAINTENANCE", frequency: "MONTHLY"
   });
 
-  const canManage = ["ADMIN", "TREASURER", "PLATFORM_ADMIN"].includes(user?.role || "");
+  const canManage = hasPermission('BILL_APPROVE');
 
   useEffect(() => { loadHeads(); }, []);
 

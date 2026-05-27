@@ -19,7 +19,7 @@ const PRIORITY_COLORS: Record<string,string> = { LOW:"bg-blue-100 text-blue-700"
 const STATUS_ICONS: Record<string,any> = { OPEN: MessageSquareWarning, IN_PROGRESS: UserCheck2, RESOLVED: CheckCircle2, CLOSED: XCircle };
 
 export default function ComplaintsPage() {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const { t } = useLocale();
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [members, setMembers] = useState<any[]>([]);
@@ -33,8 +33,8 @@ export default function ComplaintsPage() {
   const [form, setForm] = useState({ title: "", description: "", category: "GENERAL", priority: "MEDIUM" });
   const [currentPage, setCurrentPage] = useState(1);
 
-  const isAdmin = ["ADMIN","COMMITTEE","TREASURER","PLATFORM_ADMIN"].includes(user?.role || "");
-  const canRaise = (user?.role || "") === "RESIDENT";
+  const isAdmin = hasPermission('COMPLAINT_ASSIGN');
+  const canRaise = !hasPermission('COMPLAINT_ASSIGN');
 
   useEffect(() => { load(); }, []);
   const load = async () => {

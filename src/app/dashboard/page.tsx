@@ -75,7 +75,7 @@ const CustomTooltip = memo(function CustomTooltip({ active, payload, label }: an
 });
 
 export default function DashboardPage() {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const { t } = useLocale();
   const [stats, setStats] = useState<Stats | null>(null);
   const [activities, setActivities] = useState<any[]>([]);
@@ -264,7 +264,7 @@ export default function DashboardPage() {
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-xl px-3 py-2 text-sm">
               <Building2 className="w-4 h-4 text-indigo-200" />
-              <span>{user?.role?.replace(/_/g, " ")}</span>
+              <span>{(user?.role || 'Member')}</span>
             </div>
             {user?.flat_number && (
               <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-xl px-3 py-2 text-sm">

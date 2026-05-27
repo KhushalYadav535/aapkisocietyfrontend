@@ -1,7 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { authAPI } from '@/lib/api';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { authAPI, rbacAPI } from '@/lib/api';
 
 interface User {
   id: string;
@@ -19,12 +19,15 @@ interface User {
 interface AuthContextType {
   user: User | null;
   token: string | null;
+  permissions: string[];
+  hasPermission: (code: string) => boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (data: any) => Promise<void>;
   logout: () => void;
   loading: boolean;
   isAuthenticated: boolean;
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
+  refreshPermissions: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -32,7 +35,18 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [permissions, setPermissions] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const fetchPermissions = useCallback(async () => {
+    try {
+      const res = await rbacAPI.getPermissions();
+      setPermissions(res.data.permissions || []);
+    } catch (err) {
+      console.error('Failed to fetch permissions', err);
+      setPermissions([]);
+    }
+  }, []);
 
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
@@ -40,9 +54,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (storedToken && storedUser) {
       setToken(storedToken);
       setUser(JSON.parse(storedUser));
+      fetchPermissions();
     }
     setLoading(false);
-  }, []);
+  }, [fetchPermissions]);
 
   const login = async (email: string, password: string) => {
     const res = await authAPI.login({ email, password });
@@ -51,6 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(newUser);
     localStorage.setItem('token', newToken);
     localStorage.setItem('user', JSON.stringify(newUser));
+    await fetchPermissions();
   };
 
   const register = async (data: any) => {
@@ -60,25 +76,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(newUser);
     localStorage.setItem('token', newToken);
     localStorage.setItem('user', JSON.stringify(newUser));
+    await fetchPermissions();
   };
 
   const logout = () => {
     setToken(null);
     setUser(null);
+    setPermissions([]);
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+  };
+
+  const hasPermission = (code: string) => {
+    if (user?.role === 'PLATFORM_ADMIN' || user?.role === 'ADMIN') return true;
+    return permissions.includes(code);
   };
 
   return (
     <AuthContext.Provider value={{
       user,
       token,
+      permissions,
+      hasPermission,
       login,
       register,
       logout,
       loading,
       isAuthenticated: !!token && !!user,
       setUser,
+      refreshPermissions: fetchPermissions,
     }}>
       {children}
     </AuthContext.Provider>

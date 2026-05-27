@@ -18,7 +18,7 @@ function Field({ label, value, onChange, type = "text", placeholder = "", readOn
 }
 
 export default function SettingsPage() {
-  const { user, setUser } = useAuth();
+  const { user, setUser, hasPermission } = useAuth();
   const { t } = useLocale();
   const [tab, setTab] = useState("Profile");
   const TABS = [
@@ -76,7 +76,7 @@ export default function SettingsPage() {
     } catch { toast.error(t("failedToSave")); }
   };
 
-  const isAdmin = ["ADMIN", "PLATFORM_ADMIN"].includes(user?.role || "");
+  const isAdmin = hasPermission('SOCIETY_MANAGE');
 
   return (
     <div className="space-y-6 max-w-3xl">
@@ -100,7 +100,7 @@ export default function SettingsPage() {
             </div>
             <div>
               <h2 className="font-bold text-gray-900 text-lg">{user?.first_name} {user?.last_name}</h2>
-              <p className="text-sm text-indigo-500">{user?.role?.replace(/_/g," ")} · {user?.email}</p>
+              <p className="text-sm text-indigo-500">{(user?.role || 'Member')} · {user?.email}</p>
               {user?.flat_number && <p className="text-xs text-gray-400 mt-0.5">{t("flat")} {user.flat_number} · {t("wing")} {user.wing}</p>}
             </div>
           </div>
@@ -111,7 +111,7 @@ export default function SettingsPage() {
             </div>
             <Field label={t("emailAddress")} value={user?.email || ""} readOnly />
             <Field label={t("phoneNumber")} value={profile.phone} onChange={(e: any) => setProfile(p => ({ ...p, phone: e.target.value }))} placeholder="9876543210" />
-            <Field label={t("role")} value={user?.role?.replace(/_/g, " ") || ""} readOnly />
+            <Field label={t("role")} value={(user?.role || 'Member') || ""} readOnly />
             <button type="submit" disabled={savingProfile} className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold shadow-lg shadow-indigo-200 disabled:opacity-50 transition-all">
               {savingProfile ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Save className="w-4 h-4" />} {t("saveProfile")}
             </button>

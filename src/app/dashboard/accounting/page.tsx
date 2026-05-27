@@ -15,7 +15,7 @@ interface LiabilityRow { name: string; code: string; amount: number; }
 interface CapitalRow { name: string; code: string; amount: number; }
 
 export default function AccountingPage() {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>('trial-balance');
   const [loading, setLoading] = useState(true);
   const [vouchers, setVouchers] = useState<any[]>([]);

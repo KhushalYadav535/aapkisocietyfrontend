@@ -38,7 +38,7 @@ const calcHours = (checkIn: string | null, checkOut: string | null) => {
 };
 
 export default function StaffPage() {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const { t } = useLocale();
   const [staff, setStaff] = useState<any[]>([]);
   const [records, setRecords] = useState<any[]>([]);

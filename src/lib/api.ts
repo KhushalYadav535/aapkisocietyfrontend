@@ -463,3 +463,11 @@ export const exportAPI = {
   recordHistory: (data: any) => api.post('/export/history', data),
   getHistory: () => api.get('/export/history'),
 };
+
+// RBAC APIs
+export const rbacAPI = {
+  getPermissions: (societyId?: string) => api.get('/rbac/me/permissions', { params: { societyId } }),
+  getPositions: (societyId: string) => api.get(`/rbac/societies/${societyId}/positions`),
+  getAssignments: (societyId: string) => api.get(`/rbac/societies/${societyId}/assignments`),
+  assignPosition: (societyId: string, data: any) => api.post(`/rbac/societies/${societyId}/positions/assign`, data),
+};

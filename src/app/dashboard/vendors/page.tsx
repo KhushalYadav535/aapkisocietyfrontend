@@ -12,8 +12,8 @@ const ITEMS_PER_PAGE = 12;
 const CATEGORIES = ["PLUMBER", "ELECTRICIAN", "CARPENTER", "PAINTER", "CLEANING", "PEST_CONTROL", "GARDENER", "SECURITY", "MOVING", "AC_REPAIR", "APPLIANCE", "GENERAL"];
 
 export default function VendorsPage() {
-  const { user } = useAuth();
-  const isAdmin = ["ADMIN", "COMMITTEE", "PLATFORM_ADMIN"].includes(user?.role || "");
+  const { user, hasPermission } = useAuth();
+  const isAdmin = hasPermission('VENDOR_MANAGE');
   const [vendors, setVendors] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");

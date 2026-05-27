@@ -9,8 +9,8 @@ import { Car, Plus, Search, X, Trash2, ParkingSquare, CheckCircle } from "lucide
 const VEHICLE_TYPES = ["CAR", "BIKE", "SCOTTY", "BICYCLE", "OTHER"];
 
 export default function VehiclesPage() {
-  const { user } = useAuth();
-  const isAdmin = ["ADMIN", "COMMITTEE", "PLATFORM_ADMIN"].includes(user?.role || "");
+  const { user, hasPermission } = useAuth();
+  const isAdmin = hasPermission('VEHICLE_MANAGE');
 
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [slots, setSlots] = useState<any[]>([]);

@@ -11,7 +11,7 @@ interface PatrolLog { id: string; checkpoint_name: string; first_name: string; l
 interface Summary { location_name: string; area: string; scan_count: number; last_scanned: string; }
 
 export default function PatrolPage() {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const [checkpoints, setCheckpoints] = useState<Checkpoint[]>([]);
   const [logs, setLogs] = useState<PatrolLog[]>([]);
   const [summary, setSummary] = useState<Summary[]>([]);
@@ -23,8 +23,8 @@ export default function PatrolPage() {
   const [scanNotes, setScanNotes] = useState("");
   const [scanResult, setScanResult] = useState<{ success: boolean; message: string } | null>(null);
 
-  const isAdmin = ["ADMIN", "COMMITTEE", "PLATFORM_ADMIN"].includes(user?.role || "");
-  const isGuard = ["ADMIN", "COMMITTEE", "GUARD", "PLATFORM_ADMIN"].includes(user?.role || "");
+  const isAdmin = hasPermission('PATROL_MANAGE');
+  const isGuard = hasPermission('PATROL_MANAGE');
 
   useEffect(() => { loadAll(); }, []);
 
