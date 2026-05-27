@@ -23,6 +23,7 @@ export default function DocumentsPage() {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const isAdmin = ['ADMIN', 'COMMITTEE', 'PLATFORM_ADMIN'].includes(String(user?.role).toUpperCase());
 
   useEffect(() => { load(); }, []);
 
@@ -86,7 +87,9 @@ export default function DocumentsPage() {
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><FolderOpen className="w-6 h-6 text-indigo-500" /> Documents</h1>
           <p className="text-gray-400 text-sm mt-1">{documents.length} documents</p>
         </div>
-        <button onClick={() => setShowUpload(true)} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-indigo-200"><Plus className="w-4 h-4" /> Upload</button>
+        {isAdmin && (
+          <button onClick={() => setShowUpload(true)} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-indigo-200"><Plus className="w-4 h-4" /> Upload</button>
+        )}
       </div>
 
       <div className="flex flex-wrap gap-3">
@@ -105,7 +108,7 @@ export default function DocumentsPage() {
                 <div key={d.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 card-hover">
                   <div className="flex items-start justify-between">
                     <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center"><Icon className="w-5 h-5 text-indigo-600" /></div>
-                    <button onClick={() => handleDelete(d.id)} className="text-gray-400 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
+                    {isAdmin && <button onClick={() => handleDelete(d.id)} className="text-gray-400 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>}
                   </div>
                   <h3 className="font-semibold text-gray-900 mt-3 truncate">{d.title}</h3>
                   <p className="text-xs text-gray-500 mt-1">{d.category}</p>

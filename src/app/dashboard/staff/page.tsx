@@ -40,6 +40,7 @@ const calcHours = (checkIn: string | null, checkOut: string | null) => {
 export default function StaffPage() {
   const { user, hasPermission } = useAuth();
   const { t } = useLocale();
+  const isAdmin = ['ADMIN', 'COMMITTEE', 'PLATFORM_ADMIN'].includes(String(user?.role).toUpperCase());
   const [staff, setStaff] = useState<any[]>([]);
   const [records, setRecords] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -103,9 +104,11 @@ export default function StaffPage() {
           </h1>
           <p className="text-gray-400 text-sm mt-1">{staff.filter(s => s.is_active).length} active staff members</p>
         </div>
-        <button onClick={() => setShowAdd(true)} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-indigo-200">
-          <Plus className="w-4 h-4" /> Add Staff
-        </button>
+        {isAdmin && (
+          <button onClick={() => setShowAdd(true)} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-indigo-200">
+            <Plus className="w-4 h-4" /> Add Staff
+          </button>
+        )}
       </div>
 
       <div className="flex border-b border-gray-200">
@@ -134,8 +137,12 @@ export default function StaffPage() {
                       <td className="px-4 py-3"><span className={`text-xs px-2.5 py-1 rounded-lg font-semibold ${s.is_active ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>{s.is_active ? "Active" : "Inactive"}</span></td>
                       <td className="px-4 py-3">
                         <div className="flex gap-2">
-                          <button onClick={() => handleCheckIn(s.id)} className="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-2.5 py-1.5 rounded-lg font-semibold flex items-center gap-1"><Clock className="w-3 h-3" /> In</button>
-                          <button onClick={() => handleCheckOut(s.id)} className="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 px-2.5 py-1.5 rounded-lg font-semibold flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Out</button>
+                          {isAdmin && (
+                            <>
+                              <button onClick={() => handleCheckIn(s.id)} className="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-2.5 py-1.5 rounded-lg font-semibold flex items-center gap-1"><Clock className="w-3 h-3" /> In</button>
+                              <button onClick={() => handleCheckOut(s.id)} className="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 px-2.5 py-1.5 rounded-lg font-semibold flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Out</button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>

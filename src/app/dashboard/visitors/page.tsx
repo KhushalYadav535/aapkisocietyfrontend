@@ -87,12 +87,14 @@ export default function VisitorsPage() {
           <h1 className="text-2xl font-bold text-gray-900">{t("visitorsTitle")}</h1>
           <p className="text-gray-400 text-sm mt-1">{checkedIn} currently inside · {visitors.length} total today</p>
         </div>
-        <button
-          onClick={() => setShowAdd(true)}
-          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-indigo-200 hover:-translate-y-0.5 transition-all"
-        >
-          <Plus className="w-4 h-4" /> {t("logVisitor")}
-        </button>
+        {isAdmin && (
+          <button
+            onClick={() => setShowAdd(true)}
+            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-indigo-200 hover:-translate-y-0.5 transition-all"
+          >
+            <Plus className="w-4 h-4" /> {t("logVisitor")}
+          </button>
+        )}
       </div>
 
       {/* Quick stats */}
@@ -177,7 +179,7 @@ export default function VisitorsPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        {v.status === "CHECKED_IN" && (
+                        {isAdmin && v.status === "CHECKED_IN" && (
                           <button
                             onClick={() => handleCheckout(v.id)}
                             className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1.5 rounded-lg font-semibold transition-colors flex items-center gap-1"

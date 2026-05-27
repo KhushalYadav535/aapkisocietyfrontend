@@ -75,7 +75,9 @@ export default function TenantsPage() {
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><Home className="w-6 h-6 text-indigo-500" /> Tenant Management</h1>
           <p className="text-gray-400 text-sm mt-1">{tenants.length} tenants ({tenants.filter(t => t.status === "PENDING").length} pending)</p>
         </div>
-        <button onClick={() => setShowAdd(true)} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-indigo-200"><Plus className="w-4 h-4" /> Add Tenant</button>
+        {isAdmin && (
+          <button onClick={() => setShowAdd(true)} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-indigo-200"><Plus className="w-4 h-4" /> Add Tenant</button>
+        )}
       </div>
 
       <div className="flex flex-wrap gap-3">
