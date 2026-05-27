@@ -182,6 +182,7 @@ const sections: Record<string, string> = {
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { user, logout, loading, isAuthenticated, hasPermission } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -264,14 +265,42 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (loading || !isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-mesh">
-        <div className="text-center">
-          <div className="mb-4 flex justify-center">
-            <Logo size="md" showText={false} />
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-mesh overflow-hidden relative">
+        {/* Decorative Ambient Background Blobs */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-indigo-500/20 blur-[100px] rounded-full animate-pulse" style={{ animationDuration: '4s' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-purple-500/20 blur-[80px] rounded-full animate-pulse" style={{ animationDuration: '3s', animationDelay: '1s' }} />
+
+        <div className="relative z-10 flex flex-col items-center gap-8 animate-fade-in">
+          {/* Logo with Dual Rotating Rings */}
+          <div className="relative flex items-center justify-center w-28 h-28">
+            {/* Outer Ring */}
+            <div className="absolute inset-0 rounded-full border-4 border-indigo-100 border-t-indigo-600 shadow-[0_0_15px_rgba(79,70,229,0.3)] animate-[spin_3s_linear_infinite]" />
+            {/* Inner Ring */}
+            <div className="absolute inset-3 rounded-full border-4 border-purple-100 border-b-purple-600 shadow-[0_0_10px_rgba(147,51,234,0.3)] animate-[spin_2s_linear_infinite_reverse]" />
+            
+            {/* Central Pulsing Logo */}
+            <div className="animate-pulse bg-white p-3 rounded-full shadow-xl">
+              <Logo size="md" showText={false} />
+            </div>
           </div>
-          <div className="flex items-center gap-2 text-gray-400 text-sm">
-            <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-            Loading your dashboard...
+
+          <div className="flex flex-col items-center gap-3">
+            {/* Shimmering Brand Name */}
+            <h2 className="text-2xl font-extrabold bg-gradient-to-r from-indigo-600 via-purple-500 to-indigo-600 bg-[length:200%_auto] bg-clip-text text-transparent animate-[shimmer_2.5s_linear_infinite]">
+              AapkiSociety
+            </h2>
+            
+            {/* Loading Message with Bouncing Dots */}
+            <div className="flex items-center gap-3 bg-white/50 backdrop-blur-md px-4 py-2 rounded-full border border-white/60 shadow-sm">
+              <div className="flex gap-1.5">
+                <span className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce shadow-sm" style={{ animationDelay: '0ms' }} />
+                <span className="w-2 h-2 bg-purple-500 rounded-full animate-bounce shadow-sm" style={{ animationDelay: '150ms' }} />
+                <span className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce shadow-sm" style={{ animationDelay: '300ms' }} />
+              </div>
+              <p className="text-sm font-semibold text-slate-600 tracking-wide">
+                Preparing your experience...
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -279,7 +308,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="min-h-screen flex bg-mesh">
+    <div className="h-screen w-full flex overflow-hidden bg-mesh">
       {/* Mobile Overlay */}
       {sidebarOpen && (
         <div
@@ -289,7 +318,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed lg:static inset-y-0 left-0 z-50 flex flex-col w-72 bg-[#0f172a] text-white transition-all duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+      <aside className={`fixed lg:static inset-y-0 left-0 z-50 flex flex-col ${sidebarCollapsed ? 'lg:w-20 w-72' : 'w-72'} h-full bg-[#0f172a] text-white transition-all duration-300 ease-in-out ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`} style={{ boxShadow: '4px 0 40px rgba(0,0,0,0.3)' }}>
         {/* Mobile Header */}
         <div className="flex items-center justify-between lg:hidden px-4 py-4 border-b border-white/8">
@@ -303,12 +332,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
 
         {/* Logo Area */}
-        <div className="flex items-center gap-3 px-6 py-5 border-b border-white/8">
+        <div className={`flex items-center ${sidebarCollapsed ? 'lg:justify-center lg:px-0 px-6 gap-3' : 'gap-3 px-6'} py-5 border-b border-white/8`}>
           <div className="relative shrink-0">
             <Logo size="sm" showText={false} href="/dashboard" />
             <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-emerald-400 rounded-full border-2 border-[#0f172a]" />
           </div>
-          <div className="flex-1 overflow-hidden">
+          <div className={`flex-1 overflow-hidden ${sidebarCollapsed ? 'lg:hidden' : ''}`}>
             <h1 className="text-base font-bold text-white tracking-tight">AapkiSociety</h1>
             <p className="text-xs text-slate-400 truncate">Smart Management Platform</p>
           </div>
@@ -318,11 +347,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
 
         {/* Nav Items */}
-        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+        <nav className={`flex-1 ${sidebarCollapsed ? 'lg:px-2 px-3 [&::-webkit-scrollbar]:hidden' : 'px-3 custom-scrollbar'} py-4 space-y-0.5 overflow-y-auto overflow-x-hidden`} style={{ scrollbarWidth: sidebarCollapsed ? 'none' : 'auto' }}>
           {Object.entries(groupedNav).map(([section, items]) => (
-            <div key={section} className={section !== "main" ? "mt-5" : ""}>
+            <div key={section} className={`space-y-1 ${section !== "main" ? "mt-5" : ""}`}>
               {sections[section] && (
-                <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest px-3 mb-2">
+                <p className={`text-[10px] font-bold text-slate-500/80 uppercase tracking-[0.2em] px-4 mb-3 mt-1 ${sidebarCollapsed ? 'lg:hidden' : ''}`}>
                   {sections[section]}
                 </p>
               )}
@@ -334,15 +363,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     key={item.href}
                     href={item.href}
                     onClick={() => setSidebarOpen(false)}
-                    className={`relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${active
+                    title={sidebarCollapsed ? item.label : undefined}
+                    className={`relative flex items-center ${sidebarCollapsed ? 'lg:justify-center lg:px-0 lg:mx-2 lg:py-3 px-3 gap-3' : 'gap-3 px-3 py-2.5'} rounded-xl text-sm font-medium transition-all duration-200 group active:scale-[0.98] ${active
                         ? "bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-600/25"
-                        : "text-slate-400 hover:text-white hover:bg-white/6"
+                        : "text-slate-400 hover:text-white hover:bg-white/5"
                       }`}
                   >
+                    {active && !sidebarCollapsed && (
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-1/2 bg-white rounded-r-full shadow-[0_0_10px_rgba(255,255,255,0.7)]" />
+                    )}
                     <Icon className={`w-4.5 h-4.5 flex-shrink-0 transition-transform duration-200 ${active ? "" : "group-hover:scale-110"}`} />
-                    <span className="flex-1">{item.label}</span>
+                    <span className={`flex-1 whitespace-nowrap ${sidebarCollapsed ? 'lg:hidden' : ''}`}>{item.label}</span>
                     {active && (
-                      <ChevronRight className="w-3.5 h-3.5 text-white/60" />
+                      <ChevronRight className={`w-3.5 h-3.5 text-white/60 ${sidebarCollapsed ? 'lg:hidden' : ''}`} />
                     )}
                   </Link>
                 );
@@ -352,7 +385,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </nav>
 
         {/* AI Badge */}
-        <div className="px-4 pb-3">
+        <div className={`px-4 pb-3 ${sidebarCollapsed ? 'lg:hidden' : ''}`}>
           <div className="bg-gradient-to-r from-indigo-500/20 to-purple-500/20 border border-indigo-500/20 rounded-xl p-3 flex items-center gap-3">
             <Sparkles className="w-4 h-4 text-indigo-400 flex-shrink-0" />
             <div className="min-w-0">
@@ -363,38 +396,46 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
 
         {/* User Section */}
-        <div className="px-3 pb-4 border-t border-white/8 pt-3">
+        <div className={`px-3 pb-4 border-t border-white/8 pt-3 ${sidebarCollapsed ? 'lg:px-2' : ''}`}>
           <Link
             href="/dashboard/profile"
-            className="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-white/5 transition-colors"
+            className={`flex items-center ${sidebarCollapsed ? 'lg:justify-center lg:px-0 px-2 gap-3' : 'gap-3 px-2'} py-2 rounded-xl hover:bg-white/5 transition-colors`}
+            title={sidebarCollapsed ? "My Profile" : undefined}
           >
             <div className={`w-9 h-9 bg-gradient-to-br ${avatarGradient} rounded-xl flex items-center justify-center text-sm font-bold shrink-0 shadow-md`}>
               {getInitials(user?.first_name || "", user?.last_name || "")}
             </div>
-            <div className="flex-1 min-w-0">
+            <div className={`flex-1 min-w-0 ${sidebarCollapsed ? 'lg:hidden' : ''}`}>
               <p className="text-sm font-semibold text-white truncate">{user?.first_name} {user?.last_name}</p>
               <p className="text-xs text-slate-500 truncate">{(user?.role || 'Member')}</p>
             </div>
           </Link>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all w-full mt-1 group"
+            className={`flex items-center ${sidebarCollapsed ? 'lg:justify-center lg:px-0 px-3 gap-3' : 'gap-3 px-3'} py-2.5 rounded-xl text-sm text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all w-full mt-1 group`}
+            title={sidebarCollapsed ? "Sign Out" : undefined}
           >
             <LogOut className="w-4.5 h-4.5 shrink-0 group-hover:translate-x-0.5 transition-transform" />
-            <span>Sign Out</span>
+            <span className={`${sidebarCollapsed ? 'lg:hidden' : ''}`}>Sign Out</span>
           </button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-screen">
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         {/* Top Bar */}
-        <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-white/60 px-6 py-3.5" style={{ boxShadow: '0 1px 20px rgba(0,0,0,0.06)' }}>
+        <header className="sticky top-0 z-30 bg-white/70 backdrop-blur-2xl border-b border-white/40 px-6 py-3.5 transition-all" style={{ boxShadow: '0 4px 30px rgba(0,0,0,0.03)' }}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
-                className="lg:hidden p-2 hover:bg-indigo-50 rounded-xl transition-colors"
-                onClick={() => setSidebarOpen(true)}
+                className="p-2 hover:bg-indigo-50 rounded-xl transition-colors"
+                onClick={() => {
+                  if (typeof window !== "undefined" && window.innerWidth >= 1024) {
+                    setSidebarCollapsed(!sidebarCollapsed);
+                  } else {
+                    setSidebarOpen(true);
+                  }
+                }}
               >
                 <Menu className="w-5 h-5 text-gray-600" />
               </button>

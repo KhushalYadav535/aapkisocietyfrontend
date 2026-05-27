@@ -75,6 +75,7 @@ html.dark .bg-mesh {
     radial-gradient(ellipse at 80% 20%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
     radial-gradient(ellipse at 50% 80%, rgba(59, 130, 246, 0.12) 0%, transparent 50%),
     #0f172a;
+  animation: bg-mesh-drift 15s ease-in-out infinite alternate;
 }
 
 html.dark .bg-white,
@@ -173,6 +174,14 @@ html.dark *::-webkit-scrollbar-thumb:hover {
     radial-gradient(ellipse at 80% 20%, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
     radial-gradient(ellipse at 50% 80%, rgba(59, 130, 246, 0.06) 0%, transparent 50%),
     #f0f4ff;
+  background-size: 200% 200%;
+  animation: bg-mesh-drift 15s ease-in-out infinite alternate;
+}
+
+@keyframes bg-mesh-drift {
+  0% { background-position: 0% 0%; }
+  50% { background-position: 100% 100%; }
+  100% { background-position: 0% 100%; }
 }
 
 /* Shimmer animation for loading */
@@ -272,10 +281,30 @@ html.dark *::-webkit-scrollbar-thumb:hover {
 /* Card hover with glow */
 .card-hover {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+.card-hover::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(135deg, rgba(99,102,241,0.5), rgba(139,92,246,0.5));
+  filter: blur(12px);
+  opacity: 0;
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: -1;
+  border-radius: inherit;
 }
 .card-hover:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 20px 40px rgba(99, 102, 241, 0.12), 0 8px 16px rgba(0, 0, 0, 0.08);
+  transform: translateY(-4px);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+.card-hover:hover::after {
+  opacity: 0.15;
+}
+
+/* Micro-interactions */
+button:active, a.active-scale:active {
+  transform: scale(0.97);
 }
 
 /* Stat card gradient borders */

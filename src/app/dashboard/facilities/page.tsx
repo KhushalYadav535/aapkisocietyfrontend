@@ -71,7 +71,21 @@ export default function FacilitiesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between animate-slide-up">
         <div><h1 className="text-2xl font-bold text-gray-900">{t("facilitiesTitle")}</h1><p className="text-gray-400 text-sm mt-1">{facilities.filter(f=>f.is_active).length} {t("facilitiesSubtitle")}</p></div>
-        {isAdmin && <button onClick={()=>setShowAdd(true)} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-indigo-200 hover:-translate-y-0.5 transition-all"><Plus className="w-4 h-4" /> Add Facility</button>}
+        <div className="flex gap-2">
+          {!isAdmin && (
+            <button onClick={() => {
+              const firstActive = facilities.find(f => f.is_active);
+              if (firstActive) {
+                setShowBook(firstActive);
+              } else {
+                toast.error("No active facilities available to book.");
+              }
+            }} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-indigo-200 hover:-translate-y-0.5 transition-all">
+              <Plus className="w-4 h-4" /> Book Facility
+            </button>
+          )}
+          {isAdmin && <button onClick={()=>setShowAdd(true)} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl font-medium text-sm shadow-lg shadow-indigo-200 hover:-translate-y-0.5 transition-all"><Plus className="w-4 h-4" /> Add Facility</button>}
+        </div>
       </div>
 
       <div className="flex gap-1 bg-gray-100 p-1 rounded-xl w-fit">
@@ -140,8 +154,16 @@ export default function FacilitiesPage() {
       {showBook && (
         <div className="fixed inset-0 modal-backdrop flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4"><div><h2 className="text-lg font-bold text-gray-900">Book {showBook.name}</h2><p className="text-xs text-gray-400">{showBook.type.replace("_"," ")} · Capacity: {showBook.capacity}</p></div><button onClick={()=>setShowBook(null)} className="p-2 hover:bg-gray-100 rounded-xl"><X className="w-5 h-5 text-gray-500" /></button></div>
+            <div className="flex items-center justify-between mb-4"><div><h2 className="text-lg font-bold text-gray-900">Book Facility</h2><p className="text-xs text-gray-400">Fill details to confirm booking</p></div><button onClick={()=>setShowBook(null)} className="p-2 hover:bg-gray-100 rounded-xl"><X className="w-5 h-5 text-gray-500" /></button></div>
             <form onSubmit={handleBook} className="space-y-3">
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Select Facility *</label>
+                <select value={showBook.id} onChange={(e) => setShowBook(facilities.find(f => f.id === e.target.value) || showBook)} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50">
+                  {facilities.filter(f => f.is_active).map(f => (
+                    <option key={f.id} value={f.id}>{f.name} ({f.type.replace("_"," ")})</option>
+                  ))}
+                </select>
+              </div>
               <div><label className="block text-xs font-semibold text-gray-600 mb-1.5">Date *</label><input type="date" value={bookForm.booking_date} onChange={e=>setBookForm(p=>({...p,booking_date:e.target.value}))} required min={new Date().toISOString().split("T")[0]} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50" /></div>
               <div className="grid grid-cols-2 gap-3">
                 <div><label className="block text-xs font-semibold text-gray-600 mb-1.5">From</label><input type="time" value={bookForm.start_time} onChange={e=>setBookForm(p=>({...p,start_time:e.target.value}))} className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50" /></div>

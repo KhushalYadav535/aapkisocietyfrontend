@@ -61,7 +61,7 @@ const StatCard = memo(function StatCard({ label, value, icon: Icon, gradient, de
 const CustomTooltip = memo(function CustomTooltip({ active, payload, label }: any) {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white rounded-xl shadow-xl border border-gray-100 p-3 text-sm">
+      <div className="bg-white/80 backdrop-blur-xl rounded-xl shadow-xl border border-white/50 p-3 text-sm" style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }}>
         <p className="font-semibold text-gray-700 mb-1">{label}</p>
         {payload.map((p: any, i: number) => (
           <p key={i} style={{ color: p.color }} className="font-medium">
@@ -242,11 +242,11 @@ export default function DashboardPage() {
       )}
 
       {/* Welcome Banner */}
-      <div className="relative bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-700 rounded-2xl p-6 text-white overflow-hidden animate-slide-up shadow-xl shadow-indigo-500/20">
+      <div className="relative bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-700 bg-[length:200%_200%] rounded-2xl p-6 text-white overflow-hidden shadow-xl shadow-indigo-500/20" style={{ animation: 'bg-mesh-drift 15s ease infinite alternate' }}>
         {/* Decorative blobs */}
-        <div className="absolute right-0 top-0 w-80 h-80 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/3 pointer-events-none" />
-        <div className="absolute right-24 bottom-0 w-48 h-48 bg-purple-500/20 rounded-full translate-y-1/2 pointer-events-none" />
-        <div className="absolute left-1/2 top-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 pointer-events-none" />
+        <div className="absolute right-0 top-0 w-80 h-80 bg-white/10 blur-3xl rounded-full -translate-y-1/2 translate-x-1/3 pointer-events-none animate-pulse" style={{ animationDuration: '8s' }} />
+        <div className="absolute right-24 bottom-0 w-48 h-48 bg-purple-500/30 blur-2xl rounded-full translate-y-1/2 pointer-events-none animate-float" style={{ animationDuration: '6s' }} />
+        <div className="absolute left-1/4 top-0 w-32 h-32 bg-cyan-400/20 blur-2xl rounded-full -translate-y-1/2 pointer-events-none animate-float" style={{ animationDuration: '10s' }} />
 
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -463,7 +463,7 @@ export default function DashboardPage() {
       {/* Guard Quick Actions */}
       {isGuard && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-slide-up" style={{ animationDelay: "400ms" }}>
-          <Link href="/dashboard/visitors" className="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-100 rounded-2xl p-4 flex items-center gap-4 hover:shadow-md transition-all group">
+          <Link href="/dashboard/visitors" className="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-100 rounded-2xl p-4 flex items-center gap-4 hover:shadow-md transition-all group active:scale-[0.98]">
             <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center shrink-0">
               <UserCheck className="w-5 h-5 text-indigo-600" />
             </div>
@@ -473,7 +473,7 @@ export default function DashboardPage() {
             </div>
             <ArrowUpRight className="w-4 h-4 text-indigo-400 ml-auto group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
           </Link>
-          <Link href="/dashboard/patrol" className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl p-4 flex items-center gap-4 hover:shadow-md transition-all group">
+          <Link href="/dashboard/patrol" className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl p-4 flex items-center gap-4 hover:shadow-md transition-all group active:scale-[0.98]">
             <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center shrink-0">
               <QrCode className="w-5 h-5 text-emerald-600" />
             </div>
@@ -483,7 +483,7 @@ export default function DashboardPage() {
             </div>
             <ArrowUpRight className="w-4 h-4 text-emerald-400 ml-auto group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
           </Link>
-          <Link href="/dashboard/sos" className="bg-gradient-to-r from-rose-50 to-red-50 border border-rose-100 rounded-2xl p-4 flex items-center gap-4 hover:shadow-md transition-all group">
+          <Link href="/dashboard/sos" className="bg-gradient-to-r from-rose-50 to-red-50 border border-rose-100 rounded-2xl p-4 flex items-center gap-4 hover:shadow-md transition-all group active:scale-[0.98]">
             <div className="w-10 h-10 bg-rose-100 rounded-xl flex items-center justify-center shrink-0">
               <ShieldAlert className="w-5 h-5 text-rose-600" />
             </div>
