@@ -488,7 +488,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </header>
 
         {/* Renewal Banner */}
-        {renewalBanner && (
+        {renewalBanner && userRole === 'ADMIN' && (
           <div className={`px-4 py-2.5 text-sm font-medium flex items-center justify-between ${renewalBanner.type === 'error' ? 'bg-red-50 text-red-700 border-b border-red-100' :
               renewalBanner.type === 'warning' ? 'bg-amber-50 text-amber-700 border-b border-amber-100' :
                 'bg-blue-50 text-blue-700 border-b border-blue-100'
