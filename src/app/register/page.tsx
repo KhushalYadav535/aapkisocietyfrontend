@@ -28,7 +28,11 @@ export default function RegisterPage() {
     }
     setLoading(true);
     try {
-      await register({ ...formData, role: "ADMIN" });
+      const payload: any = { ...formData, role: "ADMIN" };
+      if (!payload.phone || payload.phone.trim() === "") {
+        delete payload.phone;
+      }
+      await register(payload);
       toast.success("Registration successful!");
       router.push("/dashboard");
     } catch (error: any) {
