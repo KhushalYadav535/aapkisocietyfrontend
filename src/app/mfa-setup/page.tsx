@@ -3,10 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authAPI } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 import toast from "react-hot-toast";
 
 export default function MfaSetupPage() {
   const router = useRouter();
+  const { setUser } = useAuth();
   const [method, setMethod] = useState<"SMS_OTP" | "TOTP" | "EMAIL_OTP">("TOTP");
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
@@ -35,7 +37,12 @@ export default function MfaSetupPage() {
     setLoading(true);
     try {
       await authAPI.verifyMfa({ otp });
-      toast.success("MFA verified");
+      // Refresh user profile so mfa_enabled = true in localStorage
+      const profileRes = await authAPI.getProfile();
+      const updatedUser = profileRes.data.user;
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      setUser(updatedUser);
+      toast.success("MFA verified! Welcome to your dashboard.");
       router.push("/dashboard");
     } catch (error: unknown) {
       toast.error(getErrorMessage(error) || "Invalid OTP");
