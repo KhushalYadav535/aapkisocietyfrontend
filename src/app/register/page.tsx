@@ -29,6 +29,9 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       const payload: any = { ...formData, role: "ADMIN" };
+      if (payload.phone) {
+        payload.phone = payload.phone.replace(/\s+/g, "");
+      }
       if (!payload.phone || payload.phone.trim() === "") {
         delete payload.phone;
       }
