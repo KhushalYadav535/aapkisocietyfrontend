@@ -111,7 +111,9 @@ export default function VendorsPage() {
         <div className="text-center py-16"><Wrench className="w-14 h-14 mx-auto mb-3 text-gray-200" /><p className="text-gray-400">No vendors found</p></div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {paginated.map(v => (
+          {paginated.map(v => {
+            const servicesArray = Array.isArray(v.services) ? v.services : typeof v.services === 'string' ? v.services.replace(/^{|}$/g, '').split(',').map((s: string) => s.trim().replace(/^"|"$/g, '')).filter(Boolean) : [];
+            return (
             <div key={v.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
               <div className="flex items-start justify-between">
                 <div className="w-11 h-11 bg-indigo-100 rounded-xl flex items-center justify-center text-xl">{v.category === "PLUMBER" ? "🔧" : v.category === "ELECTRICIAN" ? "💡" : v.category === "CARPENTER" ? "🪚" : v.category === "PAINTER" ? "🎨" : v.category === "CLEANING" ? "🧹" : v.category === "PEST_CONTROL" ? "🐜" : v.category === "GARDENER" ? "🌿" : v.category === "SECURITY" ? "🛡️" : v.category === "AC_REPAIR" ? "❄️" : "🔧"}</div>
@@ -126,13 +128,13 @@ export default function VendorsPage() {
                 {v.email && <div className="flex items-center gap-2 text-xs text-gray-600"><Mail className="w-3.5 h-3.5 text-gray-400" />{v.email}</div>}
                 {v.address && <div className="flex items-center gap-2 text-xs text-gray-600"><MapPin className="w-3.5 h-3.5 text-gray-400" />{v.address}</div>}
               </div>
-              {v.services?.length > 0 && <div className="flex flex-wrap gap-1 mt-3">{v.services.slice(0, 3).map((s: string, i: number) => <span key={i} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-lg">{s}</span>)}</div>}
+              {servicesArray.length > 0 && <div className="flex flex-wrap gap-1 mt-3">{servicesArray.slice(0, 3).map((s: string, i: number) => <span key={i} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-lg">{s}</span>)}</div>}
               <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-50">
                 <button onClick={() => openReviews(v)} className="text-xs text-indigo-600 hover:text-indigo-700 font-semibold">Reviews</button>
                 {isAdmin && <button onClick={() => handleDelete(v.id)} className="ml-auto text-gray-400 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>}
               </div>
             </div>
-          ))}
+          )})}
         </div>
       )}
       <Pagination currentPage={currentPage} totalPages={totalPages} totalItems={filtered.length} itemsPerPage={ITEMS_PER_PAGE} onPageChange={setCurrentPage} />

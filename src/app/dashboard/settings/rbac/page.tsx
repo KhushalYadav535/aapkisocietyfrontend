@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { rbacAPI, memberAPI } from '@/lib/api';
-import { X } from 'lucide-react';
+import { rbacAPI, memberAPI, platformAPI } from '@/lib/api';
+import { X, Building2, RefreshCw } from 'lucide-react';
 
 export default function RBACManagement() {
   const { user, hasPermission } = useAuth();
@@ -11,6 +11,11 @@ export default function RBACManagement() {
   const [assignments, setAssignments] = useState<any[]>([]);
   const [members, setMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  // Platform Admin state
+  const [societies, setSocieties] = useState<any[]>([]);
+  const [selectedSocietyId, setSelectedSocietyId] = useState<string>('');
 
   // Form state
   const [selectedUser, setSelectedUser] = useState('');
@@ -22,24 +27,48 @@ export default function RBACManagement() {
   const [historyUser, setHistoryUser] = useState<any>(null);
 
   useEffect(() => {
-    if (user?.society_id) {
-      fetchData();
+    if (user?.role === 'PLATFORM_ADMIN') {
+      platformAPI.getAllSocieties().then(res => {
+        setSocieties(res.data.societies || []);
+        if (user.society_id) setSelectedSocietyId(user.society_id);
+        setLoading(false);
+      }).catch(err => {
+        console.error('Failed to fetch societies', err);
+        setError('Failed to fetch societies');
+        setLoading(false);
+      });
+    } else if (user?.society_id) {
+      setSelectedSocietyId(user.society_id);
     }
   }, [user]);
 
-  const fetchData = async () => {
+  useEffect(() => {
+    if (selectedSocietyId) {
+      fetchData(selectedSocietyId);
+    }
+  }, [selectedSocietyId]);
+
+  const fetchData = async (societyId: string) => {
     try {
       setLoading(true);
+      setError('');
       const [posRes, assignRes, memRes] = await Promise.all([
-        rbacAPI.getPositions(user!.society_id!),
-        rbacAPI.getAssignments(user!.society_id!),
-        memberAPI.getAll()
+        rbacAPI.getPositions(societyId),
+        rbacAPI.getAssignments(societyId),
+        memberAPI.getAll({ limit: 1000 })
       ]);
-      setPositions(posRes.data.positions);
-      setAssignments(assignRes.data.assignments);
-      setMembers(memRes.data.members || memRes.data.data || []);
-    } catch (err) {
+      console.log('Positions from API:', posRes.data);
+      setPositions(posRes.data.positions || []);
+      setAssignments(assignRes.data.assignments || []);
+      
+      let fetchedMembers = memRes.data.members || memRes.data.data || [];
+      if (user?.role === 'PLATFORM_ADMIN') {
+        fetchedMembers = fetchedMembers.filter((m: any) => m.society_id === societyId);
+      }
+      setMembers(fetchedMembers);
+    } catch (err: any) {
       console.error('Failed to fetch RBAC data', err);
+      setError(err?.response?.data?.error || err.message || 'Failed to load RBAC data');
     } finally {
       setLoading(false);
     }
@@ -47,16 +76,16 @@ export default function RBACManagement() {
 
   const handleAssign = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedUser || !selectedPosition || !startDate || !endDate) return;
+    if (!selectedUser || !selectedPosition || !startDate || !endDate || !selectedSocietyId) return;
 
     try {
-      await rbacAPI.assignPosition(user!.society_id!, {
+      await rbacAPI.assignPosition(selectedSocietyId, {
         userId: selectedUser,
         positionCode: selectedPosition,
         startDate,
         endDate
       });
-      fetchData(); // refresh list
+      fetchData(selectedSocietyId); // refresh list
       // Reset form
       setSelectedUser('');
       setSelectedPosition('');
@@ -79,21 +108,59 @@ export default function RBACManagement() {
 
   return (
     <div className="p-6 space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold mb-2">Role & Position Management</h1>
-        <p className="text-gray-500 text-sm">Assign positions to society members to grant them specific permissions dynamically based on their term.</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold mb-2">Role & Position Management</h1>
+          <p className="text-gray-500 text-sm">Assign positions to society members to grant them specific permissions dynamically based on their term.</p>
+          <p className="text-xs text-gray-400 mt-1">Positions loaded: <strong>{positions.length}</strong> | Members loaded: <strong>{members.length}</strong></p>
+        </div>
+        <button
+          onClick={() => selectedSocietyId && fetchData(selectedSocietyId)}
+          className="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+          title="Refresh positions and members"
+        >
+          <RefreshCw className="w-4 h-4" /> Refresh
+        </button>
       </div>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+          {error}
+        </div>
+      )}
 
       <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
         <h2 className="text-lg font-semibold mb-4">Assign New Position</h2>
-        <form onSubmit={handleAssign} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+        <form onSubmit={handleAssign} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
           
+          {user?.role === 'PLATFORM_ADMIN' && (
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Society</label>
+              <div className="relative">
+                <Building2 className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                <select 
+                  value={selectedSocietyId} onChange={e => setSelectedSocietyId(e.target.value)}
+                  className="w-full border border-gray-200 rounded pl-9 p-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  required
+                >
+                  <option value="">Select Society</option>
+                  {societies.map((s: any) => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Member</label>
+            <label className="block text-xs text-gray-500 mb-1">
+              Member {members.length > 0 ? `(${members.length})` : '(No members found)'}
+            </label>
             <select 
               value={selectedUser} onChange={e => setSelectedUser(e.target.value)}
               className="w-full border border-gray-200 rounded p-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
               required
+              disabled={!selectedSocietyId || members.length === 0}
             >
               <option value="">Select Member</option>
               {members.map((m: any) => (
@@ -108,12 +175,38 @@ export default function RBACManagement() {
               value={selectedPosition} onChange={e => setSelectedPosition(e.target.value)}
               className="w-full border border-gray-200 rounded p-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
               required
+              disabled={!selectedSocietyId}
             >
               <option value="">Select Position</option>
               {positions.map((p: any) => (
                 <option key={p.code} value={p.code}>{p.name}</option>
               ))}
             </select>
+            {selectedPosition && (() => {
+              const POSITION_INFO: Record<string, { color: string; hint: string }> = {
+                TREASURY_MAKER:   { color: 'amber',  hint: 'Can CREATE vouchers/bills — awaits Checker approval' },
+                TREASURY_CHECKER: { color: 'indigo', hint: 'Can APPROVE vouchers/bills — cannot approve own entries' },
+                TREASURER:        { color: 'emerald', hint: 'Full finance access — bills, vouchers, tax, ledger' },
+                SECRETARY:        { color: 'violet', hint: 'Full society admin access' },
+                MEMBER:           { color: 'blue',   hint: 'Committee member — notices, complaints' },
+                RESIDENT:         { color: 'orange', hint: 'Basic resident access' },
+              };
+              const info = POSITION_INFO[selectedPosition];
+              if (!info) return null;
+              const colorMap: Record<string, string> = {
+                amber: 'bg-amber-50 border-amber-200 text-amber-700',
+                indigo: 'bg-indigo-50 border-indigo-200 text-indigo-700',
+                emerald: 'bg-emerald-50 border-emerald-200 text-emerald-700',
+                violet: 'bg-violet-50 border-violet-200 text-violet-700',
+                blue: 'bg-blue-50 border-blue-200 text-blue-700',
+                orange: 'bg-orange-50 border-orange-200 text-orange-700',
+              };
+              return (
+                <p className={`mt-1.5 text-xs px-2 py-1 rounded border ${colorMap[info.color]}`}>
+                  💡 {info.hint}
+                </p>
+              );
+            })()}
           </div>
 
           <div>

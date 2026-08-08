@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { memberAPI, societyAPI } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
@@ -59,6 +60,7 @@ function InputField({ label, ...props }: any) {
 export default function MembersPage() {
   const { user, hasPermission } = useAuth();
   const { t } = useLocale();
+  const router = useRouter();
   const [members, setMembers] = useState<Member[]>([]);
   const [wings, setWings] = useState<any[]>([]);
   const [flats, setFlats] = useState<any[]>([]);
@@ -94,10 +96,22 @@ export default function MembersPage() {
     e.preventDefault();
     try {
       await memberAPI.create(formData);
-      toast.success("Member added successfully!");
-      setShowAddModal(false);
-      setFormData({ email: "", first_name: "", last_name: "", phone: "", role: "RESIDENT", flat_number: "", wing: "", password: "" });
-      loadData();
+      const isMakerOrChecker = ['MAKER', 'CHECKER'].includes(formData.role);
+      if (isMakerOrChecker) {
+        toast.success(
+          `${formData.role} member created! Now assign their Treasury Position in Role Management.`,
+          { duration: 5000, icon: '🏦' }
+        );
+        setShowAddModal(false);
+        setFormData({ email: "", first_name: "", last_name: "", phone: "", role: "RESIDENT", flat_number: "", wing: "", password: "" });
+        loadData();
+        setTimeout(() => router.push('/dashboard/settings/rbac'), 1500);
+      } else {
+        toast.success("Member added successfully!");
+        setShowAddModal(false);
+        setFormData({ email: "", first_name: "", last_name: "", phone: "", role: "RESIDENT", flat_number: "", wing: "", password: "" });
+        loadData();
+      }
     } catch (err: any) { toast.error(err.response?.data?.error || "Failed to add member"); }
   };
 

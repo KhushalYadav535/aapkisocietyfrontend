@@ -118,7 +118,7 @@ export default function MessagesPage() {
                   {selectedConv && <button type="button" onClick={() => setSelectedConv(null)} className="md:hidden p-2 hover:bg-gray-100 rounded-xl" aria-label="Go back"><ArrowLeft className="w-4 h-4" /></button>}
                   <div className="w-9 h-9 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-bold text-sm">{selectedConv ? selectedConv.other_name?.[0] : user?.first_name?.[0]}</div>
                   <div>
-                    <p className="font-semibold text-sm text-gray-900">{selectedConv ? `${selectedConv.other_name} ${selectedConv.other_last_name}` : `To: ${receiver?.first_name} ${receiver?.last_name}`}</p>
+                    <p className="font-semibold text-sm text-gray-900">{selectedConv ? `${selectedConv.other_name || ''} ${selectedConv.other_last_name || ''}`.trim() : `To: ${receiver?.first_name || ''} ${receiver?.last_name || ''}`.trim()}</p>
                     <p className="text-xs text-gray-500">{selectedConv ? (selectedConv.other_flat ? `Wing ${selectedConv.other_wing} - ${selectedConv.other_flat}` : "") : (receiver ? `Wing ${receiver.wing} - ${receiver.flat_number}` : "")}</p>
                   </div>
                 </div>

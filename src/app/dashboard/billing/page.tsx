@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { billingAPI, mandateAPI } from "@/lib/api";
+import { billingAPI, mandateAPI, memberAPI } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import toast from "react-hot-toast";
 import { formatCurrency, formatDate, getStatusColor } from "@/lib/utils";
@@ -56,11 +56,19 @@ export default function BillingPage() {
   const [reminderBillId, setReminderBillId] = useState("");
   const [reminderType, setReminderType] = useState<'EMAIL' | 'SMS' | 'APP'>('APP');
 
+  // Members for dropdown
+  const [members, setMembers] = useState<any[]>([]);
+  const [memberSearch, setMemberSearch] = useState("");
+  const [memberSearchHeads, setMemberSearchHeads] = useState("");
+
   const isAdmin = hasPermission('BILL_APPROVE');
   const canApprove = hasPermission('BILL_APPROVE');
   const canCreate = hasPermission('BILL_APPROVE');
 
   useEffect(() => { load(); }, [tab]);
+  useEffect(() => {
+    memberAPI.getAll().then(r => setMembers(r.data.members || [])).catch(() => {});
+  }, []);
 
   const load = async () => {
     setLoading(true);
@@ -649,8 +657,61 @@ export default function BillingPage() {
               <button onClick={() => setShowCreate(false)} className="p-2 hover:bg-gray-100 rounded-xl"><X className="w-5 h-5 text-gray-500" /></button>
             </div>
             <form onSubmit={handleCreate} className="space-y-3">
+              {/* Member Searchable Dropdown */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">Member *</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={memberSearch}
+                    onChange={e => { setMemberSearch(e.target.value); if (!e.target.value) setCreateForm({ ...createForm, member_id: "" }); }}
+                    placeholder="Search by name or flat number..."
+                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50"
+                    autoComplete="off"
+                  />
+                  {memberSearch && !createForm.member_id && (
+                    <div className="absolute z-20 left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                      {members
+                        .filter(m => {
+                          const q = memberSearch.toLowerCase();
+                          return (
+                            `${m.first_name} ${m.last_name}`.toLowerCase().includes(q) ||
+                            (m.flat_number && m.flat_number.toLowerCase().includes(q)) ||
+                            (m.wing && m.wing.toLowerCase().includes(q))
+                          );
+                        })
+                        .slice(0, 10)
+                        .map(m => (
+                          <button
+                            key={m.id}
+                            type="button"
+                            onClick={() => {
+                              setCreateForm({ ...createForm, member_id: m.id });
+                              setMemberSearch(`${m.first_name} ${m.last_name} — ${m.wing || ''} ${m.flat_number || ''}`.trim());
+                            }}
+                            className="w-full text-left px-4 py-2.5 hover:bg-indigo-50 flex items-center justify-between gap-3 border-b border-gray-50 last:border-0"
+                          >
+                            <span className="font-semibold text-sm text-gray-900">{m.first_name} {m.last_name}</span>
+                            <span className="text-xs text-gray-500 shrink-0 font-mono">{m.wing} {m.flat_number}</span>
+                          </button>
+                        ))}
+                      {members.filter(m => {
+                        const q = memberSearch.toLowerCase();
+                        return `${m.first_name} ${m.last_name}`.toLowerCase().includes(q) || (m.flat_number && m.flat_number.toLowerCase().includes(q));
+                      }).length === 0 && (
+                        <div className="px-4 py-3 text-sm text-gray-400 text-center">No members found</div>
+                      )}
+                    </div>
+                  )}
+                </div>
+                {createForm.member_id && (
+                  <div className="mt-1.5 flex items-center justify-between text-xs text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-lg">
+                    <span>✓ Member selected</span>
+                    <button type="button" onClick={() => { setCreateForm({ ...createForm, member_id: "" }); setMemberSearch(""); }} className="text-indigo-400 hover:text-indigo-700">Clear</button>
+                  </div>
+                )}
+              </div>
               {[
-                { label: "Member ID", key: "member_id", placeholder: "Member UUID" },
                 { label: "Amount (₹) *", key: "amount", type: "number", placeholder: "3500" },
                 { label: "Tax Amount (₹)", key: "tax_amount", type: "number", placeholder: "0" },
                 { label: "Billing Period", key: "billing_period", placeholder: "May 2026" },
@@ -828,15 +889,57 @@ export default function BillingPage() {
             </div>
             <form onSubmit={handleCreateWithHeads} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1">Member ID *</label>
-                <input
-                  type="text"
-                  value={createWithHeadsForm.member_id}
-                  onChange={(e) => setCreateWithHeadsForm({ ...createWithHeadsForm, member_id: e.target.value })}
-                  className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  placeholder="Enter member UUID"
-                  required
-                />
+                <label className="block text-xs font-semibold text-gray-600 mb-1">Member *</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={memberSearchHeads}
+                    onChange={e => { setMemberSearchHeads(e.target.value); if (!e.target.value) setCreateWithHeadsForm({ ...createWithHeadsForm, member_id: "" }); }}
+                    placeholder="Search by name or flat number..."
+                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50"
+                    autoComplete="off"
+                  />
+                  {memberSearchHeads && !createWithHeadsForm.member_id && (
+                    <div className="absolute z-20 left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                      {members
+                        .filter(m => {
+                          const q = memberSearchHeads.toLowerCase();
+                          return (
+                            `${m.first_name} ${m.last_name}`.toLowerCase().includes(q) ||
+                            (m.flat_number && m.flat_number.toLowerCase().includes(q)) ||
+                            (m.wing && m.wing.toLowerCase().includes(q))
+                          );
+                        })
+                        .slice(0, 10)
+                        .map(m => (
+                          <button
+                            key={m.id}
+                            type="button"
+                            onClick={() => {
+                              setCreateWithHeadsForm({ ...createWithHeadsForm, member_id: m.id });
+                              setMemberSearchHeads(`${m.first_name} ${m.last_name} — ${m.wing || ''} ${m.flat_number || ''}`.trim());
+                            }}
+                            className="w-full text-left px-4 py-2.5 hover:bg-indigo-50 flex items-center justify-between gap-3 border-b border-gray-50 last:border-0"
+                          >
+                            <span className="font-semibold text-sm text-gray-900">{m.first_name} {m.last_name}</span>
+                            <span className="text-xs text-gray-500 shrink-0 font-mono">{m.wing} {m.flat_number}</span>
+                          </button>
+                        ))}
+                      {members.filter(m => {
+                        const q = memberSearchHeads.toLowerCase();
+                        return `${m.first_name} ${m.last_name}`.toLowerCase().includes(q) || (m.flat_number && m.flat_number.toLowerCase().includes(q));
+                      }).length === 0 && (
+                        <div className="px-4 py-3 text-sm text-gray-400 text-center">No members found</div>
+                      )}
+                    </div>
+                  )}
+                </div>
+                {createWithHeadsForm.member_id && (
+                  <div className="mt-1.5 flex items-center justify-between text-xs text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-lg">
+                    <span>✓ Member selected</span>
+                    <button type="button" onClick={() => { setCreateWithHeadsForm({ ...createWithHeadsForm, member_id: "" }); setMemberSearchHeads(""); }} className="text-indigo-400 hover:text-indigo-700">Clear</button>
+                  </div>
+                )}
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1">Billing Period *</label>

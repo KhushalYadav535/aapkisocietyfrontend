@@ -38,7 +38,12 @@ export default function VehiclesPage() {
     try {
       const [v, s] = await Promise.all([vehicleAPI.getAll(), vehicleAPI.getParkingSlots()]);
       setVehicles(v.data.vehicles || []);
-      setSlots(s.data.slots || []);
+      // Normalize is_available to true/false regardless of backend returning 1/0 or true/false
+      const normalizedSlots = (s.data.slots || []).map((slot: any) => ({
+        ...slot,
+        is_available: slot.is_available === true || slot.is_available === 1 || slot.is_available === 't',
+      }));
+      setSlots(normalizedSlots);
     } catch { toast.error("Failed to load"); }
     finally { setLoading(false); }
   };

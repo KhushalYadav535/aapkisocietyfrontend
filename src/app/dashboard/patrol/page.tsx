@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { patrolAPI } from "@/lib/api";
+import { patrolAPI, societyAPI } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import toast from "react-hot-toast";
 import { formatDate } from "@/lib/utils";
@@ -23,6 +23,9 @@ export default function PatrolPage() {
   const [scanNotes, setScanNotes] = useState("");
   const [scanResult, setScanResult] = useState<{ success: boolean; message: string } | null>(null);
 
+  const [areas, setAreas] = useState<string[]>([]);
+  const [floors, setFloors] = useState<string[]>([]);
+
   const isAdmin = hasPermission('PATROL_MANAGE');
   const isGuard = hasPermission('PATROL_MANAGE');
 
@@ -31,10 +34,27 @@ export default function PatrolPage() {
   const loadAll = async () => {
     setLoading(true);
     try {
-      const [cp, sm, lg] = await Promise.all([patrolAPI.getCheckpoints(), patrolAPI.getSummary(), patrolAPI.getLogs()]);
+      const [cp, sm, lg, wRes, fRes] = await Promise.all([
+        patrolAPI.getCheckpoints(), 
+        patrolAPI.getSummary(), 
+        patrolAPI.getLogs(),
+        societyAPI.getWings(user?.society_id || ''),
+        societyAPI.getFlats(user?.society_id || '')
+      ]);
       setCheckpoints(cp.data.checkpoints);
       setSummary(sm.data.summary);
       setLogs(lg.data.logs);
+
+      const wingNames = (wRes.data.wings || []).map((w: any) => w.name);
+      setAreas(wingNames);
+      
+      const flatFloors = Array.from(new Set((fRes.data.flats || []).map((f: any) => f.floor_number).filter(Boolean))).sort((a: any, b: any) => {
+         const numA = parseInt(a);
+         const numB = parseInt(b);
+         if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+         return String(a).localeCompare(String(b));
+      });
+      setFloors(flatFloors.map(String));
     } catch { toast.error("Failed to load patrol data"); }
     finally { setLoading(false); }
   };
@@ -264,13 +284,19 @@ export default function PatrolPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-gray-600 mb-1.5">Floor</label>
-                  <input value={form.floor} onChange={e => setForm(p => ({ ...p, floor: e.target.value }))}
-                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50" placeholder="G, 1, B1..." />
+                  <select value={form.floor} onChange={e => setForm(p => ({ ...p, floor: e.target.value }))}
+                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50">
+                    <option value="">Select Floor...</option>
+                    {floors.map(f => <option key={f} value={f}>{f}</option>)}
+                  </select>
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-gray-600 mb-1.5">Area/Zone</label>
-                  <input value={form.area} onChange={e => setForm(p => ({ ...p, area: e.target.value }))}
-                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50" placeholder="Wing A, Parking..." />
+                  <select value={form.area} onChange={e => setForm(p => ({ ...p, area: e.target.value }))}
+                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50">
+                    <option value="">Select Area/Zone...</option>
+                    {areas.map(a => <option key={a} value={a}>{a}</option>)}
+                  </select>
                 </div>
               </div>
               <div className="flex gap-3 pt-2">
