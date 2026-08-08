@@ -635,7 +635,7 @@ export default function Home() {
           </div>
 
           <div className="pt-8 border-t border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-sm font-semibold text-slate-600">© {new Date().getFullYear()} AapkiSociety Technologies Pvt. Ltd. — CIN: U72900MH2024PTC000000</p>
+            <p className="text-sm font-semibold text-slate-600">Powered by <span className="text-indigo-600">Datatrack</span></p>
             <div className="flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-emerald-500" />
               <span className="text-sm font-bold text-emerald-500">ISO 27001 Certified Infrastructure</span>
