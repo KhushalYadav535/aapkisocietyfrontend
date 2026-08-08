@@ -145,14 +145,7 @@ export default function LoginPage() {
             </Link>
           </p>
 
-          <div className="mt-8 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
-            <p className="text-xs font-medium text-indigo-700 mb-2">Demo Credentials:</p>
-            <div className="space-y-1 text-xs text-indigo-600">
-              <p>Admin: admin@sunrise.com / Admin@123</p>
-              <p>Treasurer: treasurer@sunrise.com / Admin@123</p>
-              <p>Resident: suresh@sunrise.com / Admin@123</p>
-            </div>
-          </div>
+
         </div>
       </div>
     </div>
