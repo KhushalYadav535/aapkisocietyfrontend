@@ -187,6 +187,12 @@ export const visitorAPI = {
   create: (data: any) => api.post('/visitors', data),
   checkout: (id: string) => api.put(`/visitors/${id}/checkout`),
   approve: (id: string) => api.put(`/visitors/${id}/approve`),
+  generatePasscode: (data: { visitor_name: string; visitor_phone?: string; purpose?: string; flat_id?: string; valid_hours?: number }) =>
+    api.post('/visitors/passcode', data),
+  verifyPasscode: (data: { passcode: string; flat_number?: string }) =>
+    api.post('/visitors/verify-passcode', data),
+  getOverstaying: (hours?: number) =>
+    api.get('/visitors/monitor/overstaying', { params: { hours } }),
 };
 
 // Facility APIs
@@ -210,6 +216,7 @@ export const societyAPI = {
   getFlats: (id: string) => api.get(`/societies/${id}/flats`),
   addFlat: (id: string, data: any) => api.post(`/societies/${id}/flats`, data),
   getHomeTypeMasters: () => api.get(`/societies/masters/home-types`),
+  completeSetup: (id: string, data: any) => api.put(`/societies/${id}/setup`, data),
 };
 
 export const planAPI = {
@@ -261,6 +268,8 @@ export const staffAPI = {
   markAbsent: (staffId: string, date?: string, reason?: string) => api.post('/staff/mark-absent', { staff_id: staffId, date, reason }),
   getSummary: (params?: any) => api.get('/staff/summary', { params }),
   deactivate: (id: string) => api.delete(`/staff/${id}`),
+  getReviews: (staff_id?: string) => api.get('/staff/reviews', { params: { staff_id } }),
+  addReview: (data: { staff_id: string; rating: number; review_text?: string }) => api.post('/staff/reviews', data),
 };
 
 // Document APIs
@@ -471,3 +480,73 @@ export const rbacAPI = {
   getAssignments: (societyId: string) => api.get(`/rbac/societies/${societyId}/assignments`),
   assignPosition: (societyId: string, data: any) => api.post(`/rbac/societies/${societyId}/positions/assign`, data),
 };
+
+// Parcel Management APIs
+export const parcelAPI = {
+  getAll: (params?: any) => api.get('/parcels', { params }),
+  getStats: () => api.get('/parcels/stats'),
+  create: (data: any) => api.post('/parcels', data),
+  verifyAndCollect: (id: string, pickup_pin: string, collected_by_name?: string) =>
+    api.put(`/parcels/${id}/collect`, { pickup_pin, collected_by_name }),
+  markReturned: (id: string) => api.put(`/parcels/${id}/return`),
+};
+
+// Move-In / Move-Out & NOC APIs
+export const moveRequestAPI = {
+  getAll: (params?: any) => api.get('/move-requests', { params }),
+  getById: (id: string) => api.get(`/move-requests/${id}`),
+  create: (data: any) => api.post('/move-requests', data),
+  updateStatus: (id: string, data: { status: string; rejection_reason?: string }) =>
+    api.put(`/move-requests/${id}/status`, data),
+  verifyNoc: (certificate_number: string) =>
+    api.get('/move-requests/verify', { params: { certificate_number } }),
+};
+
+// Hyperlocal Society Marketplace APIs
+export const marketplaceAPI = {
+  getAll: (params?: any) => api.get('/marketplace', { params }),
+  getById: (id: string) => api.get(`/marketplace/${id}`),
+  create: (data: any) => api.post('/marketplace', data),
+  updateStatus: (id: string, status: string) => api.put(`/marketplace/${id}/status`, { status }),
+  deleteListing: (id: string) => api.delete(`/marketplace/${id}`),
+};
+
+// Carpooling & Commute Sharing APIs
+export const carpoolAPI = {
+  getAll: (params?: any) => api.get('/carpools', { params }),
+  create: (data: any) => api.post('/carpools', data),
+  updateStatus: (id: string, status: string) => api.patch(`/carpools/${id}/status`, { status }),
+  deleteCarpool: (id: string) => api.delete(`/carpools/${id}`),
+};
+
+// Society Rule Violation & Parking Dispute APIs
+export const violationAPI = {
+  getAll: (params?: any) => api.get('/violations', { params }),
+  create: (data: any) => api.post('/violations', data),
+  updateAction: (id: string, data: { status: string; fine_amount?: number; committee_notes?: string }) =>
+    api.patch(`/violations/${id}/action`, data),
+};
+
+// Emergency Blood Donor Network APIs
+export const bloodAPI = {
+  getDonors: () => api.get('/blood/donors'),
+  updateMyGroup: (blood_group: string) => api.post('/blood/my-group', { blood_group }),
+  getRequests: () => api.get('/blood/requests'),
+  createRequest: (data: any) => api.post('/blood/requests', data),
+  updateStatus: (id: string, status: string) => api.patch(`/blood/requests/${id}/status`, { status }),
+};
+
+// Public Demo Booking APIs
+export const demoAPI = {
+  book: (data: {
+    societyName: string;
+    city: string;
+    flatCount: string | number;
+    name: string;
+    phone: string;
+    email?: string;
+  }) => api.post('/demo/book', data),
+  getAll: () => api.get('/demo/list'),
+};
+
+

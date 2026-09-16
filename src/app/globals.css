@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #f0f4ff;
   --foreground: #0f172a;
@@ -408,3 +410,100 @@ textarea,
 nav a {
   transition: background-color 0.15s ease, color 0.15s ease;
 }
+
+/* Custom Sleek Range Slider */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: #e2e8f0;
+  border-radius: 9999px;
+  height: 8px;
+  outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #4f46e5;
+  cursor: pointer;
+  border: 3px solid #ffffff;
+  box-shadow: 0 2px 10px rgba(79, 70, 229, 0.4);
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+  background: #4338ca;
+}
+input[type="range"]::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #4f46e5;
+  cursor: pointer;
+  border: 3px solid #ffffff;
+  box-shadow: 0 2px 10px rgba(79, 70, 229, 0.4);
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+/* Radiant glow card */
+.glow-card {
+  position: relative;
+}
+.glow-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.4), rgba(139, 92, 246, 0.2), transparent 70%);
+  border-radius: inherit;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Luxury Executive Dashboard Utilities */
+.premium-glass {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 10px 30px -10px rgba(99, 102, 241, 0.08), 0 4px 12px -2px rgba(0, 0, 0, 0.03);
+}
+
+html.dark .premium-glass {
+  background: rgba(15, 23, 42, 0.82);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), 0 4px 12px -2px rgba(0, 0, 0, 0.3);
+}
+
+.executive-hero {
+  background: linear-gradient(135deg, #1e1b4b 0%, #2e1065 40%, #1e293b 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.radar-dot {
+  position: relative;
+}
+.radar-dot::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 9999px;
+  background: currentColor;
+  opacity: 0.4;
+  animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.glass-pill {
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.glass-pill:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+

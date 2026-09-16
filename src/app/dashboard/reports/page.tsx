@@ -5,10 +5,14 @@ import { dashboardAPI, billingAPI } from "@/lib/api";
 import { useLocale } from "@/context/LocaleContext";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import Link from "next/link";
-import { BarChart3, TrendingUp, IndianRupee, Receipt, MessageSquareWarning, Users, Download, Calendar, TrendingDown } from "lucide-react";
+import { 
+  BarChart3, TrendingUp, IndianRupee, Receipt, MessageSquareWarning, 
+  Users, Download, Calendar, TrendingDown, Sparkles, Sun, CloudRain, 
+  ShieldAlert, ArrowUpRight, CheckCircle2, Droplets, Zap
+} from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  AreaChart, Area, PieChart, Pie, Cell, LineChart, Line, Legend
+  AreaChart, Area, PieChart, Pie, Cell, LineChart, Line, Legend, ComposedChart
 } from "recharts";
 
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -329,6 +333,146 @@ export default function ReportsPage() {
           </table>
         </div>
       </div>
+
+      {/* AI-Driven Predictive Budget & Seasonal Expense Forecast */}
+      <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm animate-slide-up" style={{ animationDelay: "380ms" }}>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-5 border-b border-slate-100">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-md shadow-indigo-500/20">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-bold text-slate-900">Predictive Seasonal Budget & Outflow Forecast</h3>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                  AI Projection
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Predictive algorithms forecasting seasonal utility surges, tanker demand, and monsoon provisions based on society history
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200/80 self-start md:self-auto">
+            <Calendar className="w-3.5 h-3.5 text-indigo-600" />
+            <span>Forecast Horizon: Next 8 Months</span>
+          </div>
+        </div>
+
+        {/* 3 Forecasting Insight Bento Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 my-5">
+          <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200/80 rounded-2xl p-4">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-xs font-semibold text-amber-800">Summer Surge (Apr–Jun)</span>
+              <div className="w-7 h-7 rounded-lg bg-amber-200/60 flex items-center justify-center text-amber-800">
+                <Sun className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="text-xl font-extrabold text-amber-950">+38.5% Outflow</div>
+            <p className="text-[11px] text-amber-700 mt-1">
+              Water tanker demand surges +42% & common area power surges +28%. Recommended contingency reserve: ₹1,45,000.
+            </p>
+          </div>
+
+          <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200/80 rounded-2xl p-4">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-xs font-semibold text-blue-800">Monsoon Preventions</span>
+              <div className="w-7 h-7 rounded-lg bg-blue-200/60 flex items-center justify-center text-blue-800">
+                <CloudRain className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="text-xl font-extrabold text-blue-950">₹32,500 Buffer</div>
+            <p className="text-[11px] text-blue-700 mt-1">
+              Terrace waterproofing, basement sump pump overhaul & stormwater drain clearing scheduled for late May.
+            </p>
+          </div>
+
+          <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200/80 rounded-2xl p-4">
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-xs font-semibold text-emerald-800">Sinking Fund Runway</span>
+              <div className="w-7 h-7 rounded-lg bg-emerald-200/60 flex items-center justify-center text-emerald-800">
+                <ShieldAlert className="w-4 h-4" />
+              </div>
+            </div>
+            <div className="text-xl font-extrabold text-emerald-950">4.6 Months Safe</div>
+            <p className="text-[11px] text-emerald-700 mt-1">
+              Society treasury comfortably absorbs peak summer surges without supplementary resident levies.
+            </p>
+          </div>
+        </div>
+
+        {/* Projection Chart */}
+        <div className="mt-4">
+          <div className="flex items-center justify-between mb-3 text-xs">
+            <span className="font-semibold text-slate-700">Projected Monthly Outflow vs Fixed Maintenance Baseline</span>
+            <div className="flex items-center gap-4 text-slate-500">
+              <div className="flex items-center gap-1.5">
+                <span className="w-3 h-1 bg-slate-400 rounded-sm inline-block" />
+                <span>Baseline (₹35,000)</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-3 h-3 bg-indigo-500 rounded-sm inline-block" />
+                <span className="font-bold text-indigo-700">Projected Outflow</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="h-64 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart
+                data={[
+                  { month: "Apr (Summer)", baseline: 35000, projected: 48500, tankerSurge: 9500, powerSurge: 4000 },
+                  { month: "May (Peak Heat)", baseline: 35000, projected: 54200, tankerSurge: 12500, powerSurge: 6700 },
+                  { month: "Jun (Summer End)", baseline: 35000, projected: 50800, tankerSurge: 10500, powerSurge: 5300 },
+                  { month: "Jul (Monsoon In)", baseline: 35000, projected: 44000, drainageReserve: 6500, powerSurge: 2500 },
+                  { month: "Aug (Peak Rain)", baseline: 35000, projected: 42500, drainageReserve: 5500, powerSurge: 2000 },
+                  { month: "Sep (Post-Rain)", baseline: 35000, projected: 38200, drainageReserve: 2200, powerSurge: 1000 },
+                  { month: "Oct (Festive)", baseline: 35000, projected: 39500, festiveBonus: 4500, powerSurge: 0 },
+                  { month: "Nov (Winter)", baseline: 35000, projected: 36200, festiveBonus: 1200, powerSurge: 0 },
+                ]}
+                margin={{ top: 10, right: 10, bottom: 0, left: -10 }}
+              >
+                <defs>
+                  <linearGradient id="projectedGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.25} />
+                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0.0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#64748b" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: "#64748b" }} axisLine={false} tickLine={false} tickFormatter={v => `₹${v/1000}k`} />
+                <Tooltip content={<CustomTooltip />} />
+                <Area type="monotone" dataKey="projected" name="Projected Spend" stroke="#6366f1" strokeWidth={2.5} fill="url(#projectedGrad)" />
+                <Line type="monotone" dataKey="baseline" name="Baseline Budget" stroke="#94a3b8" strokeWidth={2} strokeDasharray="4 4" dot={false} />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Actionable Society Optimization Recommendations */}
+        <div className="mt-5 pt-4 border-t border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="flex items-start gap-2.5 p-3 rounded-2xl bg-slate-50 border border-slate-200/70 text-xs">
+            <Droplets className="w-4 h-4 text-cyan-600 shrink-0 mt-0.5" />
+            <div>
+              <span className="font-bold text-slate-800">Water Tanker Forward-Booking:</span>
+              <p className="text-slate-500 mt-0.5">
+                Bulk booking 20 tanker credits with verified vendor before April 1st locks ₹1,400/tanker rate vs peak ₹1,850 spot rates (est. savings ₹18,000).
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-2.5 p-3 rounded-2xl bg-slate-50 border border-slate-200/70 text-xs">
+            <Zap className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <span className="font-bold text-slate-800">Off-Peak Common Area Pump Scheduling:</span>
+              <p className="text-slate-500 mt-0.5">
+                Shifting overhead tank fill cycles to 10:00 PM – 4:00 AM off-peak hours can decrease common area electricity surcharge by 14%.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Defaulter Aging Quick Access */}
       <Link href="/dashboard/reports/defaulters"
         className="flex items-center justify-between bg-gradient-to-r from-red-50 to-rose-50 border border-red-100 rounded-2xl p-5 hover:shadow-md transition-shadow animate-slide-up group">

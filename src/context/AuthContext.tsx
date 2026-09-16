@@ -14,6 +14,7 @@ interface User {
   wing: string | null;
   phone: string | null;
   avatar_url: string | null;
+  blood_group?: string | null;
 }
 
 interface AuthContextType {
