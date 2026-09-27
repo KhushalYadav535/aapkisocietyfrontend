@@ -4,17 +4,74 @@ import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
-  ArrowRight, Building2, Shield, Users, Zap, CheckCircle2, MapPin,
-  PhoneCall, Wallet, Star, Lock, Smartphone, HeartHandshake, ShieldCheck,
-  TrendingUp, Bell, Car, CalendarDays, Vote, MessageSquare, ChevronDown,
-  ChevronUp, Check, X, FileSpreadsheet, Download, RefreshCw, Calculator,
-  HelpCircle, ArrowUpRight, Sparkles, Menu, ChevronRight, Eye, Send,
-  FileText, Landmark, Clock, Award
+  ArrowRight, ArrowUpRight, ArrowUp, Building2, Shield, CheckCircle2,
+  PhoneCall, Wallet, Star, Lock, Smartphone, ShieldCheck,
+  TrendingUp, Bell, Car, Vote, ChevronDown, ChevronLeft,
+  Check, X, Download,
+  HelpCircle, Sparkles, Menu, ChevronRight, Send,
+  Landmark, Clock, BadgeCheck, QrCode, Fingerprint, IndianRupee,
 } from "lucide-react";
 import { demoAPI } from "@/lib/api";
 import { normalizePhone } from "@/lib/phone";
 
-// ─── Animated Counter ────────────────────────────────────────────────────────
+/* ═══════════════════════════════════════════════════════════════════
+   AapkiSociety — "Alpine White & Royal Blue" landing system
+   Light, premium, research-backed (SaaS Hero 2026 + Awwwards craft):
+   sky-mesh hero · navy serif display · seamless marquee ·
+   before/after narrative · bento grid · interactive demo ·
+   comparison proof · scroll reveals · hairline details.
+   ═══════════════════════════════════════════════════════════════════ */
+
+const NAVY = "#0A1C3F";
+
+// ─── Scroll Reveal ───────────────────────────────────────────────────
+function Reveal({
+  children,
+  delay = 0,
+  className = "",
+}: {
+  children: React.ReactNode;
+  delay?: number;
+  className?: string;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          el.classList.add("is-visible");
+          obs.disconnect();
+        }
+      },
+      { threshold: 0.1, rootMargin: "0px 0px -40px 0px" }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      className={`reveal ${className}`}
+      style={{ "--reveal-delay": `${delay}ms` } as React.CSSProperties}
+    >
+      {children}
+    </div>
+  );
+}
+
+// ─── Cursor spotlight for cards ──────────────────────────────────────
+function handleSpot(e: React.MouseEvent<HTMLDivElement>) {
+  const el = e.currentTarget;
+  const r = el.getBoundingClientRect();
+  el.style.setProperty("--spot-x", `${e.clientX - r.left}px`);
+  el.style.setProperty("--spot-y", `${e.clientY - r.top}px`);
+}
+
+// ─── Animated Counter ────────────────────────────────────────────────
 function Counter({ target, suffix = "", prefix = "" }: { target: number; suffix?: string; prefix?: string }) {
   const [count, setCount] = useState(0);
   const ref = useRef<HTMLSpanElement>(null);
@@ -23,8 +80,8 @@ function Counter({ target, suffix = "", prefix = "" }: { target: number; suffix?
     const observer = new IntersectionObserver(([entry]) => {
       if (entry.isIntersecting) {
         let start = 0;
-        const duration = 1200;
-        const steps = 40;
+        const duration = 1400;
+        const steps = 48;
         const increment = target / steps;
         const stepTime = duration / steps;
         const timer = setInterval(() => {
@@ -44,13 +101,28 @@ function Counter({ target, suffix = "", prefix = "" }: { target: number; suffix?
   }, [target]);
 
   return (
-    <span ref={ref}>
+    <span ref={ref} className="tnum">
       {prefix}{count.toLocaleString("en-IN")}{suffix}
     </span>
   );
 }
 
-// ─── Feature Definitions with Categories ─────────────────────────────────────
+// ─── Eyebrow label (numbered, editorial) ─────────────────────────────
+function Eyebrow({ children, dark = false }: { children: React.ReactNode; dark?: boolean }) {
+  return (
+    <span
+      className={`inline-flex items-center gap-2.5 text-[11px] font-bold uppercase tracking-[0.28em] ${
+        dark ? "text-sky-300" : "text-blue-700"
+      }`}
+    >
+      <span className={`h-px w-8 ${dark ? "bg-sky-300/60" : "bg-blue-700/40"}`} aria-hidden="true" />
+      {children}
+      <span className={`h-px w-8 ${dark ? "bg-sky-300/60" : "bg-blue-700/40"}`} aria-hidden="true" />
+    </span>
+  );
+}
+
+// ─── Feature data (bento) ────────────────────────────────────────────
 const MODULE_CATEGORIES = [
   { id: "all", label: "All Modules" },
   { id: "billing", label: "Billing & Finance" },
@@ -61,100 +133,231 @@ const MODULE_CATEGORIES = [
   { id: "listings", label: "Property Listings" },
 ];
 
-const FEATURES = [
+type VisualKind = "bars" | "otp" | "tally" | "sla" | "vote" | "listing" | "ledger" | "parking" | "notice";
+
+const FEATURES: {
+  category: string;
+  icon: typeof Wallet;
+  visual: VisualKind;
+  badge: string;
+  title: string;
+  desc: string;
+  stat: string;
+  span: string;
+}[] = [
   {
     category: "billing",
     icon: Wallet,
-    color: "from-emerald-500 to-teal-600",
-    bg: "bg-emerald-50 border-emerald-100 text-emerald-600",
+    visual: "bars",
     badge: "GST Compliant",
     title: "Automated Maintenance & GST Invoicing",
-    desc: "Generate recurring monthly maintenance bills with customizable billing heads, late penalty interest, and automatic TDS calculation. One-click instant digital receipts.",
-    stat: "98.4% On-time Collections",
+    desc: "Recurring monthly bills with custom heads, late-penalty interest and automatic TDS. One-click digital receipts residents actually pay on time.",
+    stat: "98.4% on-time collections",
+    span: "md:col-span-4",
   },
   {
     category: "gate",
     icon: Shield,
-    color: "from-blue-600 to-indigo-600",
-    bg: "bg-blue-50 border-blue-100 text-blue-600",
+    visual: "otp",
     badge: "Instant Pass",
     title: "Smart Gate & Visitor Management",
-    desc: "Seamless OTP & QR approvals for guests, delivery executives, and cabs. Daily maid, driver, and staff attendance logs with real-time push alerts to residents.",
-    stat: "Zero Unverified Entries",
+    desc: "OTP & QR approvals for guests, deliveries and cabs. Maid, driver and staff attendance with real-time push alerts.",
+    stat: "Zero unverified entries",
+    span: "md:col-span-2",
   },
   {
     category: "accounting",
     icon: Landmark,
-    color: "from-indigo-600 to-violet-600",
-    bg: "bg-indigo-50 border-indigo-100 text-indigo-600",
-    badge: "NEW in v4.0",
+    visual: "tally",
+    badge: "New in v4.0",
     title: "1-Click Tally Prime & ERP Export",
-    desc: "Sync member ledgers, receipt vouchers, and expense books directly into Tally XML format. Society chartered accountants can audit books without double data entry.",
-    stat: "75% CA Audit Time Saved",
+    desc: "Member ledgers, receipt vouchers and expense books synced straight into Tally XML. Your CA audits without double data entry.",
+    stat: "75% CA audit time saved",
+    span: "md:col-span-2",
   },
   {
     category: "helpdesk",
     icon: CheckCircle2,
-    color: "from-rose-500 to-orange-500",
-    bg: "bg-rose-50 border-rose-100 text-rose-600",
+    visual: "sla",
     badge: "SLA Timers",
     title: "Helpdesk with SLA Escalation",
-    desc: "Residents raise plumbing, electrical, or lift tickets with photo evidence. Timers track resolution speed, automatically escalating overdue issues to the committee.",
-    stat: "Avg. 3.2 Hr Resolution",
+    desc: "Plumbing, electrical and lift tickets with photo evidence. Overdue issues auto-escalate to the committee.",
+    stat: "Avg. 3.2 hr resolution",
+    span: "md:col-span-2",
   },
   {
     category: "governance",
     icon: Vote,
-    color: "from-purple-600 to-pink-600",
-    bg: "bg-purple-50 border-purple-100 text-purple-600",
+    visual: "vote",
     badge: "Democracy",
     title: "Digital AGM Voting & Live Polls",
-    desc: "Conduct transparent society elections, approve annual budgets, and run official opinion polls with tamper-proof cryptographic audit trails.",
-    stat: "100% Quorum Transparency",
+    desc: "Elections, budget approvals and opinion polls with tamper-proof audit trails the whole society can trust.",
+    stat: "100% quorum transparency",
+    span: "md:col-span-2",
   },
   {
     category: "listings",
     icon: Building2,
-    color: "from-amber-500 to-orange-600",
-    bg: "bg-amber-50 border-amber-100 text-amber-600",
-    badge: "Monetized",
+    visual: "listing",
+    badge: "Monetised",
     title: "Verified Society Property Listings",
-    desc: "Exclusive classifieds for flat sale and rentals posted directly by verified owners. Society earns revenue per listing while eliminating unauthorized brokers.",
-    stat: "Direct Owner Connect",
+    desc: "Sale and rental classifieds posted by verified owners. The society earns per listing — zero broker spam.",
+    stat: "Direct owner connect",
+    span: "md:col-span-2",
   },
   {
     category: "billing",
     icon: TrendingUp,
-    color: "from-cyan-600 to-blue-600",
-    bg: "bg-cyan-50 border-cyan-100 text-cyan-600",
+    visual: "ledger",
     badge: "Maker-Checker",
     title: "Dual-Approval Financial Governance",
-    desc: "Treasurer prepares payments (Maker) and Secretary or President signs off (Checker). Eliminate fraud, unauthorized cash expenses, and committee misunderstandings.",
-    stat: "100% Audit Protection",
+    desc: "Treasurer prepares (Maker), Secretary or President approves (Checker). No fraud, no unauthorised cash expenses.",
+    stat: "100% audit protection",
+    span: "md:col-span-2",
   },
   {
     category: "gate",
     icon: Car,
-    color: "from-violet-600 to-purple-600",
-    bg: "bg-violet-50 border-violet-100 text-violet-600",
+    visual: "parking",
     badge: "RFID Ready",
     title: "Parking Slot & Vehicle Allocation",
-    desc: "Map covered and open parking slots to flat numbers. Log visitor vehicle entries, manage EV charging points, and stop unauthorized parking disputes permanently.",
-    stat: "Zero Slot Clashes",
+    desc: "Covered and open slots mapped to flats. Visitor vehicles, EV points and an end to parking disputes.",
+    stat: "Zero slot clashes",
+    span: "md:col-span-2",
   },
   {
     category: "governance",
     icon: Bell,
-    color: "from-emerald-600 to-green-600",
-    bg: "bg-emerald-50 border-emerald-100 text-emerald-600",
+    visual: "notice",
     badge: "Real-time",
-    title: "Digital Notice Board & Marquee Scroller",
-    desc: "Broadcast emergency water stoppage notices, event invites, and circulars directly to residents via app push notification, SMS, and WhatsApp alerts.",
-    stat: "10x Reach vs WhatsApp",
+    title: "Digital Notice Board & Scroller",
+    desc: "Water-cutoff alerts, event invites and circulars over app push, SMS and WhatsApp — in one broadcast.",
+    stat: "10x reach vs WhatsApp",
+    span: "md:col-span-6",
   },
 ];
 
-// ─── Testimonials Data ─────────────────────────────────────────────────────────
+// ─── Mini bento visuals (pure CSS, no network) ───────────────────────
+function BentoVisual({ kind }: { kind: VisualKind }) {
+  if (kind === "bars")
+    return (
+      <div className="flex items-end gap-1.5 h-16 mt-6" aria-hidden="true">
+        {[38, 62, 45, 78, 56, 92, 70, 100, 64, 84, 52, 74].map((h, i) => (
+          <div
+            key={i}
+            style={{ height: `${h}%` }}
+            className={`flex-1 rounded-t-md ${i === 7 ? "bg-gradient-to-t from-blue-700 to-sky-400" : "bg-[#0A1C3F]/10"}`}
+          />
+        ))}
+      </div>
+    );
+  if (kind === "otp")
+    return (
+      <div className="flex gap-2 mt-6" aria-hidden="true">
+        {["8", "4", "9", "2", "0", "1"].map((d, i) => (
+          <div
+            key={i}
+            className={`w-9 h-11 rounded-xl border flex items-center justify-center text-sm font-bold tnum ${
+              i < 4 ? "bg-[#0A1C3F] text-white border-[#0A1C3F] shadow-md shadow-blue-900/20" : "bg-white text-[#0A1C3F]/35 border-[#0A1C3F]/15"
+            }`}
+          >
+            {d}
+          </div>
+        ))}
+      </div>
+    );
+  if (kind === "tally")
+    return (
+      <div className="mt-6 rounded-2xl bg-gradient-to-br from-[#0B2A6B] to-[#081738] text-white p-4 flex items-center justify-between shadow-lg shadow-blue-900/25" aria-hidden="true">
+        <div>
+          <p className="text-[10px] uppercase tracking-widest text-sky-300 font-bold">Tally Prime XML</p>
+          <p className="text-sm font-bold mt-0.5 tnum">248 vouchers · Ready</p>
+        </div>
+        <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-200 bg-emerald-400/15 border border-emerald-300/30 px-2.5 py-1 rounded-full">
+          <Check className="w-3.5 h-3.5" /> Synced
+        </span>
+      </div>
+    );
+  if (kind === "sla")
+    return (
+      <div className="mt-6 flex items-center gap-4" aria-hidden="true">
+        <div className="relative w-16 h-16">
+          <div className="absolute inset-0 rounded-full border-[6px] border-[#0A1C3F]/10" />
+          <div className="absolute inset-0 rounded-full border-[6px] border-transparent border-t-blue-600 border-r-sky-400 rotate-45" />
+          <div className="absolute inset-0 flex items-center justify-center text-xs font-black tnum text-[#0A1C3F]">1h</div>
+        </div>
+        <div className="text-xs font-semibold text-[#0A1C3F]/60">
+          <p className="font-bold text-[#0A1C3F]">#TCK-482 · Plumber en route</p>
+          <p className="mt-1">Auto-escalates if breached</p>
+        </div>
+      </div>
+    );
+  if (kind === "vote")
+    return (
+      <div className="mt-6 space-y-2.5" aria-hidden="true">
+        {[
+          { label: "Approve annual budget", pct: 82 },
+          { label: "EV charging in B-block", pct: 64 },
+        ].map((p, i) => (
+          <div key={i}>
+            <div className="flex justify-between text-[11px] font-bold text-[#0A1C3F]/70 mb-1">
+              <span>{p.label}</span>
+              <span className="tnum">{p.pct}%</span>
+            </div>
+            <div className="h-2 rounded-full bg-[#0A1C3F]/10 overflow-hidden">
+              <div style={{ width: `${p.pct}%` }} className={`h-full rounded-full ${i === 0 ? "bg-gradient-to-r from-blue-700 to-sky-400" : "bg-[#0A1C3F]"}`} />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  if (kind === "listing")
+    return (
+      <div className="mt-6 flex flex-wrap gap-2" aria-hidden="true">
+        <span className="text-[11px] font-bold bg-[#0A1C3F] text-white px-3 py-1.5 rounded-full">3BHK · For Sale</span>
+        <span className="text-[11px] font-bold bg-white border border-[#0A1C3F]/15 text-[#0A1C3F]/70 px-3 py-1.5 rounded-full">2BHK · Rent</span>
+        <span className="text-[11px] font-bold bg-blue-50 border border-blue-200 text-blue-700 px-3 py-1.5 rounded-full">Verified ✓</span>
+      </div>
+    );
+  if (kind === "ledger")
+    return (
+      <div className="mt-6 rounded-2xl border border-[#0A1C3F]/12 overflow-hidden shadow-sm" aria-hidden="true">
+        <div className="bg-[#0A1C3F] text-white text-[11px] font-bold px-4 py-2 flex justify-between">
+          <span>Maker: Treasurer</span>
+          <span className="text-sky-300">→ Checker: Secretary</span>
+        </div>
+        <div className="bg-white text-[11px] font-semibold text-[#0A1C3F]/70 px-4 py-2.5 flex justify-between">
+          <span>Diesel refill · ₹18,400</span>
+          <span className="text-emerald-700 font-bold">Approved</span>
+        </div>
+      </div>
+    );
+  if (kind === "parking")
+    return (
+      <div className="mt-6 grid grid-cols-6 gap-1.5" aria-hidden="true">
+        {Array.from({ length: 12 }).map((_, i) => (
+          <div
+            key={i}
+            className={`h-9 rounded-lg border text-[10px] font-black flex items-center justify-center tnum ${
+              i === 3 ? "bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-600/30" : i % 4 === 0 ? "bg-[#0A1C3F] text-white border-[#0A1C3F]" : "bg-white border-[#0A1C3F]/15 text-[#0A1C3F]/45"
+            }`}
+          >
+            B{i + 1}
+          </div>
+        ))}
+      </div>
+    );
+  return (
+    <div className="mt-6 rounded-2xl bg-blue-50/80 border border-blue-200/70 p-4 flex items-start gap-3" aria-hidden="true">
+      <Bell className="w-4 h-4 text-blue-700 shrink-0 mt-0.5" />
+      <p className="text-xs font-semibold text-[#0A1C3F]/75 leading-relaxed">
+        Overhead tank cleaning tomorrow, 10 AM – 1 PM. Pushed to <strong>1,240 residents</strong> via app + SMS + WhatsApp.
+      </p>
+    </div>
+  );
+}
+
+// ─── Testimonials & FAQs ─────────────────────────────────────────────
 const TESTIMONIALS = [
   {
     name: "Col. (Retd.) Rajesh Sharma",
@@ -188,7 +391,6 @@ const TESTIMONIALS = [
   },
 ];
 
-// ─── Frequently Asked Questions ───────────────────────────────────────────────
 const FAQS = [
   {
     q: "How long does it take to onboard our housing society onto AapkiSociety?",
@@ -216,6 +418,139 @@ const FAQS = [
   },
 ];
 
+const COMPARISON_ROWS = [
+  {
+    feat: "100% Ad-Free & Data Private (DPDP Act 2023)",
+    as: true, wa: false, leg: false,
+    note: "No commercial spam or resident data monetization",
+  },
+  {
+    feat: "Direct 1-Click Tally Prime & ERP Export",
+    as: true, wa: false, leg: false,
+    note: "Save chartered accountant hours without re-entry",
+  },
+  {
+    feat: "Maker-Checker Financial Approval Governance",
+    as: true, wa: false, leg: false,
+    note: "Dual authorization prevents unauthorized expenses",
+  },
+  {
+    feat: "Automated GST & TDS Invoicing with UPI Receipts",
+    as: true, wa: false, leg: true,
+    note: "Instant ledger and bank reconciliation updates",
+  },
+  {
+    feat: "Dedicated SLA Timers for Lift/Plumber Helpdesk",
+    as: true, wa: false, leg: true,
+    note: "Overdue complaints automatically escalate",
+  },
+  {
+    feat: "Paid Society Flat Listings (Sale / Rent)",
+    as: true, wa: false, leg: false,
+    note: "Generate income for the society with zero broker spam",
+  },
+  {
+    feat: "Transparent, Predictable Per-Flat Pricing",
+    as: true, wa: true, leg: false,
+    note: "No hidden hardware lock-ins or surprise fees",
+  },
+];
+
+const SOCIETY_NAMES = ["LODHA RESIDENCY", "PRESTIGE ENCLAVE", "GODREJ GARDENS", "DLF APARTMENTS", "BRIGADE HORIZON", "SOBHA EMERALD"];
+
+const BAND_ITEMS = ["Maintenance Billing", "Gate Security", "Tally Export", "SLA Helpdesk", "AGM Voting", "Property Listings"];
+
+const HEADLINE_PHRASES = [
+  { lead: "runs", accent: "itself." },
+  { lead: "collects", accent: "on time." },
+  { lead: "guards", accent: "every gate." },
+  { lead: "balances", accent: "every rupee." },
+];
+
+// ─── Scroll progress hairline ────────────────────────────────────────
+function ScrollProgress() {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const onScroll = () => {
+      const h = document.documentElement;
+      const max = h.scrollHeight - h.clientHeight;
+      const p = max > 0 ? h.scrollTop / max : 0;
+      if (ref.current) ref.current.style.transform = `scaleX(${p})`;
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+  return (
+    <div
+      ref={ref}
+      aria-hidden="true"
+      className="scroll-progress fixed top-0 left-0 right-0 h-[3px] z-[60] bg-gradient-to-r from-blue-800 via-blue-500 to-sky-400"
+    />
+  );
+}
+
+// ─── Rotating hero headline (filmstrip) ──────────────────────────────
+function RotatingHeadline() {
+  const [index, setIndex] = useState(0);
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const id = setInterval(() => setIndex((i) => (i + 1) % HEADLINE_PHRASES.length), 2800);
+    return () => clearInterval(id);
+  }, []);
+  return (
+    <span className="filmstrip-viewport block h-[1.14em]" aria-live="polite">
+      <span className="filmstrip-reel" style={{ transform: `translateY(-${index * 1.14}em)` }}>
+        {HEADLINE_PHRASES.map((p, i) => (
+          <span key={p.lead} className="block h-[1.14em] leading-[1.14]" aria-hidden={i !== index}>
+            {p.lead} <em className="blue-sheen font-semibold">{p.accent}</em>
+          </span>
+        ))}
+      </span>
+      <span className="sr-only">
+        {HEADLINE_PHRASES.map((p) => `${p.lead} ${p.accent}`).join(" ")}
+      </span>
+    </span>
+  );
+}
+
+// ─── Magnetic hover wrapper ──────────────────────────────────────────
+function Magnetic({ children, strength = 10 }: { children: React.ReactNode; strength?: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const onMove = (e: React.MouseEvent) => {
+    const el = ref.current;
+    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const r = el.getBoundingClientRect();
+    const x = e.clientX - (r.left + r.width / 2);
+    const y = e.clientY - (r.top + r.height / 2);
+    el.style.transform = `translate(${((x / r.width) * strength).toFixed(1)}px, ${((y / r.height) * strength).toFixed(1)}px)`;
+  };
+  const onLeave = () => {
+    if (ref.current) ref.current.style.transform = "translate(0px, 0px)";
+  };
+  return (
+    <div ref={ref} onMouseMove={onMove} onMouseLeave={onLeave} className="inline-flex transition-transform duration-200 will-change-transform">
+      {children}
+    </div>
+  );
+}
+
+// ─── Back to top ─────────────────────────────────────────────────────
+function BackToTop({ visible }: { visible: boolean }) {
+  return (
+    <button
+      onClick={() => window.scrollTo({ behavior: "smooth", top: 0 })}
+      aria-label="Back to top"
+      tabIndex={visible ? 0 : -1}
+      className={`fixed bottom-6 right-6 z-40 w-12 h-12 rounded-full bg-[#0A1C3F] text-white shadow-xl shadow-blue-900/30 items-center justify-center transition-all duration-300 hover:bg-blue-700 hover:-translate-y-1 cursor-pointer flex ${
+        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
+      }`}
+    >
+      <ArrowUp className="w-5 h-5" />
+    </button>
+  );
+}
+
 export default function Home() {
   const [isMounted, setIsMounted] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -227,6 +562,11 @@ export default function Home() {
   const [simulatorView, setSimulatorView] = useState<"resident" | "committee" | "guard">("resident");
   const [activeFaq, setActiveFaq] = useState<number | null>(0);
   const [annualBilling, setAnnualBilling] = useState(true);
+  const [scrolled, setScrolled] = useState(false);
+  const [showTop, setShowTop] = useState(false);
+  const [quoteIndex, setQuoteIndex] = useState(0);
+  const [quotePaused, setQuotePaused] = useState(false);
+  const tiltRef = useRef<HTMLDivElement>(null);
 
   // Interactive Calculator State
   const [calcFlats, setCalcFlats] = useState<number>(120);
@@ -248,22 +588,69 @@ export default function Home() {
   });
 
   useEffect(() => {
-    setIsMounted(true);
-    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-    if (token) setIsLoggedIn(true);
+    // Defer mount state to a frame callback so hydration completes first
+    // (avoids synchronous setState-in-effect cascading renders).
+    const id = requestAnimationFrame(() => {
+      setIsMounted(true);
+      if (typeof window !== "undefined" && localStorage.getItem("token")) {
+        setIsLoggedIn(true);
+      }
+    });
+    return () => cancelAnimationFrame(id);
   }, []);
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    document.body.style.overflow = demoModalOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [demoModalOpen]);
+
+  // Header elevation + back-to-top visibility (state only flips on change)
+  useEffect(() => {
+    const onScroll = () => {
+      const s = window.scrollY > 8;
+      const t = window.scrollY > 900;
+      setScrolled((prev) => (prev === s ? prev : s));
+      setShowTop((prev) => (prev === t ? prev : t));
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Testimonial autoplay (pauses on hover, respects reduced motion)
+  useEffect(() => {
+    if (quotePaused) return;
+    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const id = setInterval(() => setQuoteIndex((i) => (i + 1) % TESTIMONIALS.length), 6000);
+    return () => clearInterval(id);
+  }, [quotePaused]);
+
+  // 3D tilt for the hero console (direct DOM writes, no re-renders)
+  const handleTiltMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const el = tiltRef.current;
+    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width - 0.5;
+    const py = (e.clientY - r.top) / r.height - 0.5;
+    el.style.transform = `rotateX(${(-py * 6).toFixed(2)}deg) rotateY(${(px * 8).toFixed(2)}deg)`;
+  };
+  const handleTiltLeave = () => {
+    if (tiltRef.current) tiltRef.current.style.transform = "rotateX(0deg) rotateY(0deg)";
+  };
 
   if (!isMounted) return null;
 
   // Dynamic Calculator Computations
   const monthlyMaintenanceCollection = calcFlats * calcFee;
-  // Recovered 11.5% defaulter rate on average
   const estimatedRecovery = Math.round(monthlyMaintenanceCollection * 0.115);
-  // Hours saved in manual ledger, billing, gatebook, receipt writing
   const hoursSaved = calcFlats >= 250 ? 55 : calcFlats >= 100 ? 38 : 22;
-  // Per flat cost on Compliance Plan (₹50 monthly or ₹42 annual)
   const softwareInvestment = calcFlats * (annualBilling ? 42 : 50);
   const netRoiMultiplier = Math.max(3, Math.round(estimatedRecovery / Math.max(softwareInvestment, 1)));
+  const flatsFill = `${Math.round(((calcFlats - 20) / (500 - 20)) * 100)}%`;
+  const feeFill = `${Math.round(((calcFee - 1500) / (15000 - 1500)) * 100)}%`;
 
   // Filtered Feature List
   const filteredFeatures = selectedCategory === "all"
@@ -285,9 +672,8 @@ export default function Home() {
         setDemoModalOpen(false);
         setDemoForm({ societyName: "", city: "", flatCount: "100", name: "", phone: "", email: "" });
       }, 3500);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Demo submission failed:", err);
-      // Still show successful confirmation so resident experience isn't interrupted
       setDemoSubmitted(true);
       setTimeout(() => {
         setDemoSubmitted(false);
@@ -299,145 +685,121 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans selection:bg-indigo-600 selection:text-white relative overflow-x-hidden">
+    <div className="min-h-screen bg-[#F7FAFF] text-slate-900 font-sans selection:bg-blue-700 selection:text-white relative overflow-x-hidden">
+      <ScrollProgress />
 
-      {/* ── BACKGROUND AMBIENT GLOW MESH ─────────────────────────────────────── */}
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        <div className="absolute top-0 right-1/4 w-[750px] h-[750px] rounded-full bg-gradient-to-br from-indigo-300/35 via-violet-200/25 to-transparent blur-[120px]" />
-        <div className="absolute top-1/3 left-[-100px] w-[650px] h-[650px] rounded-full bg-gradient-to-tr from-blue-300/30 via-teal-200/20 to-transparent blur-[130px]" />
-        <div className="absolute bottom-1/4 right-[-100px] w-[800px] h-[800px] rounded-full bg-gradient-to-tl from-purple-200/30 via-indigo-100/25 to-transparent blur-[140px]" />
-      </div>
-
-      {/* ── TOP SCROLLER MARQUEE ANNOUNCEMENT ─────────────────────────────────── */}
-      <div className="relative z-50 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white text-xs font-semibold py-2.5 px-4 border-b border-indigo-900/50 shadow-inner">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="flex h-2 w-2 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+      {/* ── 01 · ANNOUNCEMENT HAIRLINE ─────────────────────────────────── */}
+      <div className="relative z-50 bg-gradient-to-r from-blue-50 via-sky-50 to-blue-50 text-[#0A1C3F] text-xs border-b border-blue-100">
+        <div className="max-w-7xl mx-auto flex items-center gap-4 px-4 sm:px-6 lg:px-8 py-2.5">
+          <span className="flex items-center gap-2 shrink-0">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="ticker-dot absolute inline-flex h-full w-full rounded-full bg-blue-600" />
             </span>
-            <span className="bg-indigo-600/80 text-white px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider">
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white bg-blue-700 px-2 py-0.5 rounded-full shadow-sm shadow-blue-700/30">
               v4.0 Live
             </span>
-          </div>
-
-          <div className="overflow-hidden whitespace-nowrap flex-1 mx-4 text-slate-200 text-xs md:text-sm">
-            <div className="inline-block animate-marquee">
-              ✨ <strong className="text-white font-bold">AapkiSociety Platform v4.0 is here:</strong> Direct 1-Click Tally Prime XML Export • GST/TDS Compliant Automated Invoicing • Paid Society Property Listings • 100% Indian Data Sovereignty (DPDP Act 2023) • Trusted by 500+ Housing Societies across Mumbai, Pune, Delhi-NCR &amp; Bengaluru!
+          </span>
+          <div className="overflow-hidden whitespace-nowrap flex-1 marquee-mask">
+            <div className="marquee-track-fast text-[12px] font-medium text-[#0A1C3F]/60">
+              {[0, 1].map((dup) => (
+                <span key={dup} aria-hidden={dup === 1} className="flex shrink-0">
+                  <span className="px-6">1-Click Tally Prime XML Export <span className="text-blue-500 px-4">✦</span> GST / TDS Compliant Invoicing <span className="text-blue-500 px-4">✦</span> Paid Society Property Listings <span className="text-blue-500 px-4">✦</span> 100% Indian Data Sovereignty — DPDP Act 2023 <span className="text-blue-500 px-4">✦</span> Trusted by 500+ societies <span className="text-blue-500 px-4">✦</span></span>
+                </span>
+              ))}
             </div>
           </div>
-
           <button
             onClick={() => setDemoModalOpen(true)}
-            className="hidden sm:inline-flex items-center gap-1 text-[11px] font-bold text-indigo-300 hover:text-white transition-colors underline shrink-0 cursor-pointer"
+            className="hidden sm:inline-flex items-center gap-1 text-[11px] font-bold text-blue-700 hover:text-blue-900 transition-colors underline underline-offset-4 shrink-0 cursor-pointer"
           >
-            Schedule 1-on-1 Walkthrough <ArrowRight className="w-3 h-3" />
+            Schedule walkthrough <ArrowRight className="w-3 h-3" />
           </button>
         </div>
       </div>
 
-      {/* ── STICKY GLASSMORPHIC HEADER ───────────────────────────────────────── */}
-      <header className="sticky top-0 z-40 bg-white/85 backdrop-blur-xl border-b border-slate-200/70 shadow-[0_4px_30px_rgba(0,0,0,0.03)] transition-all">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
-          {/* Brand Logo */}
-          <Link href="/" className="flex items-center gap-3.5 group">
-            <div className="relative w-11 h-11 rounded-2xl overflow-hidden shadow-md shadow-indigo-600/15 border border-slate-200/80 bg-white group-hover:scale-105 transition-transform duration-300 shrink-0">
-              <Image
-                src="/aapp.jpeg"
-                alt="AapkiSociety Logo"
-                fill
-                sizes="44px"
-                className="object-cover"
-                priority
-              />
+      {/* ── 02 · FLOATING PILL NAV ─────────────────────────────────────── */}
+      <header className="sticky top-3 z-40 px-4 sm:px-6">
+        <div className={`max-w-6xl mx-auto flex items-center justify-between gap-3 rounded-2xl border backdrop-blur-xl pl-3 pr-2 sm:pl-4 sm:pr-3 py-2 transition-all duration-300 ${
+          scrolled
+            ? "border-blue-200 bg-white/92 shadow-[0_18px_55px_rgba(11,42,107,0.18)]"
+            : "border-blue-100/80 bg-white/85 shadow-[0_12px_40px_rgba(11,42,107,0.10)]"
+        }`}>
+          <Link href="/" className="flex items-center gap-3 group min-h-[44px]">
+            <div className="relative w-10 h-10 rounded-xl overflow-hidden border border-blue-100 bg-white shrink-0 shadow-sm">
+              <Image src="/aapp.jpeg" alt="AapkiSociety logo" fill sizes="40px" className="object-cover" priority />
             </div>
-            <div>
+            <div className="leading-none">
               <div className="flex items-center gap-1.5">
-                <span className="text-xl font-black tracking-tight text-slate-950">Aapki<span className="text-indigo-600">Society</span></span>
-                <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">OS</span>
+                <span className="text-[17px] font-black tracking-tight" style={{ color: NAVY }}>Aapki<span className="text-blue-700">Society</span></span>
+                <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">OS</span>
               </div>
-              <p className="text-[10px] font-bold text-slate-500 tracking-wider uppercase">Smart Society Management</p>
+              <p className="text-[9px] font-bold text-slate-400 tracking-[0.22em] uppercase mt-1">Society Operating System</p>
             </div>
           </Link>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-1 bg-slate-100/70 p-1.5 rounded-full border border-slate-200/60 text-sm font-semibold text-slate-600">
-            <a href="#features" className="px-4 py-1.5 rounded-full hover:text-indigo-600 hover:bg-white transition-all">Features</a>
-            <a href="#simulator" className="px-4 py-1.5 rounded-full hover:text-indigo-600 hover:bg-white transition-all">Live Preview</a>
-            <a href="#calculator" className="px-4 py-1.5 rounded-full hover:text-indigo-600 hover:bg-white transition-all">ROI Calculator</a>
-            <a href="#comparison" className="px-4 py-1.5 rounded-full hover:text-indigo-600 hover:bg-white transition-all">Why Us</a>
-            <a href="#pricing" className="px-4 py-1.5 rounded-full hover:text-indigo-600 hover:bg-white transition-all">Pricing</a>
-            <a href="#faq" className="px-4 py-1.5 rounded-full hover:text-indigo-600 hover:bg-white transition-all">FAQs</a>
+          <nav aria-label="Primary" className="hidden lg:flex items-center gap-1 text-[13px] font-semibold text-slate-500">
+            <a href="#features" className="link-sweep px-3.5 py-2 hover:text-blue-700 transition-colors">Modules</a>
+            <a href="#simulator" className="link-sweep px-3.5 py-2 hover:text-blue-700 transition-colors">Live Demo</a>
+            <a href="#calculator" className="link-sweep px-3.5 py-2 hover:text-blue-700 transition-colors">ROI</a>
+            <a href="#comparison" className="link-sweep px-3.5 py-2 hover:text-blue-700 transition-colors">Why Us</a>
+            <a href="#pricing" className="link-sweep px-3.5 py-2 hover:text-blue-700 transition-colors">Pricing</a>
+            <a href="#faq" className="link-sweep px-3.5 py-2 hover:text-blue-700 transition-colors">FAQs</a>
           </nav>
 
-          {/* Header Action Buttons */}
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setDemoModalOpen(true)}
-              className="hidden md:inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold text-slate-700 hover:text-indigo-600 hover:bg-indigo-50/70 transition-all cursor-pointer"
-            >
-              <PhoneCall className="w-4 h-4 text-indigo-600" />
-              <span>Book Demo</span>
-            </button>
-
+          <div className="flex items-center gap-2">
             {isLoggedIn ? (
               <Link
                 href="/dashboard"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold text-sm hover:from-indigo-700 hover:to-violet-700 shadow-md shadow-indigo-600/25 active:scale-95 transition-all"
+                className="inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl bg-blue-700 text-white font-bold text-[13px] hover:bg-blue-800 shadow-lg shadow-blue-700/25 active:scale-95 transition-all min-h-[44px]"
               >
-                Go to Dashboard <ArrowRight className="w-4 h-4" />
+                Dashboard <ArrowRight className="w-4 h-4" />
               </Link>
             ) : (
               <>
-                <Link
-                  href="/login"
-                  className="hidden sm:inline-flex px-4 py-2 text-sm font-bold text-slate-700 hover:text-indigo-600 transition-colors"
-                >
+                <Link href="/login" className="hidden sm:inline-flex px-3 py-2 text-[13px] font-bold text-slate-500 hover:text-blue-700 transition-colors min-h-[44px] items-center">
                   Sign In
                 </Link>
                 <Link
                   href="/register"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-sm hover:bg-slate-800 shadow-lg shadow-slate-900/20 active:scale-95 transition-all"
+                  className="inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl bg-blue-700 text-white font-bold text-[13px] hover:bg-blue-800 shadow-lg shadow-blue-700/25 active:scale-95 transition-all min-h-[44px]"
                 >
-                  <span>Register Society</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <span className="hidden sm:inline">Start Free Trial</span>
+                  <span className="sm:hidden">Trial</span>
+                  <ArrowUpRight className="w-4 h-4" />
                 </Link>
               </>
             )}
-
-            {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 rounded-xl text-slate-700 hover:bg-slate-100 transition-colors"
-              aria-label="Toggle Navigation Menu"
+              className="lg:hidden p-2.5 rounded-xl text-slate-600 hover:bg-blue-50 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+              aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+              aria-expanded={mobileMenuOpen}
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </div>
 
-        {/* Mobile Dropdown Menu */}
         {mobileMenuOpen && (
-          <div className="lg:hidden bg-white border-b border-slate-200 px-6 py-5 space-y-4 shadow-xl animate-fade-in">
-            <nav className="flex flex-col gap-3 text-base font-semibold text-slate-700">
-              <a onClick={() => setMobileMenuOpen(false)} href="#features" className="py-2 border-b border-slate-100">Features</a>
-              <a onClick={() => setMobileMenuOpen(false)} href="#simulator" className="py-2 border-b border-slate-100">Live Simulator</a>
-              <a onClick={() => setMobileMenuOpen(false)} href="#calculator" className="py-2 border-b border-slate-100">ROI Calculator</a>
-              <a onClick={() => setMobileMenuOpen(false)} href="#comparison" className="py-2 border-b border-slate-100">Comparison</a>
-              <a onClick={() => setMobileMenuOpen(false)} href="#pricing" className="py-2 border-b border-slate-100">Pricing</a>
-              <a onClick={() => setMobileMenuOpen(false)} href="#faq" className="py-2">FAQs</a>
+          <div className="lg:hidden max-w-6xl mx-auto mt-2 rounded-2xl border border-blue-100 bg-white/95 backdrop-blur-xl px-5 py-4 shadow-2xl shadow-blue-900/10 animate-fade-in">
+            <nav aria-label="Mobile" className="flex flex-col text-[15px] font-semibold text-slate-600">
+              {[["Modules", "#features"], ["Live Demo", "#simulator"], ["ROI Calculator", "#calculator"], ["Why Us", "#comparison"], ["Pricing", "#pricing"], ["FAQs", "#faq"]].map(([label, href]) => (
+                <a key={href} onClick={() => setMobileMenuOpen(false)} href={href} className="py-3 border-b border-slate-100 last:border-0 hover:text-blue-700">
+                  {label}
+                </a>
+              ))}
             </nav>
-            <div className="pt-2 flex flex-col gap-3">
+            <div className="pt-2 flex flex-col gap-2.5">
               <button
                 onClick={() => { setMobileMenuOpen(false); setDemoModalOpen(true); }}
-                className="w-full py-3 rounded-xl bg-indigo-50 text-indigo-700 font-bold text-sm text-center flex items-center justify-center gap-2"
+                className="w-full py-3 rounded-xl bg-blue-50 border border-blue-100 text-blue-800 font-bold text-sm flex items-center justify-center gap-2 min-h-[44px]"
               >
                 <PhoneCall className="w-4 h-4" /> Book Live Demo
               </button>
               <Link
                 href="/register"
                 onClick={() => setMobileMenuOpen(false)}
-                className="w-full py-3 rounded-xl bg-indigo-600 text-white font-bold text-sm text-center flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/25"
+                className="w-full py-3 rounded-xl bg-blue-700 text-white font-bold text-sm text-center flex items-center justify-center gap-2 min-h-[44px]"
               >
                 Start 30-Day Free Trial <ArrowRight className="w-4 h-4" />
               </Link>
@@ -446,1436 +808,1303 @@ export default function Home() {
         )}
       </header>
 
-      {/* ── HERO SECTION ─────────────────────────────────────────────────────── */}
-      <section className="relative z-10 pt-12 pb-20 md:pt-16 md:pb-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="flex flex-col items-center text-center max-w-4xl mx-auto mb-16">
-          {/* Trust Pill */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/90 border border-slate-200/90 shadow-sm text-xs font-extrabold text-slate-700 mb-8 backdrop-blur-md">
-            <span className="flex items-center justify-center w-5 h-5 rounded-full bg-indigo-100 text-indigo-600">
-              <Sparkles className="w-3 h-3" />
-            </span>
-            <span>Built Specifically for Indian RWAs &amp; CHSs</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
-            <span className="text-indigo-600 font-black">DPDP Act 2023 Compliant</span>
-          </div>
+      {/* ── 03 · SKY-MESH HERO ─────────────────────────────────────────── */}
+      <section className="relative overflow-hidden sky-canvas grain-light">
+        <div className="blueprint-light absolute inset-0" aria-hidden="true" />
+        <div className="aurora absolute -top-32 left-[8%] w-[480px] h-[480px] rounded-full bg-blue-400/25 blur-[130px]" aria-hidden="true" />
+        <div className="aurora absolute top-10 right-[4%] w-[420px] h-[420px] rounded-full bg-sky-300/30 blur-[130px]" style={{ animationDelay: "-6s" }} aria-hidden="true" />
 
-          {/* Main Headline */}
-          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-slate-950 leading-[1.08] mb-6">
-            Run Your Housing Society on Autopilot.{" "}
-            <span className="block mt-2 bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 bg-clip-text text-transparent">
-              With 100% Transparency.
-            </span>
-          </h1>
-
-          {/* Subtitle */}
-          <p className="text-lg sm:text-xl text-slate-600 leading-relaxed font-normal max-w-3xl mb-10">
-            Say goodbye to chaotic WhatsApp groups, lost Excel receipts, and gate confusion.
-            AapkiSociety unites <strong className="text-slate-900 font-bold">automated GST billing</strong>,{" "}
-            <strong className="text-slate-900 font-bold">1-click Tally export</strong>,{" "}
-            <strong className="text-slate-900 font-bold">visitor gate passes</strong>, and{" "}
-            <strong className="text-slate-900 font-bold">SLA helpdesk</strong> into one beautifully intuitive platform.
-          </p>
-
-          {/* Primary Action Buttons */}
-          <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto justify-center mb-12">
-            <Link
-              href="/register"
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-base shadow-xl shadow-indigo-600/30 hover:shadow-indigo-600/40 hover:-translate-y-0.5 transition-all duration-200 active:scale-95 group"
-            >
-              <span>Start 30-Day Free Trial</span>
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </Link>
-
-            <button
-              onClick={() => setDemoModalOpen(true)}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl bg-white hover:bg-slate-50 text-slate-800 font-extrabold text-base border-2 border-slate-200/90 shadow-sm hover:border-indigo-300 hover:shadow-md transition-all duration-200 active:scale-95 cursor-pointer"
-            >
-              <PhoneCall className="w-5 h-5 text-indigo-600" />
-              <span>Book Interactive Demo</span>
-            </button>
-          </div>
-
-          {/* Social Proof Badges */}
-          <div className="flex flex-wrap items-center justify-center gap-y-3 gap-x-8 text-xs sm:text-sm font-semibold text-slate-600">
-            <div className="flex items-center gap-2">
-              <div className="flex -space-x-2">
-                {[1, 2, 3, 4].map((i) => (
-                  <div
-                    key={i}
-                    className="w-7 h-7 rounded-full border-2 border-white bg-gradient-to-tr from-indigo-500 to-violet-500 text-[10px] text-white font-bold flex items-center justify-center shadow-sm"
-                  >
-                    {["RK", "MI", "AS", "PV"][i - 1]}
-                  </div>
-                ))}
-              </div>
-              <span className="font-bold text-slate-800">10,000+ Verified Residents</span>
-            </div>
-
-            <div className="h-4 w-px bg-slate-300 hidden sm:block"></div>
-
-            <div className="flex items-center gap-1.5">
-              <div className="flex text-amber-400">
-                {[1, 2, 3, 4, 5].map((s) => (
-                  <Star key={s} className="w-4 h-4 fill-current" />
-                ))}
-              </div>
-              <span className="font-bold text-slate-800">4.9/5 Rating</span>
-            </div>
-
-            <div className="h-4 w-px bg-slate-300 hidden sm:block"></div>
-
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              <span className="font-bold text-slate-800">ISO 27001 Certified &amp; AWS Mumbai Hosted</span>
-            </div>
-          </div>
-        </div>
-
-        {/* ── 3-WAY INTERACTIVE PRODUCT SIMULATOR ───────────────────────────────── */}
-        <div id="simulator" className="relative max-w-5xl mx-auto scroll-mt-28">
-          <div className="text-center mb-6">
-            <span className="text-xs font-black uppercase tracking-widest text-indigo-600 bg-indigo-50 border border-indigo-200/80 px-3 py-1 rounded-full">
-              Live Product Experience
-            </span>
-            <h3 className="text-2xl sm:text-3xl font-black text-slate-900 mt-2">
-              Experience AapkiSociety in Real-Time
-            </h3>
-            <p className="text-sm text-slate-500 mt-1">
-              Select a viewpoint below to interact with our live simulated interfaces
-            </p>
-          </div>
-
-          {/* Mode Switcher Tabs */}
-          <div className="flex justify-center mb-6">
-            <div className="inline-flex p-1.5 bg-slate-200/80 backdrop-blur-md rounded-2xl border border-slate-300/80 shadow-inner">
-              <button
-                onClick={() => setSimulatorView("resident")}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-extrabold transition-all cursor-pointer ${
-                  simulatorView === "resident"
-                    ? "bg-white text-indigo-600 shadow-md shadow-slate-200"
-                    : "text-slate-600 hover:text-slate-950"
-                }`}
-              >
-                <Smartphone className="w-4 h-4" />
-                <span>Resident App View</span>
-              </button>
-
-              <button
-                onClick={() => setSimulatorView("committee")}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-extrabold transition-all cursor-pointer ${
-                  simulatorView === "committee"
-                    ? "bg-white text-indigo-600 shadow-md shadow-slate-200"
-                    : "text-slate-600 hover:text-slate-950"
-                }`}
-              >
-                <Landmark className="w-4 h-4" />
-                <span>RWA Committee Command Center</span>
-              </button>
-
-              <button
-                onClick={() => setSimulatorView("guard")}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-extrabold transition-all cursor-pointer ${
-                  simulatorView === "guard"
-                    ? "bg-white text-indigo-600 shadow-md shadow-slate-200"
-                    : "text-slate-600 hover:text-slate-950"
-                }`}
-              >
-                <Shield className="w-4 h-4" />
-                <span>Security Gate Tablet</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Simulator Visual Container */}
-          <div className="relative bg-white rounded-3xl border border-slate-200/90 shadow-[0_25px_70px_rgba(79,70,229,0.12)] overflow-hidden transition-all duration-300">
-            {/* Window Title Bar */}
-            <div className="bg-slate-900 text-white px-6 py-3.5 flex items-center justify-between border-b border-slate-800">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-rose-500"></div>
-                <div className="w-3 h-3 rounded-full bg-amber-500"></div>
-                <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
-                <span className="text-xs font-bold text-slate-400 ml-2">
-                  {simulatorView === "resident" && "AapkiSociety Resident Portal — Flat 402, Wing B"}
-                  {simulatorView === "committee" && "RWA Executive Dashboard — Prestige Lakeside CHS"}
-                  {simulatorView === "guard" && "Gate #1 Security Terminal — Live Access Log"}
-                </span>
-              </div>
-              <span className="text-[11px] font-bold bg-indigo-500/20 text-indigo-300 px-2.5 py-0.5 rounded border border-indigo-400/30">
-                Simulated Sandbox
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-24 pb-14 text-center">
+          <Reveal>
+            <div className="inline-flex flex-wrap items-center justify-center gap-x-3 gap-y-2 px-4 py-2 rounded-full bg-white/80 border border-blue-100 shadow-sm backdrop-blur-md text-[11px] font-bold text-slate-600 mb-8">
+              <span className="flex items-center gap-1.5 text-blue-700">
+                <Sparkles className="w-3.5 h-3.5" /> Built for Indian RWAs &amp; CHSs
+              </span>
+              <span className="w-1 h-1 rounded-full bg-blue-200" aria-hidden="true" />
+              <span className="flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> DPDP Act 2023 Compliant
               </span>
             </div>
+          </Reveal>
 
-            {/* 1. RESIDENT APP VIEW */}
-            {simulatorView === "resident" && (
-              <div className="p-6 sm:p-8 bg-slate-50/50 animate-fade-in">
-                <div className="grid md:grid-cols-3 gap-6">
-                  {/* Left Column: Maintenance Card */}
-                  <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between">
-                    <div>
-                      <div className="flex justify-between items-start mb-4">
-                        <span className="text-xs font-extrabold text-indigo-600 uppercase tracking-wider bg-indigo-50 px-2.5 py-1 rounded-md">
-                          August 2026 Bill
-                        </span>
-                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${billPaid ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>
-                          {billPaid ? "Paid & Verified" : "Due in 3 Days"}
-                        </span>
-                      </div>
-                      <p className="text-xs font-semibold text-slate-500">Total Payable Amount</p>
-                      <h4 className="text-3xl font-black text-slate-950 mt-1">₹4,250</h4>
-                      <div className="text-[11px] text-slate-500 mt-2 space-y-1 border-t border-slate-100 pt-3">
-                        <div className="flex justify-between"><span>Maintenance &amp; Sinking:</span> <span className="font-semibold">₹3,200</span></div>
-                        <div className="flex justify-between"><span>Lift &amp; Diesel Generator AMC:</span> <span className="font-semibold">₹650</span></div>
-                        <div className="flex justify-between"><span>GST @ 18%:</span> <span className="font-semibold">₹400</span></div>
-                      </div>
-                    </div>
+          <Reveal delay={90}>
+            <h1 className="font-display font-medium tracking-[-0.02em] leading-[1.04] text-[clamp(2.75rem,7.5vw,6.25rem)] max-w-5xl mx-auto" style={{ color: NAVY }}>
+              The society that
+              <RotatingHeadline />
+            </h1>
+          </Reveal>
 
-                    <div className="mt-6">
-                      {billPaid ? (
-                        <div className="flex items-center gap-2 text-emerald-700 bg-emerald-50 border border-emerald-200 p-3 rounded-xl text-xs font-bold justify-center">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                          <span>Receipt #REC-2026-894 Generated</span>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => setBillPaid(true)}
-                          className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-sm shadow-md shadow-emerald-600/20 active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2"
-                        >
-                          <Wallet className="w-4 h-4" /> Pay ₹4,250 via UPI / Card
-                        </button>
-                      )}
-                    </div>
+          <Reveal delay={180}>
+            <p className="text-slate-500 text-base sm:text-xl leading-relaxed max-w-2xl mx-auto mt-7 font-normal">
+              Billing, gate, helpdesk and accounts — one calm operating system
+              replacing WhatsApp chaos, lost receipts and Excel ledgers.
+            </p>
+          </Reveal>
+
+          <Reveal delay={260}>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 mt-10">
+              <Magnetic>
+                <Link
+                  href="/register"
+                  className="btn-shine group w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl bg-blue-700 text-white font-extrabold text-[15px] hover:bg-blue-800 shadow-[0_18px_45px_rgba(29,78,216,0.35)] hover:shadow-[0_22px_55px_rgba(29,78,216,0.45)] hover:-translate-y-0.5 active:scale-[0.98] transition-all min-h-[52px]"
+                >
+                  Start 30-Day Free Trial
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </Magnetic>
+              <button
+                onClick={() => setDemoModalOpen(true)}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl bg-white text-[#0A1C3F] font-bold text-[15px] border border-blue-200 shadow-sm hover:border-blue-400 hover:shadow-lg hover:shadow-blue-100 active:scale-[0.98] transition-all cursor-pointer min-h-[52px]"
+              >
+                <span className="relative flex h-2 w-2">
+                  <span className="ticker-dot absolute inline-flex h-full w-full rounded-full bg-blue-600" />
+                </span>
+                Watch It Work Live
+              </button>
+            </div>
+          </Reveal>
+
+          <Reveal delay={340}>
+            <div className="flex flex-wrap items-center justify-center gap-x-7 gap-y-3 mt-10 text-[13px] font-semibold text-slate-500">
+              <span className="flex items-center gap-2.5">
+                <span className="flex -space-x-2" aria-hidden="true">
+                  {["RK", "MI", "AS", "PV"].map((t) => (
+                    <span key={t} className="w-7 h-7 rounded-full border-2 border-white bg-gradient-to-tr from-blue-700 to-sky-400 text-[9px] text-white font-black flex items-center justify-center shadow-sm">
+                      {t}
+                    </span>
+                  ))}
+                </span>
+                <span className="font-bold text-slate-700">10,000+ verified residents</span>
+              </span>
+              <span className="hidden sm:block h-4 w-px bg-blue-100" aria-hidden="true" />
+              <span className="flex items-center gap-1.5">
+                <span className="flex text-amber-400" aria-label="Rated 4.9 out of 5">
+                  {[1, 2, 3, 4, 5].map((s) => (<Star key={s} className="w-3.5 h-3.5 fill-current" />))}
+                </span>
+                <span className="font-bold text-slate-700">4.9/5</span>
+              </span>
+              <span className="hidden sm:block h-4 w-px bg-blue-100" aria-hidden="true" />
+              <span className="flex items-center gap-1.5">
+                <Lock className="w-3.5 h-3.5 text-emerald-600" />
+                <span className="font-bold text-slate-700">ISO 27001 · AWS Mumbai</span>
+              </span>
+            </div>
+          </Reveal>
+
+          {/* ── Hero console : floating glass command-centre ── */}
+          <Reveal delay={420} className="mt-14 tilt-stage">
+            <div
+              ref={tiltRef}
+              onMouseMove={handleTiltMove}
+              onMouseLeave={handleTiltLeave}
+              className="tilt-inner relative max-w-5xl mx-auto"
+            >
+              <div className="absolute -inset-x-8 -top-8 bottom-0 bg-gradient-to-b from-blue-200/50 to-transparent blur-2xl" aria-hidden="true" />
+              <div className="console-float relative rounded-3xl border border-blue-100 bg-white/85 backdrop-blur-2xl shadow-[0_40px_100px_rgba(11,42,107,0.16)] overflow-hidden text-left">
+                <div className="flex items-center justify-between px-5 sm:px-7 py-4 border-b border-blue-50 bg-gradient-to-r from-blue-50/60 to-transparent">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <span className="flex gap-1.5 shrink-0" aria-hidden="true">
+                      <span className="w-2.5 h-2.5 rounded-full bg-rose-400" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+                    </span>
+                    <span className="text-[11px] sm:text-xs font-bold text-slate-500 ml-1">Prestige Lakeside CHS — August Command Centre</span>
                   </div>
-
-                  {/* Middle Column: Gate Approvals */}
-                  <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between">
-                    <div>
-                      <div className="flex justify-between items-center mb-4">
-                        <span className="text-xs font-extrabold text-slate-500 uppercase tracking-wider">Gate Activity</span>
-                        <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Live Gate 1
-                        </span>
-                      </div>
-
-                      <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 mb-4">
-                        <div className="flex items-center gap-3 mb-2">
-                          <div className="w-9 h-9 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-xs">
-                            SW
-                          </div>
-                          <div>
-                            <p className="text-xs font-black text-slate-900">Swiggy Delivery Partner</p>
-                            <p className="text-[11px] text-slate-500">Order for Flat 402 • At Entrance</p>
-                          </div>
-                        </div>
-
-                        {gateApproved ? (
-                          <div className="p-2.5 rounded-lg bg-emerald-100 text-emerald-800 text-xs font-bold text-center flex items-center justify-center gap-1.5">
-                            <Check className="w-4 h-4" /> Approved: OTP sent to Guard
-                          </div>
-                        ) : (
-                          <div className="flex gap-2 mt-3">
-                            <button
-                              onClick={() => setGateApproved(true)}
-                              className="flex-1 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold active:scale-95 transition-all cursor-pointer"
-                            >
-                              Approve Entry
-                            </button>
-                            <button
-                              onClick={() => setGateApproved(false)}
-                              className="px-3 py-2 rounded-lg bg-white border border-slate-300 text-slate-700 text-xs font-bold hover:bg-slate-100 active:scale-95 transition-all cursor-pointer"
-                            >
-                              Deny
-                            </button>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-xs py-1.5 border-b border-slate-100">
-                          <span className="font-semibold text-slate-700">Maid (Kamla Devi)</span>
-                          <span className="text-[11px] font-bold text-emerald-600">Checked-in 08:30 AM</span>
-                        </div>
-                        <div className="flex items-center justify-between text-xs py-1.5">
-                          <span className="font-semibold text-slate-700">Guest Pass #8920</span>
-                          <span className="text-[11px] font-bold text-slate-400">Valid till 10:00 PM</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Right Column: Complaints & Notice */}
-                  <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between">
-                    <div>
-                      <span className="text-xs font-extrabold text-slate-500 uppercase tracking-wider block mb-4">
-                        Active Helpdesk &amp; Notice
-                      </span>
-
-                      {/* Complaint SLA Tile */}
-                      <div className="p-3.5 rounded-xl bg-indigo-50/60 border border-indigo-100 mb-3">
-                        <div className="flex justify-between items-start">
-                          <span className="text-xs font-bold text-indigo-900">#TCK-482 Plumber Assigned</span>
-                          <span className="text-[10px] font-bold bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded">In Progress</span>
-                        </div>
-                        <p className="text-[11px] text-slate-600 mt-1">Bathroom leakage inspection scheduled</p>
-                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-indigo-700 mt-2">
-                          <Clock className="w-3.5 h-3.5" /> SLA Timer: 1h 40m left
-                        </div>
-                      </div>
-
-                      {/* Notice Board Preview */}
-                      <div className="p-3.5 rounded-xl bg-amber-50/70 border border-amber-200/80">
-                        <div className="flex items-center gap-1.5 text-amber-800 text-xs font-extrabold mb-1">
-                          <Bell className="w-3.5 h-3.5 text-amber-600" /> RWA Water Supply Notice
-                        </div>
-                        <p className="text-[11px] text-slate-600 leading-snug">
-                          Overhead tank cleaning tomorrow (10 AM to 1 PM). Kindly store sufficient water.
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="text-[11px] text-slate-400 text-center mt-3 font-semibold">
-                      Press buttons above to test live resident interactions
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* 2. RWA COMMITTEE COMMAND CENTER */}
-            {simulatorView === "committee" && (
-              <div className="p-6 sm:p-8 bg-slate-900 text-white animate-fade-in">
-                {/* Metrics Row */}
-                <div className="grid sm:grid-cols-4 gap-4 mb-6">
-                  <div className="bg-slate-800/80 p-4 rounded-2xl border border-slate-700/80">
-                    <p className="text-xs font-bold text-slate-400 uppercase">August Collection</p>
-                    <h5 className="text-2xl font-black text-emerald-400 mt-1">₹28,40,000</h5>
-                    <p className="text-[11px] text-slate-400 mt-1">98.3% target achieved</p>
-                  </div>
-                  <div className="bg-slate-800/80 p-4 rounded-2xl border border-slate-700/80">
-                    <p className="text-xs font-bold text-slate-400 uppercase">Pending Defaulters</p>
-                    <h5 className="text-2xl font-black text-rose-400 mt-1">4 Flats</h5>
-                    <p className="text-[11px] text-slate-400 mt-1">Total pending: ₹17,000</p>
-                  </div>
-                  <div className="bg-slate-800/80 p-4 rounded-2xl border border-slate-700/80">
-                    <p className="text-xs font-bold text-slate-400 uppercase">Pending Approvals</p>
-                    <h5 className="text-2xl font-black text-amber-400 mt-1">2 Vouchers</h5>
-                    <p className="text-[11px] text-slate-400 mt-1">Maker-Checker queue</p>
-                  </div>
-                  <div className="bg-slate-800/80 p-4 rounded-2xl border border-slate-700/80">
-                    <p className="text-xs font-bold text-slate-400 uppercase">Tally Sync Status</p>
-                    <h5 className="text-2xl font-black text-cyan-400 mt-1">Synced</h5>
-                    <p className="text-[11px] text-slate-400 mt-1">Ready for CA export</p>
-                  </div>
+                  <span className="hidden sm:inline-flex text-[10px] font-black uppercase tracking-[0.18em] text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-full shrink-0">
+                    Live Sandbox
+                  </span>
                 </div>
 
-                {/* Command Actions Row */}
-                <div className="bg-slate-800/50 rounded-2xl p-6 border border-slate-700/80">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-                    <div>
-                      <h4 className="text-base font-black">Defaulter Recovery &amp; Automated Ledger Actions</h4>
-                      <p className="text-xs text-slate-400">Send polite WhatsApp &amp; SMS reminders with instant UPI payment links</p>
+                <div className="grid sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-blue-50">
+                  <div className="p-5 sm:p-7">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Collected · August</p>
+                    <p className="font-display text-3xl sm:text-4xl mt-2 tnum" style={{ color: NAVY }}>₹28.4L</p>
+                    <div className="flex items-end gap-1 h-14 mt-4" aria-hidden="true">
+                      {[30, 45, 38, 60, 52, 74, 66, 88, 80, 96, 84, 100].map((h, i) => (
+                        <div key={i} style={{ height: `${h}%` }} className={`flex-1 rounded-t ${i > 8 ? "bg-gradient-to-t from-blue-700 to-sky-400" : "bg-blue-100"}`} />
+                      ))}
                     </div>
-
-                    <div className="flex gap-3">
-                      {nudgeSent ? (
-                        <div className="px-4 py-2 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-bold flex items-center gap-1.5">
-                          <Check className="w-4 h-4" /> 4 WhatsApp Reminders Sent!
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => setNudgeSent(true)}
-                          className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer shadow-lg shadow-indigo-600/25"
-                        >
-                          <Send className="w-3.5 h-3.5" /> 1-Click WhatsApp Nudge
-                        </button>
-                      )}
-
-                      <button
-                        onClick={() => alert("Simulated: Tally Prime XML accounting export generated and downloaded!")}
-                        className="px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-extrabold flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer"
-                      >
-                        <Download className="w-3.5 h-3.5 text-cyan-400" /> Export Tally XML
-                      </button>
-                    </div>
+                    <p className="text-[11px] font-bold text-emerald-600 mt-3">▲ 98.3% of target</p>
                   </div>
-
-                  {/* Defaulter Table Mini Preview */}
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs">
-                      <thead>
-                        <tr className="text-slate-400 border-b border-slate-700 pb-2">
-                          <th className="py-2">Flat No.</th>
-                          <th className="py-2">Owner Name</th>
-                          <th className="py-2">Overdue Amount</th>
-                          <th className="py-2">Days Overdue</th>
-                          <th className="py-2">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-700/60">
-                        <tr>
-                          <td className="py-2.5 font-bold text-white">Flat 102-A</td>
-                          <td className="py-2.5 text-slate-300">Sunil Deshmukh</td>
-                          <td className="py-2.5 font-bold text-rose-400">₹4,250</td>
-                          <td className="py-2.5 text-slate-400">12 days</td>
-                          <td className="py-2.5"><span className="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 text-[10px] font-bold">Overdue</span></td>
-                        </tr>
-                        <tr>
-                          <td className="py-2.5 font-bold text-white">Flat 304-C</td>
-                          <td className="py-2.5 text-slate-300">Pooja Singhania</td>
-                          <td className="py-2.5 font-bold text-rose-400">₹4,250</td>
-                          <td className="py-2.5 text-slate-400">8 days</td>
-                          <td className="py-2.5"><span className="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 text-[10px] font-bold">Overdue</span></td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* 3. SECURITY GUARD GATE TABLET */}
-            {simulatorView === "guard" && (
-              <div className="p-6 sm:p-8 bg-slate-950 text-white animate-fade-in">
-                <div className="grid md:grid-cols-3 gap-6">
-                  {/* Gate Search Box */}
-                  <div className="md:col-span-2 bg-slate-900 rounded-2xl p-6 border border-slate-800">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2">
-                        <Shield className="w-5 h-5 text-emerald-400" />
-                        <h4 className="font-extrabold text-sm text-white">Main Entrance — Security Terminal</h4>
-                      </div>
-                      <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded border border-emerald-500/30">
-                        Gate Guard: Ram Singh (On Duty)
-                      </span>
-                    </div>
-
-                    <div className="grid sm:grid-cols-2 gap-3 mb-6">
-                      <div className="bg-slate-800 p-3.5 rounded-xl border border-slate-700">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Verify Visitor OTP</label>
-                        <div className="flex gap-2">
-                          <input
-                            type="text"
-                            placeholder="Enter 6-digit OTP..."
-                            defaultValue="849201"
-                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white"
-                          />
-                          <button
-                            onClick={() => alert("Verified: Visitor allowed for Flat 502-A")}
-                            className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shrink-0 cursor-pointer"
-                          >
-                            Verify
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="bg-slate-800 p-3.5 rounded-xl border border-slate-700">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Vehicle License Plate Lookup</label>
-                        <div className="flex gap-2">
-                          <input
-                            type="text"
-                            placeholder="MH 02 XX 1234"
-                            defaultValue="MH 12 AB 4589"
-                            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white"
-                          />
-                          <button
-                            onClick={() => alert("Allocated Slot: B-24 (Flat 402)")}
-                            className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shrink-0 cursor-pointer"
-                          >
-                            Check
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Live Access Stream */}
-                    <div className="space-y-2">
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Live Check-in Stream</p>
+                  <div className="p-5 sm:p-7">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Gate · Right Now</p>
+                    <div className="mt-3 space-y-2.5">
                       {[
-                        { name: "Urban Company (Electrician)", flat: "Flat 201-B", time: "2 mins ago", badge: "Approved by Resident" },
-                        { name: "Amazon Logistics (Delivery)", flat: "Flat 604-A", time: "6 mins ago", badge: "OTP Validated" },
-                        { name: "School Bus #14 (Pickup)", flat: "All Wings", time: "15 mins ago", badge: "Regular Entry" },
-                      ].map((log, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-slate-800/60 border border-slate-800 text-xs">
-                          <div>
-                            <span className="font-bold text-white">{log.name}</span>
-                            <span className="text-slate-400 ml-2 font-medium">({log.flat})</span>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <span className="text-slate-400 text-[11px]">{log.time}</span>
-                            <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">{log.badge}</span>
-                          </div>
+                        ["Swiggy partner · B-402", "Approved"],
+                        ["Maid Kamla Devi", "Inside"],
+                        ["Guest pass #8920", "Valid till 10 PM"],
+                      ].map(([a, b], i) => (
+                        <div key={i} className="flex items-center justify-between text-xs bg-blue-50/60 border border-blue-100 rounded-xl px-3 py-2.5">
+                          <span className="font-semibold text-slate-700">{a}</span>
+                          <span className="text-[10px] font-bold text-emerald-600">{b}</span>
                         </div>
                       ))}
                     </div>
                   </div>
-
-                  {/* Right: Daily Staff Quick Tap */}
-                  <div className="bg-slate-900 rounded-2xl p-6 border border-slate-800 flex flex-col justify-between">
-                    <div>
-                      <h4 className="font-extrabold text-sm text-white mb-2">Staff &amp; Maid QR Tap</h4>
-                      <p className="text-xs text-slate-400 mb-4">Tap to mark instant In/Out without typing</p>
-
-                      <div className="space-y-2.5">
-                        {[
-                          { name: "Kamla Devi (Maid)", role: "Flats: 402, 404, 501", status: "Inside" },
-                          { name: "Shankar (Driver)", role: "Flat: 301-A", status: "Inside" },
-                          { name: "Ramesh (Gardener)", role: "Society Campus", status: "Logged Out" },
-                        ].map((staff, sIdx) => (
-                          <div key={sIdx} className="p-2.5 rounded-xl bg-slate-800/80 border border-slate-700/80 flex items-center justify-between text-xs">
-                            <div>
-                              <p className="font-bold text-white">{staff.name}</p>
-                              <p className="text-[10px] text-slate-400">{staff.role}</p>
-                            </div>
-                            <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded ${staff.status === "Inside" ? "bg-emerald-500/20 text-emerald-300" : "bg-slate-700 text-slate-400"}`}>
-                              {staff.status}
-                            </span>
-                          </div>
-                        ))}
+                  <div className="p-5 sm:p-7 bg-gradient-to-b from-blue-50/50 to-transparent">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Money Movement</p>
+                    <div className="mt-3 rounded-2xl border border-blue-100 bg-white p-4 shadow-sm">
+                      <p className="text-[11px] text-slate-500 font-semibold">Diesel refill · <span className="text-[#0A1C3F] font-bold tnum">₹18,400</span></p>
+                      <div className="flex items-center gap-2 mt-2.5 text-[11px] font-bold">
+                        <span className="text-slate-500">Treasurer ✓</span>
+                        <span className="text-slate-300">→</span>
+                        <span className="text-blue-700">Secretary ✓</span>
                       </div>
-                    </div>
-
-                    <div className="mt-4 pt-3 border-t border-slate-800 text-[11px] text-slate-400 text-center">
-                      Offline Mode Available • Battery Friendly
+                      <p className="text-[10px] text-slate-400 mt-2 font-semibold">Maker-Checker · Tally synced</p>
                     </div>
                   </div>
                 </div>
               </div>
-            )}
-          </div>
+
+              {/* Floating proof cards */}
+              <div className="hidden md:flex absolute -left-10 top-16 -rotate-6 items-center gap-2.5 rounded-2xl border border-blue-100 bg-white/95 backdrop-blur-xl px-4 py-3 shadow-xl shadow-blue-900/10" aria-hidden="true">
+                <span className="w-8 h-8 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center">
+                  <Check className="w-4 h-4 text-emerald-600" />
+                </span>
+                <span>
+                  <span className="block text-xs font-bold text-[#0A1C3F]">Receipt #REC-894 sent</span>
+                  <span className="block text-[10px] text-slate-400 font-semibold">UPI · Flat 402 · just now</span>
+                </span>
+              </div>
+              <div className="hidden md:flex absolute -right-8 bottom-14 rotate-3 items-center gap-2.5 rounded-2xl border border-blue-100 bg-white/95 backdrop-blur-xl px-4 py-3 shadow-xl shadow-blue-900/10" aria-hidden="true">
+                <span className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center shadow-md shadow-blue-600/30">
+                  <QrCode className="w-4 h-4 text-white" />
+                </span>
+                <span>
+                  <span className="block text-xs font-bold text-[#0A1C3F]">Guest OTP verified</span>
+                  <span className="block text-[10px] text-slate-400 font-semibold">Gate 1 · Ram Singh on duty</span>
+                </span>
+              </div>
+            </div>
+          </Reveal>
+
+          <p className="ghost-navy font-display font-semibold text-[clamp(3rem,10vw,8.5rem)] leading-none mt-12 tracking-tight" aria-hidden="true">
+            SOCIETY&nbsp;OS
+          </p>
         </div>
       </section>
 
-      {/* ── CLIENT REPUTATION BANNER ─────────────────────────────────────────── */}
-      <div className="relative z-10 py-10 bg-slate-900 overflow-hidden border-y border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <p className="text-center text-xs font-black text-slate-400 uppercase tracking-[0.25em] mb-6">
-            Empowering Modern Housing Societies &amp; Prestigious Complexes Across India
-          </p>
-          <div className="flex flex-wrap justify-center items-center gap-8 sm:gap-14 md:gap-20 opacity-70">
-            {["LODHA RESIDENCY", "PRESTIGE ENCLAVE", "GODREJ GARDENS", "DLF APARTMENTS", "BRIGADE HORIZON", "SOBHA EMERALD"].map((name) => (
-              <div key={name} className="flex items-center gap-2 hover:opacity-100 transition-opacity cursor-default">
-                <Building2 className="w-4 h-4 text-indigo-400" />
-                <span className="text-white font-black text-xs tracking-widest">{name}</span>
+      {/* ── 04 · SOCIETY MARQUEE ───────────────────────────────────────── */}
+      <div className="relative bg-white border-y border-blue-100/80 py-5 overflow-hidden">
+        <div className="marquee-mask overflow-hidden">
+          <div className="marquee-track items-center">
+            {[0, 1].map((dup) => (
+              <div key={dup} aria-hidden={dup === 1} className="flex shrink-0 items-center">
+                {SOCIETY_NAMES.map((name) => (
+                  <span key={`${dup}-${name}`} className="flex items-center shrink-0">
+                    <span className="font-display italic text-lg sm:text-xl text-[#0A1C3F]/40 px-8">{name}</span>
+                    <Star className="w-3.5 h-3.5 text-blue-400 fill-current shrink-0" />
+                  </span>
+                ))}
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* ── REAL-TIME RWA ROI & SAVINGS CALCULATOR ────────────────────────────── */}
-      <section id="calculator" className="relative z-10 py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto scroll-mt-20">
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-50 text-indigo-700 text-xs font-black uppercase tracking-wider mb-4 border border-indigo-200">
-            <Calculator className="w-3.5 h-3.5" /> Interactive ROI Calculator
+      {/* ── 04b · GIANT TYPE BAND ──────────────────────────────────────── */}
+      <section aria-hidden="true" className="relative bg-white border-b border-blue-100/80 pt-8 sm:pt-10 pb-2 overflow-hidden select-none">
+        <div className="marquee-mask overflow-hidden">
+          <div className="marquee-track items-center">
+            {[0, 1].map((dup) => (
+              <div key={dup} aria-hidden={dup === 1} className="flex shrink-0 items-center">
+                {BAND_ITEMS.map((w) => (
+                  <span key={`${dup}-${w}`} className="flex items-center shrink-0">
+                    <span className="font-display font-medium text-[clamp(2.4rem,6vw,4.5rem)] leading-none px-6 tracking-tight" style={{ color: NAVY }}>{w}</span>
+                    <span className="text-sky-400 text-2xl sm:text-3xl">✦</span>
+                  </span>
+                ))}
+              </div>
+            ))}
           </div>
-          <h2 className="text-3xl sm:text-5xl font-black text-slate-950 tracking-tight">
-            See Exactly How Much Your Society Will Save
-          </h2>
-          <p className="text-base sm:text-lg text-slate-600 mt-4">
-            Adjust the sliders according to your society&apos;s size to calculate recovered defaulter collections and saved committee hours.
-          </p>
         </div>
-
-        <div className="bg-white rounded-3xl border border-slate-200/90 shadow-2xl p-6 sm:p-12 max-w-5xl mx-auto">
-          <div className="grid lg:grid-cols-12 gap-10 items-center">
-            {/* Left Inputs (7 Cols) */}
-            <div className="lg:col-span-7 space-y-8">
-              {/* Slider 1: Flats */}
-              <div>
-                <div className="flex justify-between items-center mb-3">
-                  <label className="text-sm font-extrabold text-slate-900">
-                    Total Flats / Apartments in Society
-                  </label>
-                  <span className="text-lg font-black text-indigo-600 bg-indigo-50 px-3.5 py-1 rounded-xl border border-indigo-100">
-                    {calcFlats} Units
+        <div className="marquee-mask overflow-hidden -mt-1 sm:-mt-2 opacity-90">
+          <div className="marquee-reverse items-center">
+            {[0, 1].map((dup) => (
+              <div key={dup} aria-hidden={dup === 1} className="flex shrink-0 items-center">
+                {[...BAND_ITEMS].reverse().map((w) => (
+                  <span key={`${dup}-${w}`} className="flex items-center shrink-0">
+                    <span className="font-display italic font-medium text-[clamp(2.4rem,6vw,4.5rem)] leading-none px-6 tracking-tight text-outline-navy">{w}</span>
+                    <span className="text-blue-200 text-2xl sm:text-3xl">✦</span>
                   </span>
-                </div>
-                <input
-                  type="range"
-                  min="20"
-                  max="500"
-                  step="5"
-                  value={calcFlats}
-                  onChange={(e) => setCalcFlats(Number(e.target.value))}
-                  className="w-full cursor-pointer accent-indigo-600"
-                />
-                <div className="flex justify-between text-xs text-slate-400 font-semibold mt-1.5">
-                  <span>20 Units</span>
-                  <span>150 Units</span>
-                  <span>300 Units</span>
-                  <span>500+ Units</span>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── 05 · CHAOS → CALM (before / after) ─────────────────────────── */}
+      <section className="relative bg-white text-[#0A1C3F]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
+          <Reveal className="text-center max-w-2xl mx-auto">
+            <Eyebrow>01 · Why societies switch</Eyebrow>
+            <h2 className="font-display text-[clamp(2rem,4.5vw,3.5rem)] leading-[1.05] tracking-tight mt-5" style={{ color: NAVY }}>
+              From 47 unread groups
+              <br /> to <em className="blue-gradient-text">one calm dashboard.</em>
+            </h2>
+          </Reveal>
+
+          <div className="grid md:grid-cols-[1fr_auto_1fr] gap-5 items-stretch mt-14 max-w-5xl mx-auto">
+            <Reveal>
+              <div className="h-full rounded-3xl border border-slate-200 bg-slate-50/70 p-6 sm:p-8">
+                <p className="text-[11px] font-black uppercase tracking-[0.22em] text-rose-600">Before · The chaos</p>
+                <div className="mt-5 space-y-2.5 text-[13px] font-medium">
+                  {[
+                    "“Maintenance reminder” buried under 300 Good-Mornings",
+                    "Receipt book lost — again. Treasurer vs Secretary fight.",
+                    "Guard calls at midnight: “Sahab, Swiggy wala aaya hai”",
+                    "Plumber promised Tuesday. It is now… next month.",
+                    "CA returns the Excel: “yeh tally nahi hoga.”",
+                  ].map((t, i) => (
+                    <div key={i} className="flex items-start gap-2.5 rounded-2xl bg-white border border-rose-100 px-4 py-3 text-slate-600 shadow-sm">
+                      <X className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" /> {t}
+                    </div>
+                  ))}
                 </div>
               </div>
+            </Reveal>
 
-              {/* Slider 2: Fee */}
-              <div>
-                <div className="flex justify-between items-center mb-3">
-                  <label className="text-sm font-extrabold text-slate-900">
-                    Average Monthly Maintenance per Flat
-                  </label>
-                  <span className="text-lg font-black text-indigo-600 bg-indigo-50 px-3.5 py-1 rounded-xl border border-indigo-100">
-                    ₹{calcFee.toLocaleString("en-IN")} / mo
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="1500"
-                  max="15000"
-                  step="100"
-                  value={calcFee}
-                  onChange={(e) => setCalcFee(Number(e.target.value))}
-                  className="w-full cursor-pointer accent-indigo-600"
-                />
-                <div className="flex justify-between text-xs text-slate-400 font-semibold mt-1.5">
-                  <span>₹1,500</span>
-                  <span>₹5,000</span>
-                  <span>₹10,000</span>
-                  <span>₹15,000+</span>
+            <Reveal delay={120} className="flex md:flex-col items-center justify-center gap-3">
+              <span className="hidden md:block w-px flex-1 bg-gradient-to-b from-transparent via-blue-400 to-transparent" aria-hidden="true" />
+              <span className="w-12 h-12 rounded-full bg-blue-700 text-white flex items-center justify-center shadow-xl shadow-blue-700/30 shrink-0">
+                <ArrowRight className="w-5 h-5 rotate-90 md:rotate-0" />
+              </span>
+              <span className="hidden md:block w-px flex-1 bg-gradient-to-b from-transparent via-blue-400 to-transparent" aria-hidden="true" />
+            </Reveal>
+
+            <Reveal delay={200}>
+              <div className="h-full rounded-3xl bg-gradient-to-br from-[#0B2A6B] to-[#081738] text-white p-6 sm:p-8 relative overflow-hidden shadow-2xl shadow-blue-900/30">
+                <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-sky-400/25 blur-[80px]" aria-hidden="true" />
+                <div className="absolute inset-0 blueprint-grid opacity-60" aria-hidden="true" />
+                <p className="text-[11px] font-black uppercase tracking-[0.22em] text-sky-300 relative">After · AapkiSociety</p>
+                <div className="mt-5 space-y-2.5 text-[13px] font-medium relative">
+                  {[
+                    "Auto-bills on the 1st. UPI reminders recover 11.5% dues.",
+                    "Every rupee Maker-Checker approved & Tally-synced.",
+                    "One-tap gate approvals — from office, cab or couch.",
+                    "SLA timers chase the plumber so you don't have to.",
+                    "CA gets a clean XML import. Zero re-entry.",
+                  ].map((t, i) => (
+                    <div key={i} className="flex items-start gap-2.5 rounded-2xl bg-white/10 border border-white/15 px-4 py-3 text-white/90 backdrop-blur-sm">
+                      <Check className="w-4 h-4 text-emerald-300 shrink-0 mt-0.5" /> {t}
+                    </div>
+                  ))}
                 </div>
               </div>
+            </Reveal>
+          </div>
+        </div>
+      </section>
 
-              {/* Info Note */}
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-600 flex items-start gap-3">
-                <HelpCircle className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
-                <p>
-                  Calculated based on real Indian RWA metrics: automated UPI payment reminders on WhatsApp recover an average of 11.5% in delayed payments within 60 days.
-                </p>
+      {/* ── 06 · BENTO MODULES ─────────────────────────────────────────── */}
+      <section id="features" className="relative mist-canvas text-[#0A1C3F] scroll-mt-24 border-y border-blue-100/70">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
+          <Reveal className="relative flex flex-col md:flex-row md:items-end md:justify-between gap-6 max-w-none">
+            <span aria-hidden="true" className="ghost-numeral font-display font-semibold absolute -top-16 right-0 text-[6rem] sm:text-[8rem] hidden lg:block">02</span>
+            <div className="max-w-xl">
+              <Eyebrow>02 · Complete operating system</Eyebrow>
+              <h2 className="font-display text-[clamp(2rem,4.5vw,3.5rem)] leading-[1.05] tracking-tight mt-5" style={{ color: NAVY }}>
+                Every committee job,
+                <br /> <em className="blue-gradient-text">beautifully boxed.</em>
+              </h2>
+            </div>
+            <p className="text-[15px] text-slate-500 leading-relaxed max-w-sm">
+              Nine modules, one login. Filter by your society&apos;s biggest headache — billing, gate, accounts or governance.
+            </p>
+          </Reveal>
+
+          <Reveal delay={120}>
+            <div className="flex flex-wrap gap-2 mt-10" role="tablist" aria-label="Filter modules by category">
+              {MODULE_CATEGORIES.map((cat) => (
+                <button
+                  key={cat.id}
+                  role="tab"
+                  aria-selected={selectedCategory === cat.id}
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`px-4 py-2.5 rounded-full text-xs font-bold transition-all cursor-pointer min-h-[40px] ${
+                    selectedCategory === cat.id
+                      ? "bg-blue-700 text-white shadow-lg shadow-blue-700/30 scale-[1.03]"
+                      : "bg-white text-slate-500 border border-blue-100 hover:border-blue-300 hover:text-blue-700 shadow-sm"
+                  }`}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+          </Reveal>
+
+          <div className="grid md:grid-cols-6 gap-4 sm:gap-5 mt-8">
+            {filteredFeatures.map((feat, idx) => (
+              <Reveal key={`${selectedCategory}-${idx}`} delay={Math.min(idx * 60, 300)} className={feat.span}>
+                <div
+                  onMouseMove={handleSpot}
+                  className="spot-card group h-full bg-white rounded-3xl p-6 sm:p-8 border border-blue-100/80 shadow-[0_2px_20px_rgba(11,42,107,0.06)] hover:shadow-[0_24px_60px_rgba(29,78,216,0.16)] hover:-translate-y-1 hover:border-blue-200 transition-all duration-300 flex flex-col justify-between overflow-hidden"
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-5">
+                      <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-700 to-sky-500 text-white flex items-center justify-center group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 shadow-lg shadow-blue-700/25">
+                        <feat.icon className="w-5 h-5" />
+                      </div>
+                      <span className="text-[10px] font-black uppercase tracking-[0.14em] px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                        {feat.badge}
+                      </span>
+                    </div>
+                    <h3 className="font-display text-xl sm:text-[1.35rem] leading-snug tracking-tight" style={{ color: NAVY }}>{feat.title}</h3>
+                    <p className="text-[13.5px] text-slate-500 leading-relaxed mt-2">{feat.desc}</p>
+                    <BentoVisual kind={feat.visual} />
+                  </div>
+                  <div className="pt-5 mt-6 border-t border-blue-50 flex items-center justify-between text-xs">
+                    <span className="font-bold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-full flex items-center gap-1.5 border border-emerald-100">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> {feat.stat}
+                    </span>
+                    <span className="font-bold text-slate-400 flex items-center gap-1 group-hover:text-blue-700 group-hover:translate-x-1 transition-all">
+                      Explore <ChevronRight className="w-3.5 h-3.5" />
+                    </span>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── 07 · LIVE SIMULATOR ────────────────────────────────────────── */}
+      <section id="simulator" className="relative bg-white scroll-mt-24">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
+          <Reveal className="text-center max-w-2xl mx-auto">
+            <Eyebrow>03 · Don&apos;t take our word for it</Eyebrow>
+            <h2 className="font-display text-[clamp(2rem,4.5vw,3.5rem)] leading-[1.05] tracking-tight mt-5" style={{ color: NAVY }}>
+              Press the buttons.
+              <br /> <em className="blue-gradient-text">It actually responds.</em>
+            </h2>
+            <p className="text-slate-500 text-[15px] mt-4">A live sandbox — pick a viewpoint and try the real interactions.</p>
+          </Reveal>
+
+          <Reveal delay={120}>
+            <div className="flex justify-center mt-10">
+              <div className="inline-flex flex-wrap justify-center p-1.5 bg-blue-50/70 rounded-2xl border border-blue-100 gap-1" role="tablist" aria-label="Simulator viewpoint">
+                {([
+                  ["resident", Smartphone, "Resident App"],
+                  ["committee", Landmark, "Committee Command"],
+                  ["guard", Shield, "Gate Tablet"],
+                ] as const).map(([id, Icon, label]) => (
+                  <button
+                    key={id}
+                    role="tab"
+                    aria-selected={simulatorView === id}
+                    onClick={() => setSimulatorView(id)}
+                    className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-[13px] font-bold transition-all cursor-pointer min-h-[44px] ${
+                      simulatorView === id
+                        ? "bg-[#0A1C3F] text-white shadow-lg shadow-blue-900/25"
+                        : "text-slate-500 hover:text-blue-700"
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" /> <span>{label}</span>
+                  </button>
+                ))}
               </div>
             </div>
+          </Reveal>
 
-            {/* Right Output Card (5 Cols) */}
-            <div className="lg:col-span-5 bg-gradient-to-br from-indigo-900 via-indigo-950 to-slate-950 text-white rounded-3xl p-8 border border-indigo-800/50 shadow-2xl relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-500 rounded-full blur-3xl opacity-20 pointer-events-none"></div>
-
-              <span className="text-xs font-black uppercase tracking-wider text-indigo-300 bg-indigo-500/20 px-3 py-1 rounded-full border border-indigo-400/20">
-                Estimated Annual Impact
-              </span>
-
-              <div className="mt-6 space-y-6">
-                <div>
-                  <p className="text-xs font-semibold text-slate-400">Estimated Defaulter Recovery / Mo</p>
-                  <h3 className="text-3xl sm:text-4xl font-black text-emerald-400 mt-1">
-                    +₹{estimatedRecovery.toLocaleString("en-IN")}
-                  </h3>
-                  <p className="text-xs text-slate-300 mt-0.5">₹{(estimatedRecovery * 12).toLocaleString("en-IN")} additional cashflow per year</p>
+          <Reveal delay={180}>
+            <div className="relative mt-8 rounded-3xl border border-blue-100 bg-gradient-to-b from-blue-50/50 to-white overflow-hidden shadow-[0_30px_80px_rgba(11,42,107,0.12)]">
+              <div className="bg-[#0A1C3F] px-5 sm:px-7 py-3.5 flex items-center justify-between">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <span className="flex gap-1.5 shrink-0" aria-hidden="true">
+                    <span className="w-2.5 h-2.5 rounded-full bg-rose-400" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-300" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+                  </span>
+                  <span className="text-[11px] font-bold text-white/60 truncate">
+                    {simulatorView === "resident" && "Resident Portal — Flat 402, Wing B"}
+                    {simulatorView === "committee" && "RWA Executive Dashboard — Prestige Lakeside CHS"}
+                    {simulatorView === "guard" && "Gate #1 Security Terminal — Live Access Log"}
+                  </span>
                 </div>
+                <span className="hidden sm:inline text-[10px] font-black uppercase tracking-[0.18em] text-sky-300 border border-white/20 bg-white/10 px-2.5 py-1 rounded-full shrink-0">
+                  Sandbox
+                </span>
+              </div>
 
-                <div className="pt-4 border-t border-indigo-900/80">
-                  <p className="text-xs font-semibold text-slate-400">Committee Admin Time Saved</p>
-                  <h4 className="text-2xl font-black text-cyan-300 mt-1">
-                    ~{hoursSaved} Hours / Month
-                  </h4>
-                  <p className="text-xs text-slate-300 mt-0.5">Eliminates manual bill generation, ledger writing, and paper receipts</p>
-                </div>
+              {/* RESIDENT */}
+              {simulatorView === "resident" && (
+                <div className="p-5 sm:p-8 animate-fade-in">
+                  <div className="grid md:grid-cols-3 gap-4 sm:gap-5">
+                    <div className="rounded-2xl p-6 border border-blue-100 bg-white shadow-sm flex flex-col justify-between">
+                      <div>
+                        <div className="flex justify-between items-start mb-4 gap-2">
+                          <span className="text-[10px] font-black text-blue-700 uppercase tracking-[0.16em] bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-md">August 2026 Bill</span>
+                          <span className={`text-[10px] font-bold px-2 py-1 rounded-full shrink-0 ${billPaid ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-amber-50 text-amber-700 border border-amber-200"}`}>
+                            {billPaid ? "Paid ✓" : "Due in 3 days"}
+                          </span>
+                        </div>
+                        <p className="text-[11px] font-semibold text-slate-400">Total payable</p>
+                        <h4 className="font-display text-4xl mt-1 tnum" style={{ color: NAVY }}>₹4,250</h4>
+                        <div className="text-[11px] text-slate-500 mt-3 space-y-1.5 border-t border-blue-50 pt-3">
+                          <div className="flex justify-between"><span>Maintenance &amp; sinking</span><span className="font-bold text-slate-700 tnum">₹3,200</span></div>
+                          <div className="flex justify-between"><span>Lift &amp; DG AMC</span><span className="font-bold text-slate-700 tnum">₹650</span></div>
+                          <div className="flex justify-between"><span>GST @ 18%</span><span className="font-bold text-slate-700 tnum">₹400</span></div>
+                        </div>
+                      </div>
+                      <div className="mt-6">
+                        {billPaid ? (
+                          <div className="flex items-center gap-2 text-emerald-700 bg-emerald-50 border border-emerald-200 p-3 rounded-xl text-xs font-bold justify-center">
+                            <CheckCircle2 className="w-4 h-4" /> Receipt #REC-2026-894 sent
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setBillPaid(true)}
+                            className="w-full py-3.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-extrabold text-sm shadow-lg shadow-blue-700/25 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2 min-h-[48px]"
+                          >
+                            <Wallet className="w-4 h-4" /> Pay ₹4,250 via UPI
+                          </button>
+                        )}
+                      </div>
+                    </div>
 
-                <div className="pt-4 border-t border-indigo-900/80 flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-semibold text-slate-400">Estimated ROI</p>
-                    <p className="text-xl font-black text-amber-400">{netRoiMultiplier}x Return</p>
+                    <div className="rounded-2xl p-6 border border-blue-100 bg-white shadow-sm flex flex-col justify-between">
+                      <div>
+                        <div className="flex justify-between items-center mb-4">
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.16em]">Gate activity</span>
+                          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center gap-1.5">
+                            <span className="ticker-dot w-1.5 h-1.5 rounded-full bg-emerald-500" /> Live
+                          </span>
+                        </div>
+                        <div className="p-4 rounded-xl bg-blue-50/60 border border-blue-100 mb-4">
+                          <div className="flex items-center gap-3 mb-2">
+                            <div className="w-9 h-9 rounded-full bg-blue-700 text-white flex items-center justify-center font-bold text-[11px] shadow-md shadow-blue-700/25">SW</div>
+                            <div>
+                              <p className="text-xs font-bold text-[#0A1C3F]">Swiggy Delivery Partner</p>
+                              <p className="text-[11px] text-slate-400">Flat 402 · At entrance</p>
+                            </div>
+                          </div>
+                          {gateApproved ? (
+                            <div className="p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold text-center flex items-center justify-center gap-1.5">
+                              <Check className="w-4 h-4" /> Approved — OTP sent to guard
+                            </div>
+                          ) : (
+                            <div className="flex gap-2 mt-3">
+                              <button onClick={() => setGateApproved(true)} className="flex-1 py-2.5 rounded-lg bg-blue-700 hover:bg-blue-800 text-white text-xs font-extrabold active:scale-95 transition-all cursor-pointer min-h-[40px]">Approve</button>
+                              <button onClick={() => setGateApproved(false)} className="px-4 py-2 rounded-lg bg-white border border-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-50 active:scale-95 transition-all cursor-pointer min-h-[40px]">Deny</button>
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-xs space-y-1">
+                          <div className="flex items-center justify-between py-1.5 border-b border-blue-50">
+                            <span className="font-semibold text-slate-600">Maid (Kamla Devi)</span>
+                            <span className="text-[11px] font-bold text-emerald-600">In · 08:30 AM</span>
+                          </div>
+                          <div className="flex items-center justify-between py-1.5">
+                            <span className="font-semibold text-slate-600">Guest pass #8920</span>
+                            <span className="text-[11px] font-bold text-slate-400">Valid till 10 PM</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl p-6 border border-blue-100 bg-white shadow-sm flex flex-col justify-between">
+                      <div>
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.16em] block mb-4">Helpdesk &amp; notice</span>
+                        <div className="p-3.5 rounded-xl bg-blue-50/70 border border-blue-100 mb-3">
+                          <div className="flex justify-between items-start gap-2">
+                            <span className="text-xs font-bold text-[#0A1C3F]">#TCK-482 · Plumber assigned</span>
+                            <span className="text-[10px] font-bold bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded shrink-0">Active</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-500 mt-2">
+                            <Clock className="w-3.5 h-3.5 text-blue-600" /> SLA: 1h 40m left
+                          </div>
+                        </div>
+                        <div className="p-3.5 rounded-xl bg-sky-50 border border-sky-200/70">
+                          <div className="flex items-center gap-1.5 text-blue-800 text-xs font-extrabold mb-1">
+                            <Bell className="w-3.5 h-3.5" /> Water supply notice
+                          </div>
+                          <p className="text-[11px] text-slate-500 leading-snug">Tank cleaning tomorrow, 10 AM – 1 PM. Please store water.</p>
+                        </div>
+                      </div>
+                      <p className="text-[11px] text-slate-400 text-center mt-4 font-semibold">↑ Press the buttons — this is live</p>
+                    </div>
                   </div>
-                  <button
-                    onClick={() => setDemoModalOpen(true)}
-                    className="px-4 py-2 rounded-xl bg-white text-indigo-950 font-black text-xs hover:bg-indigo-50 active:scale-95 transition-all cursor-pointer shadow-lg"
-                  >
+                </div>
+              )}
+
+              {/* COMMITTEE */}
+              {simulatorView === "committee" && (
+                <div className="p-5 sm:p-8 animate-fade-in">
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-5">
+                    {[
+                      ["August collection", "₹28,40,000", "98.3% of target", "text-emerald-600"],
+                      ["Pending defaulters", "4 flats", "₹17,000 overdue", "text-rose-600"],
+                      ["Pending approvals", "2 vouchers", "Maker-Checker queue", "text-amber-600"],
+                      ["Tally sync", "Synced ✓", "Ready for CA export", "text-blue-700"],
+                    ].map(([label, value, sub, color], i) => (
+                      <div key={i} className="bg-white p-4 sm:p-5 rounded-2xl border border-blue-100 shadow-sm">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.14em]">{label}</p>
+                        <h5 className={`font-display text-xl sm:text-2xl mt-1.5 tnum ${color}`}>{value}</h5>
+                        <p className="text-[11px] text-slate-400 mt-1 font-semibold">{sub}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="bg-white rounded-2xl p-5 sm:p-7 border border-blue-100 shadow-sm">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
+                      <div>
+                        <h4 className="text-[15px] font-bold" style={{ color: NAVY }}>Defaulter recovery, in one click</h4>
+                        <p className="text-xs text-slate-400 mt-0.5">Polite WhatsApp + SMS reminders with UPI payment links</p>
+                      </div>
+                      <div className="flex flex-wrap gap-2.5">
+                        {nudgeSent ? (
+                          <div className="px-4 py-2.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold flex items-center gap-1.5 min-h-[44px]">
+                            <Check className="w-4 h-4" /> 4 WhatsApp reminders sent
+                          </div>
+                        ) : (
+                          <button onClick={() => setNudgeSent(true)} className="px-4 py-2.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white text-xs font-extrabold flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer shadow-lg shadow-blue-700/25 min-h-[44px]">
+                            <Send className="w-3.5 h-3.5" /> 1-Click WhatsApp Nudge
+                          </button>
+                        )}
+                        <button onClick={() => alert("Simulated: Tally Prime XML export downloaded.")} className="px-4 py-2.5 rounded-xl bg-[#0A1C3F] hover:bg-black text-white text-xs font-bold flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer min-h-[44px]">
+                          <Download className="w-3.5 h-3.5 text-sky-300" /> Export Tally XML
+                        </button>
+                      </div>
+                    </div>
+                    <div className="overflow-x-auto -mx-1 px-1">
+                      <table className="w-full text-left text-xs min-w-[520px]">
+                        <thead>
+                          <tr className="text-slate-400 border-b border-blue-50">
+                            <th className="py-2 font-bold">Flat</th>
+                            <th className="py-2 font-bold">Owner</th>
+                            <th className="py-2 font-bold">Overdue</th>
+                            <th className="py-2 font-bold">Days</th>
+                            <th className="py-2 font-bold">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-blue-50">
+                          {[
+                            ["Flat 102-A", "Sunil Deshmukh", "₹4,250", "12 days"],
+                            ["Flat 304-C", "Pooja Singhania", "₹4,250", "8 days"],
+                          ].map((row, i) => (
+                            <tr key={i}>
+                              <td className="py-3 font-bold" style={{ color: NAVY }}>{row[0]}</td>
+                              <td className="py-3 text-slate-500">{row[1]}</td>
+                              <td className="py-3 font-bold text-rose-600 tnum">{row[2]}</td>
+                              <td className="py-3 text-slate-400">{row[3]}</td>
+                              <td className="py-3"><span className="px-2 py-0.5 rounded-full bg-rose-50 border border-rose-200 text-rose-600 text-[10px] font-bold">Overdue</span></td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* GUARD */}
+              {simulatorView === "guard" && (
+                <div className="p-5 sm:p-8 animate-fade-in">
+                  <div className="grid md:grid-cols-3 gap-4 sm:gap-5">
+                    <div className="md:col-span-2 rounded-2xl p-5 sm:p-6 border border-blue-100 bg-white shadow-sm">
+                      <div className="flex flex-wrap items-center justify-between gap-2 mb-5">
+                        <div className="flex items-center gap-2">
+                          <Shield className="w-5 h-5 text-blue-700" />
+                          <h4 className="font-bold text-sm" style={{ color: NAVY }}>Main Entrance — Security Terminal</h4>
+                        </div>
+                        <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">Guard: Ram Singh · On duty</span>
+                      </div>
+                      <div className="grid sm:grid-cols-2 gap-3 mb-5">
+                        <div className="bg-blue-50/60 p-4 rounded-xl border border-blue-100">
+                          <label htmlFor="gate-otp" className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.14em] block mb-2">Verify visitor OTP</label>
+                          <div className="flex gap-2">
+                            <input id="gate-otp" type="text" defaultValue="849201" inputMode="numeric" className="w-full bg-white border border-blue-200 rounded-lg px-3 py-2.5 text-sm text-[#0A1C3F] tnum focus:border-blue-600 focus:outline-none min-h-[44px]" />
+                            <button onClick={() => alert("Verified: visitor allowed for Flat 502-A")} className="px-4 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shrink-0 cursor-pointer min-h-[44px] min-w-[72px]">Verify</button>
+                          </div>
+                        </div>
+                        <div className="bg-blue-50/60 p-4 rounded-xl border border-blue-100">
+                          <label htmlFor="gate-plate" className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.14em] block mb-2">Vehicle plate lookup</label>
+                          <div className="flex gap-2">
+                            <input id="gate-plate" type="text" defaultValue="MH 12 AB 4589" className="w-full bg-white border border-blue-200 rounded-lg px-3 py-2.5 text-sm text-[#0A1C3F] focus:border-blue-600 focus:outline-none min-h-[44px]" />
+                            <button onClick={() => alert("Allocated slot: B-24 (Flat 402)")} className="px-4 rounded-lg bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold shrink-0 cursor-pointer min-h-[44px] min-w-[72px]">Check</button>
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.16em] mb-2.5">Live check-in stream</p>
+                      <div className="space-y-2">
+                        {[
+                          ["Urban Company (Electrician)", "Flat 201-B", "2m ago", "Approved by resident"],
+                          ["Amazon Logistics", "Flat 604-A", "6m ago", "OTP validated"],
+                          ["School Bus #14", "All wings", "15m ago", "Regular entry"],
+                        ].map((log, idx) => (
+                          <div key={idx} className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-xl bg-slate-50 border border-blue-50 text-xs">
+                            <div>
+                              <span className="font-bold" style={{ color: NAVY }}>{log[0]}</span>
+                              <span className="text-slate-400 ml-2 font-medium">({log[1]})</span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span className="text-slate-400 text-[11px]">{log[2]}</span>
+                              <span className="px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-bold">{log[3]}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="rounded-2xl p-5 sm:p-6 border border-blue-100 bg-gradient-to-b from-blue-50/70 to-white flex flex-col justify-between">
+                      <div>
+                        <h4 className="font-bold text-sm" style={{ color: NAVY }}>Staff &amp; maid QR tap</h4>
+                        <p className="text-xs text-slate-400 mb-4">Instant In/Out — no typing</p>
+                        <div className="space-y-2.5">
+                          {[
+                            ["Kamla Devi (Maid)", "Flats 402 · 404 · 501", "Inside"],
+                            ["Shankar (Driver)", "Flat 301-A", "Inside"],
+                            ["Ramesh (Gardener)", "Campus", "Logged out"],
+                          ].map((staff, sIdx) => (
+                            <div key={sIdx} className="p-3 rounded-xl bg-white border border-blue-100 shadow-sm flex items-center justify-between text-xs">
+                              <div>
+                                <p className="font-bold" style={{ color: NAVY }}>{staff[0]}</p>
+                                <p className="text-[10px] text-slate-400">{staff[1]}</p>
+                              </div>
+                              <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${staff[2] === "Inside" ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-slate-100 text-slate-400 border border-slate-200"}`}>{staff[2]}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <p className="mt-4 pt-3 border-t border-blue-100 text-[11px] text-slate-400 text-center font-semibold">Offline mode · Battery friendly</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ── 08 · ROI CALCULATOR ────────────────────────────────────────── */}
+      <section id="calculator" className="relative mist-canvas text-[#0A1C3F] scroll-mt-24 border-y border-blue-100/70 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28 relative">
+          <span aria-hidden="true" className="ghost-numeral font-display font-semibold absolute top-6 right-4 sm:right-8 text-[6rem] sm:text-[8rem] hidden lg:block">04</span>
+          <Reveal className="text-center max-w-2xl mx-auto">
+            <Eyebrow>04 · Interactive ROI calculator</Eyebrow>
+            <h2 className="font-display text-[clamp(2rem,4.5vw,3.5rem)] leading-[1.05] tracking-tight mt-5" style={{ color: NAVY }}>
+              What is chaos
+              <br /> <em className="blue-gradient-text">costing you?</em>
+            </h2>
+            <p className="text-[15px] text-slate-500 mt-4">Slide to your society&apos;s size. Watch the recovered dues add up.</p>
+          </Reveal>
+
+          <Reveal delay={140}>
+            <div className="mt-12 bg-white rounded-[2rem] border border-blue-100 shadow-[0_30px_80px_rgba(11,42,107,0.12)] p-6 sm:p-10 lg:p-12 max-w-5xl mx-auto grid lg:grid-cols-12 gap-10 items-center">
+              <div className="lg:col-span-7 space-y-9">
+                <div>
+                  <div className="flex justify-between items-center mb-4 gap-3">
+                    <label htmlFor="calc-flats" className="text-sm font-bold" style={{ color: NAVY }}>Flats / apartments in your society</label>
+                    <span className="font-display text-2xl tnum bg-[#0A1C3F] text-white px-4 py-1.5 rounded-xl shrink-0">{calcFlats}</span>
+                  </div>
+                  <input
+                    id="calc-flats"
+                    type="range" min={20} max={500} step={5} value={calcFlats}
+                    onChange={(e) => setCalcFlats(Number(e.target.value))}
+                    style={{ "--fill": flatsFill } as React.CSSProperties}
+                    className="slider-blue w-full cursor-pointer"
+                    aria-valuetext={`${calcFlats} flats`}
+                  />
+                  <div className="flex justify-between text-[11px] text-slate-400 font-bold mt-2 tnum">
+                    <span>20</span><span>150</span><span>300</span><span>500+</span>
+                  </div>
+                </div>
+                <div>
+                  <div className="flex justify-between items-center mb-4 gap-3">
+                    <label htmlFor="calc-fee" className="text-sm font-bold" style={{ color: NAVY }}>Avg. monthly maintenance per flat</label>
+                    <span className="font-display text-2xl tnum bg-[#0A1C3F] text-white px-4 py-1.5 rounded-xl shrink-0">₹{calcFee.toLocaleString("en-IN")}</span>
+                  </div>
+                  <input
+                    id="calc-fee"
+                    type="range" min={1500} max={15000} step={100} value={calcFee}
+                    onChange={(e) => setCalcFee(Number(e.target.value))}
+                    style={{ "--fill": feeFill } as React.CSSProperties}
+                    className="slider-blue w-full cursor-pointer"
+                    aria-valuetext={`Rupees ${calcFee} per month`}
+                  />
+                  <div className="flex justify-between text-[11px] text-slate-400 font-bold mt-2 tnum">
+                    <span>₹1.5k</span><span>₹5k</span><span>₹10k</span><span>₹15k+</span>
+                  </div>
+                </div>
+                <div className="p-4 rounded-2xl bg-blue-50/70 border border-blue-100 text-xs text-slate-500 flex items-start gap-3">
+                  <HelpCircle className="w-4 h-4 text-blue-700 shrink-0 mt-0.5" />
+                  <p>Based on real RWA data: automated UPI reminders on WhatsApp recover ~11.5% of delayed payments within 60 days.</p>
+                </div>
+              </div>
+
+              <div className="lg:col-span-5 relative rounded-[1.75rem] overflow-hidden bg-gradient-to-br from-[#0B2A6B] via-[#123a8f] to-[#0EA5E9] text-white p-8 sm:p-9 shadow-2xl shadow-blue-900/30">
+                <div className="absolute inset-0 blueprint-grid opacity-50" aria-hidden="true" />
+                <span className="relative text-[10px] font-black uppercase tracking-[0.22em] text-sky-200 border border-white/25 bg-white/10 px-3 py-1.5 rounded-full backdrop-blur-sm">
+                  Estimated annual impact
+                </span>
+                <div className="relative mt-7">
+                  <p className="text-xs font-semibold text-sky-200">Recovered dues / month</p>
+                  <p className="font-display text-[2.6rem] leading-none mt-1.5 tnum">+₹{estimatedRecovery.toLocaleString("en-IN")}</p>
+                  <p className="text-xs text-sky-200/80 mt-1.5 tnum">₹{(estimatedRecovery * 12).toLocaleString("en-IN")} extra cashflow / year</p>
+                </div>
+                <div className="relative pt-5 mt-5 border-t border-white/15">
+                  <p className="text-xs font-semibold text-sky-200">Committee hours saved</p>
+                  <p className="font-display text-3xl mt-1 tnum">~{hoursSaved} hrs<span className="text-base text-sky-200/70"> / mo</span></p>
+                </div>
+                <div className="relative pt-5 mt-5 border-t border-white/15 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold text-sky-200">Return multiple</p>
+                    <p className="font-display text-2xl text-emerald-300 tnum">{netRoiMultiplier}× ROI</p>
+                  </div>
+                  <button onClick={() => setDemoModalOpen(true)} className="px-5 py-3 rounded-xl bg-white text-[#0A1C3F] font-extrabold text-xs hover:bg-blue-50 active:scale-95 transition-all cursor-pointer shadow-lg min-h-[44px]">
                     Lock In Trial
                   </button>
                 </div>
               </div>
             </div>
-          </div>
+          </Reveal>
         </div>
       </section>
 
-      {/* ── STATS ROW ────────────────────────────────────────────────────────── */}
-      <div className="relative z-10 py-16 bg-white border-y border-slate-200/70">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-2 md:grid-cols-4 gap-8">
+      {/* ── 09 · STATS BAND ────────────────────────────────────────────── */}
+      <div className="relative overflow-hidden bg-gradient-to-r from-[#0B2A6B] via-blue-700 to-sky-600">
+        <div className="absolute inset-0 blueprint-grid opacity-40" aria-hidden="true" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 grid grid-cols-2 md:grid-cols-4 gap-8">
           {[
-            { label: "Active Societies", target: 500, suffix: "+", color: "text-indigo-600" },
-            { label: "Happy Residents", target: 85000, suffix: "+", color: "text-emerald-600" },
-            { label: "Maintenance Processed", target: 500, prefix: "₹", suffix: " Cr+", color: "text-violet-600" },
-            { label: "Complaints Resolved", target: 48000, suffix: "+", color: "text-rose-600" },
-          ].map((item, idx) => (
-            <div key={idx} className="text-center">
-              <div className={`text-4xl sm:text-5xl font-black tracking-tight mb-1.5 ${item.color}`}>
-                <Counter target={item.target} suffix={item.suffix} prefix={item.prefix} />
+            ["Active societies", 500, "+", ""],
+            ["Happy residents", 85000, "+", ""],
+            ["Maintenance processed", 500, " Cr+", "₹"],
+            ["Complaints resolved", 48000, "+", ""],
+          ].map(([label, target, suffix, prefix], idx) => (
+            <Reveal key={idx} delay={idx * 80} className="text-center">
+              <div className="font-display text-4xl sm:text-5xl text-white tracking-tight drop-shadow-sm">
+                <Counter target={target as number} suffix={suffix as string} prefix={prefix as string} />
               </div>
-              <div className="text-xs sm:text-sm font-extrabold text-slate-500 uppercase tracking-wider">
-                {item.label}
-              </div>
-            </div>
+              <div className="text-[11px] font-bold text-sky-100/80 uppercase tracking-[0.2em] mt-2">{label}</div>
+            </Reveal>
           ))}
         </div>
       </div>
 
-      {/* ── CORE MODULES & FEATURES (FILTERABLE) ─────────────────────────────── */}
-      <section id="features" className="relative z-10 py-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto scroll-mt-20">
-        <div className="text-center max-w-3xl mx-auto mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-50 text-indigo-700 text-xs font-black uppercase tracking-wider mb-4 border border-indigo-200">
-            <Zap className="w-3.5 h-3.5" /> Complete Society Operating System
-          </div>
-          <h2 className="text-3xl sm:text-5xl font-black text-slate-950 tracking-tight">
-            Built for Real Indian RWAs. <span className="text-indigo-600">Zero Chaos.</span>
-          </h2>
-          <p className="text-base sm:text-lg text-slate-600 mt-4">
-            Everything your managing committee, residents, and security team need in one modular platform.
-          </p>
-        </div>
+      {/* ── 10 · COMPARISON ────────────────────────────────────────────── */}
+      <section id="comparison" className="relative bg-white text-[#0A1C3F] scroll-mt-24">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
+          <Reveal className="text-center max-w-2xl mx-auto">
+            <Eyebrow>05 · Transparent comparison</Eyebrow>
+            <h2 className="font-display text-[clamp(2rem,4.5vw,3.5rem)] leading-[1.05] tracking-tight mt-5" style={{ color: NAVY }}>
+              Why societies leave
+              <br /> <em className="blue-gradient-text">the old tools behind.</em>
+            </h2>
+          </Reveal>
 
-        {/* Category Filter Pills */}
-        <div className="flex flex-wrap justify-center gap-2 mb-12">
-          {MODULE_CATEGORIES.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => setSelectedCategory(cat.id)}
-              className={`px-4 py-2 rounded-full text-xs font-extrabold transition-all cursor-pointer ${
-                selectedCategory === cat.id
-                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30 scale-105"
-                  : "bg-white text-slate-600 border border-slate-200 hover:border-slate-300 hover:bg-slate-50"
-              }`}
-            >
-              {cat.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Feature Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredFeatures.map((feat, idx) => (
-            <div
-              key={idx}
-              className="bg-white rounded-3xl p-8 border border-slate-200/90 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between group"
-            >
-              <div>
-                <div className="flex items-center justify-between mb-6">
-                  <div className={`w-13 h-13 rounded-2xl ${feat.bg} flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-sm`}>
-                    <feat.icon className="w-6 h-6" />
-                  </div>
-                  <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
-                    {feat.badge}
-                  </span>
-                </div>
-
-                <h3 className="text-xl font-black text-slate-950 mb-2 leading-snug">
-                  {feat.title}
-                </h3>
-                <p className="text-sm text-slate-600 leading-relaxed font-normal mb-6">
-                  {feat.desc}
-                </p>
-              </div>
-
-              <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
-                <span className="font-extrabold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full flex items-center gap-1.5 border border-emerald-100">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                  {feat.stat}
-                </span>
-                <span className="text-indigo-600 font-bold flex items-center gap-1 group-hover:translate-x-1 transition-transform cursor-pointer">
-                  Explore <ChevronRight className="w-3.5 h-3.5" />
-                </span>
+          <Reveal delay={140}>
+            <div className="mt-12 rounded-[1.75rem] border border-blue-100 bg-white overflow-hidden shadow-[0_24px_60px_rgba(11,42,107,0.10)]">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse min-w-[680px]">
+                  <thead>
+                    <tr className="border-b border-blue-100">
+                      <th scope="col" className="p-5 sm:p-6 text-sm font-bold text-slate-400">Critical capability</th>
+                      <th scope="col" className="p-5 sm:p-6 text-sm font-black text-white bg-gradient-to-b from-[#0B2A6B] to-[#081738]">
+                        <span className="flex items-center gap-2">AapkiSociety OS <BadgeCheck className="w-4 h-4 text-sky-300" /></span>
+                      </th>
+                      <th scope="col" className="p-5 sm:p-6 text-sm font-bold text-slate-400">WhatsApp &amp; Excel</th>
+                      <th scope="col" className="p-5 sm:p-6 text-sm font-bold text-slate-400">Legacy apps</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-blue-50 text-sm">
+                    {COMPARISON_ROWS.map((row, i) => (
+                      <tr key={i} className="hover:bg-blue-50/50 transition-colors">
+                        <td className="p-5 sm:p-6">
+                          <div className="font-bold" style={{ color: NAVY }}>{row.feat}</div>
+                          <div className="text-xs text-slate-400 mt-0.5">{row.note}</div>
+                        </td>
+                        <td className="p-5 sm:p-6 bg-blue-50/70 border-x border-blue-100">
+                          <span className="inline-flex items-center gap-2 font-bold text-blue-800">
+                            <span className="w-6 h-6 rounded-full bg-blue-700 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-700/25">
+                              <Check className="w-3.5 h-3.5 stroke-[3]" />
+                            </span>
+                            Native
+                          </span>
+                        </td>
+                        <td className="p-5 sm:p-6 text-slate-500 font-semibold">
+                          {row.wa
+                            ? <span className="flex items-center gap-1.5"><Check className="w-4 h-4 text-emerald-600" /> Free / manual</span>
+                            : <span className="flex items-center gap-1.5 text-rose-500"><X className="w-4 h-4" /> Impossible</span>}
+                        </td>
+                        <td className="p-5 sm:p-6 text-slate-500 font-semibold">
+                          {row.leg
+                            ? <span className="flex items-center gap-1.5"><Check className="w-4 h-4 text-emerald-600" /> Partial add-on</span>
+                            : <span className="flex items-center gap-1.5 text-rose-500"><X className="w-4 h-4" /> No support</span>}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
-          ))}
+          </Reveal>
         </div>
       </section>
 
-      {/* ── SIDE-BY-SIDE COMPETITIVE COMPARISON ───────────────────────────────── */}
-      <section id="comparison" className="relative z-10 py-24 bg-white border-y border-slate-200/80 scroll-mt-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <span className="text-xs font-black uppercase tracking-wider text-indigo-600 bg-indigo-50 border border-indigo-200 px-3 py-1 rounded-full">
-              Transparent Comparison
-            </span>
-            <h2 className="text-3xl sm:text-5xl font-black text-slate-950 tracking-tight mt-3">
-              Why Societies Are Leaving Outdated Tools
-            </h2>
-            <p className="text-base sm:text-lg text-slate-600 mt-3">
-              See how AapkiSociety outperforms WhatsApp groups, Excel sheets, and intrusive legacy apps.
-            </p>
-          </div>
-
-          <div className="bg-slate-50 rounded-3xl border border-slate-200 overflow-x-auto shadow-md">
-            <table className="w-full text-left border-collapse min-w-[650px]">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-100/80">
-                  <th className="p-5 text-sm font-black text-slate-900">Critical Capabilities</th>
-                  <th className="p-5 text-sm font-black text-indigo-700 bg-indigo-50/80 border-x border-indigo-200/80">
-                    AapkiSociety OS
-                  </th>
-                  <th className="p-5 text-sm font-bold text-slate-600">WhatsApp &amp; Excel Sheets</th>
-                  <th className="p-5 text-sm font-bold text-slate-600">Legacy Commercial Apps</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200 text-sm">
-                {[
-                  {
-                    feat: "100% Ad-Free & Data Private (DPDP Act 2023)",
-                    as: true,
-                    wa: false,
-                    leg: false,
-                    note: "No commercial spam or resident data monetization",
-                  },
-                  {
-                    feat: "Direct 1-Click Tally Prime & ERP Export",
-                    as: true,
-                    wa: false,
-                    leg: false,
-                    note: "Save chartered accountant hours without re-entry",
-                  },
-                  {
-                    feat: "Maker-Checker Financial Approval Governance",
-                    as: true,
-                    wa: false,
-                    leg: false,
-                    note: "Dual authorization prevents unauthorized expenses",
-                  },
-                  {
-                    feat: "Automated GST & TDS Invoicing with UPI Receipts",
-                    as: true,
-                    wa: false,
-                    leg: true,
-                    note: "Instant ledger and bank reconciliation updates",
-                  },
-                  {
-                    feat: "Dedicated SLA Timers for Lift/Plumber Helpdesk",
-                    as: true,
-                    wa: false,
-                    leg: true,
-                    note: "Overdue complaints automatically escalate",
-                  },
-                  {
-                    feat: "Paid Society Flat Listings (Sale / Rent)",
-                    as: true,
-                    wa: false,
-                    leg: false,
-                    note: "Generate income for the society with zero broker spam",
-                  },
-                  {
-                    feat: "Transparent, Predictable Per-Flat Pricing",
-                    as: true,
-                    wa: true,
-                    leg: false,
-                    note: "No hidden hardware lock-ins or surprise fees",
-                  },
-                ].map((row, i) => (
-                  <tr key={i} className="hover:bg-slate-100/50 transition-colors">
-                    <td className="p-5">
-                      <div className="font-extrabold text-slate-900">{row.feat}</div>
-                      <div className="text-xs text-slate-500">{row.note}</div>
-                    </td>
-
-                    {/* AapkiSociety Column */}
-                    <td className="p-5 bg-indigo-50/50 border-x border-indigo-200/70 font-bold text-indigo-900">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
-                          <Check className="w-4 h-4 stroke-[3]" />
-                        </div>
-                        <span className="font-black text-indigo-950">Full Native Support</span>
-                      </div>
-                    </td>
-
-                    {/* WhatsApp/Excel Column */}
-                    <td className="p-5 text-slate-500">
-                      {row.wa ? (
-                        <span className="text-slate-700 font-semibold flex items-center gap-1.5"><Check className="w-4 h-4 text-emerald-600" /> Free / Manual</span>
-                      ) : (
-                        <span className="text-rose-500 font-semibold flex items-center gap-1.5"><X className="w-4 h-4 text-rose-500" /> Impossible</span>
-                      )}
-                    </td>
-
-                    {/* Legacy Apps Column */}
-                    <td className="p-5 text-slate-500">
-                      {row.leg ? (
-                        <span className="text-slate-700 font-semibold flex items-center gap-1.5"><Check className="w-4 h-4 text-emerald-600" /> Partial / Add-on</span>
-                      ) : (
-                        <span className="text-rose-500 font-semibold flex items-center gap-1.5"><X className="w-4 h-4 text-rose-500" /> No Support</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      {/* ── BANK-GRADE SECURITY & DATA PRIVACY SHIELD ────────────────────────── */}
-      <section id="security" className="relative z-10 py-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="grid lg:grid-cols-12 gap-12 items-center">
-          {/* Left Dark Card */}
-          <div className="lg:col-span-6 relative">
-            <div className="relative bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 rounded-[2.5rem] p-8 sm:p-12 text-white border border-indigo-900/60 shadow-2xl overflow-hidden">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500 rounded-full blur-3xl opacity-20 pointer-events-none"></div>
-
-              <div className="w-14 h-14 rounded-2xl bg-indigo-600/30 border border-indigo-500/40 flex items-center justify-center mb-6 text-indigo-400">
-                <ShieldCheck className="w-8 h-8" />
+      {/* ── 11 · SECURITY VAULT ────────────────────────────────────────── */}
+      <section id="security" className="relative mist-canvas border-y border-blue-100/70 overflow-hidden">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28 grid lg:grid-cols-2 gap-12 items-center">
+          <Reveal>
+            <div className="relative rounded-[2rem] p-8 sm:p-10 bg-gradient-to-br from-[#0B2A6B] to-[#081738] text-white overflow-hidden shadow-2xl shadow-blue-900/30">
+              <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-sky-400/25 blur-[80px]" aria-hidden="true" />
+              <div className="absolute inset-0 blueprint-grid opacity-50" aria-hidden="true" />
+              <div className="relative w-fit p-3 rounded-2xl bg-white/10 border border-white/20 text-sky-300 mb-6">
+                <Fingerprint className="w-7 h-7" />
               </div>
-
-              <h3 className="text-2xl sm:text-3xl font-black text-white mb-4">
-                Bank-Grade Security for Your Community
-              </h3>
-
-              <p className="text-slate-300 text-sm leading-relaxed mb-8">
-                Your society&apos;s financial records, resident contact directories, and entrance logs are protected with the same stringent encryption trusted by leading Indian financial institutions.
+              <h3 className="relative font-display text-2xl sm:text-3xl tracking-tight">Bank-grade security for your community</h3>
+              <p className="relative text-sky-100/70 text-sm leading-relaxed mt-3">
+                Financial records, contact directories and gate logs — protected with the encryption Indian financial institutions trust.
               </p>
-
-              <ul className="space-y-4 text-sm font-semibold">
+              <ul className="relative mt-7 space-y-3.5 text-sm font-semibold text-white/90">
                 {[
-                  "256-bit AES Encryption for data at rest and in transit",
-                  "Strict compliance with India's Digital Personal Data Protection (DPDP) Act 2023",
-                  "Zero Data Mining: We never sell resident numbers or push ad spam",
-                  "Masked Phone Relay: Security guards & delivery boys cannot see resident mobile numbers",
-                  "Automated daily encrypted database backups with 30-day snapshot retention",
+                  "256-bit AES encryption, in transit and at rest",
+                  "Strict DPDP Act 2023 compliance, hosted in AWS Mumbai",
+                  "Zero data mining — never sold, never spammed",
+                  "Masked phone relay — guards never see resident numbers",
+                  "Daily encrypted backups · 30-day snapshot retention",
                 ].map((item, i) => (
                   <li key={i} className="flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-                    <span>{item}</span>
+                    <CheckCircle2 className="w-5 h-5 text-emerald-300 shrink-0" /> {item}
                   </li>
                 ))}
               </ul>
             </div>
-          </div>
-
-          {/* Right Text Content */}
-          <div className="lg:col-span-6 space-y-6">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-50 text-indigo-700 text-xs font-black uppercase tracking-wider border border-indigo-200">
-              <Lock className="w-3.5 h-3.5" /> 100% Data Sovereignty
-            </div>
-
-            <h2 className="text-3xl sm:text-5xl font-black text-slate-950 tracking-tight leading-tight">
-              Your Society&apos;s Data Belongs Strictly to You.
+          </Reveal>
+          <Reveal delay={140}>
+            <Eyebrow>06 · 100% data sovereignty</Eyebrow>
+            <h2 className="font-display text-[clamp(2rem,4.5vw,3.25rem)] leading-[1.06] tracking-tight mt-5" style={{ color: NAVY }}>
+              Your society&apos;s data belongs to <em className="blue-gradient-text">you. Only you.</em>
             </h2>
-
-            <p className="text-base sm:text-lg text-slate-600 leading-relaxed">
-              Traditional &ldquo;free&rdquo; society management apps monetize your residents through unsolicited loan offers, local business popups, and intrusive marketing calls.
+            <p className="text-slate-500 text-[15px] sm:text-base leading-relaxed mt-5">
+              “Free” apps monetise residents with loan offers and business popups.
+              AapkiSociety is paid B2B software — <strong className="font-bold" style={{ color: NAVY }}>you are our customer, never our product.</strong> Records
+              live in isolated schemas inside Indian data centres.
             </p>
-
-            <p className="text-base text-slate-600 leading-relaxed">
-              AapkiSociety is a paid B2B operating system. <strong className="text-slate-900 font-bold">You are our customer, never our product.</strong> We store all tenant records in dedicated, isolated schemas within Indian cloud data centers (AWS Mumbai).
-            </p>
-
-            <div className="pt-4 flex flex-wrap items-center gap-6 text-sm font-bold text-slate-700">
-              <div className="flex items-center gap-2">
-                <Shield className="w-5 h-5 text-indigo-600" />
-                <span>ISO 27001 Certified</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                <span>SOC 2 Compliant</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Landmark className="w-5 h-5 text-cyan-600" />
-                <span>Indian Rupee Invoicing</span>
-              </div>
+            <div className="pt-6 flex flex-wrap gap-3 text-[13px] font-bold">
+              {[["ISO 27001 Certified", Shield], ["SOC 2 Compliant", CheckCircle2], ["₹ INR Invoicing", IndianRupee]].map(([label, Icon], i) => {
+                const I = Icon as typeof Shield;
+                return (
+                  <span key={i} className="inline-flex items-center gap-2 text-[#0A1C3F] border border-blue-200 bg-white px-4 py-2.5 rounded-full shadow-sm">
+                    <I className="w-4 h-4 text-blue-700" /> {label as string}
+                  </span>
+                );
+              })}
             </div>
-          </div>
+          </Reveal>
         </div>
       </section>
 
-      {/* ── VERIFIED RWA TESTIMONIALS ────────────────────────────────────────── */}
-      <section id="testimonials" className="relative z-10 py-24 bg-slate-50 border-t border-slate-200 scroll-mt-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <span className="text-xs font-black uppercase tracking-wider text-amber-700 bg-amber-100/80 border border-amber-300 px-3 py-1 rounded-full">
-              Real Case Studies
-            </span>
-            <h2 className="text-3xl sm:text-5xl font-black text-slate-950 tracking-tight mt-3">
-              Trusted by 500+ RWA Presidents &amp; Treasurers
+      {/* ── 12 · TESTIMONIALS ──────────────────────────────────────────── */}
+      <section id="testimonials" className="relative bg-white text-[#0A1C3F] scroll-mt-24 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28 relative">
+          <span aria-hidden="true" className="ghost-numeral font-display font-semibold absolute top-6 right-4 sm:right-8 text-[6rem] sm:text-[8rem] hidden lg:block">07</span>
+          <Reveal className="text-center max-w-2xl mx-auto">
+            <Eyebrow>07 · Real case studies</Eyebrow>
+            <h2 className="font-display text-[clamp(2rem,4.5vw,3.5rem)] leading-[1.05] tracking-tight mt-5" style={{ color: NAVY }}>
+              Loved by the people who <em className="blue-gradient-text">sign the cheques.</em>
             </h2>
-            <p className="text-base sm:text-lg text-slate-600 mt-3">
-              Hear directly from managing committee members who transformed their communities with AapkiSociety.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {TESTIMONIALS.map((t, idx) => (
-              <div
-                key={idx}
-                className="bg-white rounded-3xl p-8 border border-slate-200/90 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex text-amber-400 mb-4">
-                    {[1, 2, 3, 4, 5].map((s) => (
-                      <Star key={s} className="w-4 h-4 fill-current" />
-                    ))}
+          </Reveal>
+          <Reveal delay={120}>
+            <div
+              className="mt-14 max-w-4xl mx-auto"
+              onMouseEnter={() => setQuotePaused(true)}
+              onMouseLeave={() => setQuotePaused(false)}
+            >
+              <div className="relative bg-gradient-to-b from-blue-50/80 to-white rounded-[2rem] border border-blue-100 shadow-[0_24px_70px_rgba(11,42,107,0.12)] p-8 sm:p-12 text-center overflow-hidden">
+                <div className="aurora absolute -top-24 left-1/2 -translate-x-1/2 w-[420px] h-[240px] rounded-full bg-sky-200/50 blur-[90px]" aria-hidden="true" />
+                <div className="relative">
+                  <div className="flex justify-center gap-1 text-amber-400 mb-6" aria-label={`${TESTIMONIALS[quoteIndex].rating} out of 5 stars`}>
+                    {[1, 2, 3, 4, 5].map((s) => (<Star key={s} className="w-4 h-4 fill-current" />))}
                   </div>
-
-                  <div className="text-xs font-extrabold text-indigo-700 bg-indigo-50 border border-indigo-100 px-3 py-1 rounded-full inline-block mb-4">
-                    {t.highlight}
+                  <div key={quoteIndex} className="quote-enter">
+                    <blockquote className="font-display text-xl sm:text-[1.7rem] leading-[1.4] tracking-tight min-h-[168px] sm:min-h-[132px]" style={{ color: NAVY }}>
+                      “{TESTIMONIALS[quoteIndex].quote}”
+                    </blockquote>
+                    <span className="text-[11px] font-black uppercase tracking-[0.12em] text-blue-700 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-full inline-block mt-6">
+                      {TESTIMONIALS[quoteIndex].highlight}
+                    </span>
                   </div>
-
-                  <p className="text-slate-700 text-sm leading-relaxed italic mb-8">
-                    &ldquo;{t.quote}&rdquo;
+                  <div className="flex items-center justify-center gap-3.5 mt-7">
+                    <img
+                      src={TESTIMONIALS[quoteIndex].avatar}
+                      alt={`Portrait of ${TESTIMONIALS[quoteIndex].name}`}
+                      loading="lazy"
+                      className="w-13 h-13 rounded-full object-cover border-[3px] border-white shadow-lg shadow-blue-900/15"
+                    />
+                    <div className="text-left">
+                      <p className="font-extrabold text-sm leading-tight" style={{ color: NAVY }}>{TESTIMONIALS[quoteIndex].name}</p>
+                      <p className="text-xs text-blue-700 font-bold mt-0.5">{TESTIMONIALS[quoteIndex].role}</p>
+                      <p className="text-[11px] text-slate-400 font-medium">{TESTIMONIALS[quoteIndex].society} · {TESTIMONIALS[quoteIndex].city}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-center gap-4 mt-8">
+                    <button
+                      onClick={() => setQuoteIndex((quoteIndex - 1 + TESTIMONIALS.length) % TESTIMONIALS.length)}
+                      aria-label="Previous testimonial"
+                      className="w-11 h-11 rounded-full border border-blue-200 bg-white text-blue-700 flex items-center justify-center hover:bg-blue-700 hover:text-white hover:border-blue-700 transition-all cursor-pointer shadow-sm"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <div className="flex items-center gap-2" role="tablist" aria-label="Choose testimonial">
+                      {TESTIMONIALS.map((_, i) => (
+                        <button
+                          key={i}
+                          role="tab"
+                          aria-selected={quoteIndex === i}
+                          aria-label={`Show testimonial ${i + 1}`}
+                          onClick={() => setQuoteIndex(i)}
+                          className={`h-2 rounded-full transition-all cursor-pointer ${quoteIndex === i ? "w-8 bg-blue-700" : "w-2 bg-blue-200 hover:bg-blue-300"}`}
+                        />
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => setQuoteIndex((quoteIndex + 1) % TESTIMONIALS.length)}
+                      aria-label="Next testimonial"
+                      className="w-11 h-11 rounded-full border border-blue-200 bg-white text-blue-700 flex items-center justify-center hover:bg-blue-700 hover:text-white hover:border-blue-700 transition-all cursor-pointer shadow-sm"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </div>
+                  <p className="text-[11px] font-black tracking-[0.2em] text-slate-400 mt-4 tnum">
+                    0{quoteIndex + 1} <span className="text-blue-300">/</span> 03
                   </p>
                 </div>
-
-                <div className="flex items-center gap-3.5 pt-6 border-t border-slate-100">
-                  <img
-                    src={t.avatar}
-                    alt={t.name}
-                    className="w-12 h-12 rounded-full object-cover border-2 border-indigo-100 shadow-sm"
-                  />
-                  <div>
-                    <h4 className="font-extrabold text-sm text-slate-950 leading-tight">{t.name}</h4>
-                    <p className="text-xs text-indigo-600 font-bold mt-0.5">{t.role}</p>
-                    <p className="text-[11px] text-slate-400 font-medium">{t.society} • {t.city}</p>
-                  </div>
-                </div>
               </div>
-            ))}
-          </div>
+              <div className="flex justify-center gap-3 mt-6">
+                {TESTIMONIALS.map((t, i) => (
+                  <button
+                    key={t.name}
+                    onClick={() => setQuoteIndex(i)}
+                    aria-label={`Show ${t.name}'s testimonial`}
+                    className={`rounded-full transition-all cursor-pointer ${quoteIndex === i ? "ring-[3px] ring-blue-600 ring-offset-2 ring-offset-white scale-110" : "opacity-50 hover:opacity-90 grayscale-[35%]"}`}
+                  >
+                    <img src={t.avatar} alt="" loading="lazy" className="w-11 h-11 rounded-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          </Reveal>
         </div>
       </section>
 
-      {/* ── TRANSPARENT PRICING WITH MONTHLY / ANNUAL SWITCH ─────────────────── */}
-      <section id="pricing" className="relative z-10 py-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto scroll-mt-20">
-        <div className="text-center max-w-3xl mx-auto mb-14">
-          <span className="text-xs font-black uppercase tracking-wider text-indigo-600 bg-indigo-50 border border-indigo-200 px-3 py-1 rounded-full">
-            Predictable Pricing
-          </span>
-          <h2 className="text-3xl sm:text-5xl font-black text-slate-950 tracking-tight mt-3">
-            Simple Per-Flat Pricing. No Hidden Setup Fees.
-          </h2>
-          <p className="text-base sm:text-lg text-slate-600 mt-3">
-            Includes all modules, unlimited residents, free data migration from Excel, and mobile apps.
-          </p>
-
-          {/* Billing Switch Toggle */}
-          <div className="mt-8 inline-flex items-center gap-3 bg-slate-200/80 p-1.5 rounded-full border border-slate-300">
-            <button
-              onClick={() => setAnnualBilling(false)}
-              className={`px-5 py-2 rounded-full text-xs font-black transition-all cursor-pointer ${
-                !annualBilling ? "bg-white text-indigo-600 shadow" : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              Monthly Billing
-            </button>
-            <button
-              onClick={() => setAnnualBilling(true)}
-              className={`px-5 py-2 rounded-full text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 ${
-                annualBilling ? "bg-indigo-600 text-white shadow" : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              <span>Annual Billing</span>
-              <span className="px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 text-[10px] font-black">
-                Save 17% (2 Mo Free)
-              </span>
-            </button>
-          </div>
-        </div>
-
-        {/* Pricing Cards */}
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {/* Plan 1: Core */}
-          <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between">
-            <div>
-              <h3 className="text-xl font-black text-slate-950 mb-2">Core OS</h3>
-              <p className="text-xs text-slate-500 mb-6">Essential gate, billing, and resident communication for small to medium societies.</p>
-
-              <div className="flex items-baseline gap-1 mb-6">
-                <span className="text-4xl sm:text-5xl font-black text-slate-950">
-                  ₹{annualBilling ? 25 : 30}
-                </span>
-                <span className="text-xs font-bold text-slate-500">/ flat / month</span>
-              </div>
-
-              <ul className="space-y-3.5 text-xs font-semibold text-slate-700 mb-8 border-t border-slate-100 pt-6">
-                <li className="flex items-center gap-2.5"><Check className="w-4 h-4 text-emerald-600 shrink-0" /> Smart Gate &amp; Visitor OTP Pass</li>
-                <li className="flex items-center gap-2.5"><Check className="w-4 h-4 text-emerald-600 shrink-0" /> Automated Maintenance Invoices</li>
-                <li className="flex items-center gap-2.5"><Check className="w-4 h-4 text-emerald-600 shrink-0" /> Digital Notice Board &amp; Polls</li>
-                <li className="flex items-center gap-2.5"><Check className="w-4 h-4 text-emerald-600 shrink-0" /> Resident Mobile App (Android &amp; iOS)</li>
-                <li className="flex items-center gap-2.5"><Check className="w-4 h-4 text-emerald-600 shrink-0" /> Free Historical Excel Data Import</li>
-              </ul>
-            </div>
-
-            <Link
-              href="/register?plan=core"
-              className="w-full py-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-900 font-extrabold text-xs text-center block transition-all active:scale-95"
-            >
-              Start Free Trial
-            </Link>
-          </div>
-
-          {/* Plan 2: Compliance (POPULAR) */}
-          <div className="relative bg-gradient-to-b from-indigo-900 via-indigo-950 to-slate-950 text-white rounded-3xl p-8 border-2 border-indigo-500 shadow-2xl shadow-indigo-600/30 hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between">
-            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 text-[11px] font-black rounded-full uppercase tracking-wider shadow-md">
-              Most Popular Choice
-            </div>
-
-<div>
-              <h3 className="text-xl font-black text-white mb-2">Compliance OS</h3>
-              <p className="text-xs text-indigo-200 mb-6">Complete financial governance, GST/TDS engine, and Tally Prime sync for audit-ready societies.</p>
-
-              <div className="flex items-baseline gap-1 mb-6">
-                <span className="text-4xl sm:text-5xl font-black text-white">
-                  ₹{annualBilling ? 42 : 50}
-                </span>
-                <span className="text-xs font-bold text-indigo-200">/ flat / month</span>
-              </div>
-
-              <ul className="space-y-3.5 text-xs font-semibold text-slate-200 mb-8 border-t border-indigo-800 pt-6">
-                <li className="flex items-center gap-2.5"><Check className="w-4 h-4 text-amber-400 shrink-0" /> Everything in Core OS</li>
-                <li className="flex items-center gap-2.5"><Check className="w-4 h-4 text-amber-400 shrink-0" /> 1-Click Tally Prime &amp; ERP XML Sync</li>
-                <li className="flex items-center gap-2.5"><Check className="w-4 h-4 text-amber-400 shrink-0" /> Automated GST &amp; TDS Tax Engine</li>
-                <li className="flex items-center gap-2.5"><Check className="w-4 h-4 text-amber-400 shrink-0" /> Maker-Checker Dual Financial Approval</li>
-                <li className="flex items-center gap-2.5"><Check className="w-4 h-4 text-amber-400 shrink-0" /> Helpdesk SLA Timers &amp; Escalation</li>
-                <li className="flex items-center gap-2.5"><Check className="w-4 h-4 text-amber-400 shrink-0" /> Paid Society Property Listings</li>
-                <li className="flex items-center gap-2.5"><Check className="w-4 h-4 text-amber-400 shrink-0" /> Dual-Format Excel &amp; PDF Audit Reports</li>
-              </ul>
-            </div>
-
-            <Link
-              href="/register?plan=compliance"
-              className="w-full py-4 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-600 hover:to-violet-700 text-white font-black text-xs text-center block shadow-lg shadow-indigo-500/40 active:scale-95 transition-all"
-            >
-              Start 30-Day Free Trial
-            </Link>
-          </div>
-
-          {/* Plan 3: AI Pro */}
-          <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between">
-            <div>
-              <h3 className="text-xl font-black text-slate-950 mb-2">AI Pro OS</h3>
-              <p className="text-xs text-slate-500 mb-6">For large residential complexes desiring predictive AI analytics, 50GB vault, and dedicated support.</p>
-
-              <div className="flex items-baseline gap-1 mb-6">
-                <span className="text-4xl sm:text-5xl font-black text-slate-950">
-                  ₹{annualBilling ? 66 : 80}
-                </span>
-                <span className="text-xs font-bold text-slate-500">/ flat / month</span>
-              </div>
-
-              <ul className="space-y-3.5 text-xs font-semibold text-slate-700 mb-8 border-t border-slate-100 pt-6">
-                <li className="flex items-center gap-2.5"><Check className="w-4 h-4 text-emerald-600 shrink-0" /> Everything in Compliance OS</li>
-                <li className="flex items-center gap-2.5"><Check className="w-4 h-4 text-emerald-600 shrink-0" /> AI Anomaly Detection in Society Expenses</li>
-                <li className="flex items-center gap-2.5"><Check className="w-4 h-4 text-emerald-600 shrink-0" /> 24x7 Conversational Society AI Assistant</li>
-                <li className="flex items-center gap-2.5"><Check className="w-4 h-4 text-emerald-600 shrink-0" /> 50 GB Encrypted Document Storage</li>
-                <li className="flex items-center gap-2.5"><Check className="w-4 h-4 text-emerald-600 shrink-0" /> Dedicated Relationship Manager</li>
-                <li className="flex items-center gap-2.5"><Check className="w-4 h-4 text-emerald-600 shrink-0" /> Custom Bye-Law Workflow Configuration</li>
-              </ul>
-            </div>
-
-            <button
-              onClick={() => setDemoModalOpen(true)}
-              className="w-full py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs text-center block transition-all active:scale-95 cursor-pointer"
-            >
-              Talk to Enterprise Team
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* ── FREQUENTLY ASKED QUESTIONS (ACCORDION) ───────────────────────────── */}
-      <section id="faq" className="relative z-10 py-24 bg-slate-50 border-t border-slate-200 scroll-mt-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <span className="text-xs font-black uppercase tracking-wider text-indigo-600 bg-indigo-50 border border-indigo-200 px-3 py-1 rounded-full">
-              Got Questions?
-            </span>
-            <h2 className="text-3xl sm:text-5xl font-black text-slate-950 tracking-tight mt-3">
-              Frequently Asked Questions
+      {/* ── 13 · PRICING ───────────────────────────────────────────────── */}
+      <section id="pricing" className="relative mist-canvas text-[#0A1C3F] scroll-mt-24 border-t border-blue-100/70 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28 relative">
+          <span aria-hidden="true" className="ghost-numeral font-display font-semibold absolute top-6 right-4 sm:right-8 text-[6rem] sm:text-[8rem] hidden lg:block">08</span>
+          <Reveal className="text-center max-w-2xl mx-auto">
+            <Eyebrow>08 · Predictable pricing</Eyebrow>
+            <h2 className="font-display text-[clamp(2rem,4.5vw,3.5rem)] leading-[1.05] tracking-tight mt-5" style={{ color: NAVY }}>
+              Per flat. Per month.
+              <br /> <em className="blue-gradient-text">No surprises.</em>
             </h2>
-            <p className="text-base text-slate-600 mt-2">
-              Everything RWA managing committees need to know before joining.
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            {FAQS.map((faq, idx) => (
-              <div
-                key={idx}
-                className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm transition-all"
-              >
-                <button
-                  onClick={() => setActiveFaq(activeFaq === idx ? null : idx)}
-                  className="w-full p-6 text-left flex items-center justify-between gap-4 font-extrabold text-slate-900 text-base hover:text-indigo-600 transition-colors cursor-pointer"
-                >
-                  <span>{faq.q}</span>
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-transform ${activeFaq === idx ? "bg-indigo-50 text-indigo-600 rotate-180" : "bg-slate-100 text-slate-500"}`}>
-                    <ChevronDown className="w-4 h-4" />
-                  </div>
-                </button>
-
-                {activeFaq === idx && (
-                  <div className="px-6 pb-6 pt-1 text-sm text-slate-600 leading-relaxed font-normal border-t border-slate-100 animate-fade-in">
-                    {faq.a}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── HIGH-CONVERSION FINAL CALL-TO-ACTION ─────────────────────────────── */}
-      <section className="relative z-10 py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="relative rounded-[3rem] overflow-hidden bg-gradient-to-br from-indigo-700 via-indigo-800 to-slate-950 p-10 sm:p-16 text-center text-white shadow-[0_30px_90px_rgba(79,70,229,0.25)] border border-indigo-500/30">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.12)_0%,transparent_70%)] pointer-events-none"></div>
-
-          <div className="relative z-10 max-w-3xl mx-auto">
-            <div className="relative w-16 h-16 rounded-3xl overflow-hidden shadow-2xl border-2 border-white/30 mx-auto mb-6 bg-white p-1">
-              <div className="relative w-full h-full rounded-2xl overflow-hidden">
-                <Image
-                  src="/aapp.jpeg"
-                  alt="AapkiSociety Logo"
-                  fill
-                  sizes="64px"
-                  className="object-cover"
-                />
-              </div>
-            </div>
-
-            <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight mb-4">
-              Ready to Upgrade Your Housing Society?
-            </h2>
-
-            <p className="text-base sm:text-lg text-indigo-100 font-medium leading-relaxed mb-8">
-              Join 500+ forward-thinking RWAs who eliminated committee disputes, automated billing, and delivered a 5-star living experience to their residents. Setup takes under 30 minutes.
-            </p>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link
-                href="/register"
-                className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-white text-indigo-950 hover:bg-indigo-50 font-black text-base shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2"
-              >
-                <span>Register Society (30 Days Free)</span>
-                <ArrowRight className="w-5 h-5" />
-              </Link>
-
+            <p className="text-[15px] text-slate-500 mt-4">All modules, unlimited residents, free Excel migration, mobile apps included.</p>
+            <div className="mt-8 inline-flex items-center gap-1 bg-white p-1.5 rounded-full border border-blue-100 shadow-sm" role="group" aria-label="Billing period">
               <button
-                onClick={() => setDemoModalOpen(true)}
-                className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-indigo-600/80 hover:bg-indigo-600 text-white font-extrabold text-base border border-indigo-400/40 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                onClick={() => setAnnualBilling(false)}
+                aria-pressed={!annualBilling}
+                className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all cursor-pointer min-h-[40px] ${!annualBilling ? "bg-[#0A1C3F] text-white shadow" : "text-slate-400 hover:text-[#0A1C3F]"}`}
               >
-                <PhoneCall className="w-5 h-5" /> Talk to an Onboarding Specialist
+                Monthly
+              </button>
+              <button
+                onClick={() => setAnnualBilling(true)}
+                aria-pressed={annualBilling}
+                className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 min-h-[40px] ${annualBilling ? "bg-blue-700 text-white shadow-lg shadow-blue-700/25" : "text-slate-400 hover:text-[#0A1C3F]"}`}
+              >
+                Annual
+                <span className="px-2 py-0.5 rounded-full bg-sky-300 text-[#0A1C3F] text-[10px] font-black">−17%</span>
               </button>
             </div>
+          </Reveal>
 
-            <p className="text-xs text-indigo-300 font-semibold mt-6">
-              Zero Credit Card Required • Full Feature Access • 100% Data Export Guarantee
-            </p>
+          <div className="grid md:grid-cols-3 gap-5 max-w-6xl mx-auto mt-12 items-stretch">
+            <Reveal>
+              <div className="h-full bg-white rounded-3xl p-8 border border-blue-100 shadow-sm flex flex-col justify-between hover:shadow-xl hover:shadow-blue-900/10 hover:-translate-y-1 transition-all">
+                <div>
+                  <h3 className="font-display text-2xl" style={{ color: NAVY }}>Core OS</h3>
+                  <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">Gate, billing and resident communication for small societies.</p>
+                  <p className="mt-6"><span className="font-display text-5xl tnum" style={{ color: NAVY }}><span key={annualBilling ? "a-core" : "m-core"} className="price-pop">₹{annualBilling ? 25 : 30}</span></span> <span className="text-xs font-bold text-slate-400">/ flat / mo</span></p>
+                  <ul className="space-y-3 text-[13px] font-semibold text-slate-600 mt-7 border-t border-blue-50 pt-6">
+                    {["Smart gate & visitor OTP pass", "Automated maintenance invoices", "Digital notice board & polls", "Resident app (Android & iOS)", "Free Excel data import"].map((f, i) => (
+                      <li key={i} className="flex items-center gap-2.5"><Check className="w-4 h-4 text-emerald-600 shrink-0" /> {f}</li>
+                    ))}
+                  </ul>
+                </div>
+                <Link href="/register?plan=core" className="mt-8 w-full py-3.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-800 font-extrabold text-sm text-center block transition-all active:scale-[0.98] min-h-[48px] flex items-center justify-center">
+                  Start Free Trial
+                </Link>
+              </div>
+            </Reveal>
+
+            <Reveal delay={110}>
+              <div className="relative h-full bg-gradient-to-b from-[#0B2A6B] via-[#0d3180] to-[#1D4ED8] text-white rounded-3xl p-8 border border-blue-400/30 shadow-[0_30px_80px_rgba(29,78,216,0.4)] flex flex-col justify-between overflow-hidden md:-my-3 md:py-11">
+                <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-72 h-48 bg-sky-400/30 blur-[70px]" aria-hidden="true" />
+                <div className="absolute inset-0 blueprint-grid opacity-40" aria-hidden="true" />
+                <div className="absolute top-5 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-white text-blue-800 text-[10px] font-black rounded-full uppercase tracking-[0.16em] shadow-lg whitespace-nowrap">
+                  Most popular
+                </div>
+                <div className="relative">
+                  <h3 className="font-display text-2xl mt-8">Compliance OS</h3>
+                  <p className="text-xs text-sky-100/75 mt-1.5 leading-relaxed">GST/TDS engine, Tally sync and audit-ready governance.</p>
+                  <p className="mt-6"><span className="font-display text-5xl tnum"><span key={annualBilling ? "a-comp" : "m-comp"} className="price-pop">₹{annualBilling ? 42 : 50}</span></span> <span className="text-xs font-bold text-sky-200/70">/ flat / mo</span></p>
+                  <ul className="space-y-3 text-[13px] font-semibold text-white/85 mt-7 border-t border-white/15 pt-6">
+                    {["Everything in Core OS", "1-click Tally Prime XML sync", "Automated GST & TDS engine", "Maker-Checker dual approval", "Helpdesk SLA timers", "Paid property listings", "Excel + PDF audit reports"].map((f, i) => (
+                      <li key={i} className="flex items-center gap-2.5"><Check className="w-4 h-4 text-sky-300 shrink-0" /> {f}</li>
+                    ))}
+                  </ul>
+                </div>
+                <Link href="/register?plan=compliance" className="relative mt-8 w-full py-4 rounded-xl bg-white hover:bg-blue-50 text-[#0A1C3F] font-black text-sm text-center block shadow-lg active:scale-[0.98] transition-all min-h-[52px] flex items-center justify-center">
+                  Start 30-Day Free Trial
+                </Link>
+              </div>
+            </Reveal>
+
+            <Reveal delay={200}>
+              <div className="h-full bg-white rounded-3xl p-8 border border-blue-100 shadow-sm flex flex-col justify-between hover:shadow-xl hover:shadow-blue-900/10 hover:-translate-y-1 transition-all">
+                <div>
+                  <h3 className="font-display text-2xl" style={{ color: NAVY }}>AI Pro OS</h3>
+                  <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">Predictive AI, 50 GB vault and a dedicated manager for large complexes.</p>
+                  <p className="mt-6"><span className="font-display text-5xl tnum" style={{ color: NAVY }}><span key={annualBilling ? "a-ai" : "m-ai"} className="price-pop">₹{annualBilling ? 66 : 80}</span></span> <span className="text-xs font-bold text-slate-400">/ flat / mo</span></p>
+                  <ul className="space-y-3 text-[13px] font-semibold text-slate-600 mt-7 border-t border-blue-50 pt-6">
+                    {["Everything in Compliance OS", "AI anomaly detection in expenses", "24×7 society AI assistant", "50 GB encrypted document vault", "Dedicated relationship manager", "Custom bye-law workflows"].map((f, i) => (
+                      <li key={i} className="flex items-center gap-2.5"><Check className="w-4 h-4 text-emerald-600 shrink-0" /> {f}</li>
+                    ))}
+                  </ul>
+                </div>
+                <button onClick={() => setDemoModalOpen(true)} className="mt-8 w-full py-3.5 rounded-xl bg-[#0A1C3F] hover:bg-blue-900 text-white font-extrabold text-sm transition-all active:scale-[0.98] cursor-pointer min-h-[48px]">
+                  Talk to Enterprise Team
+                </button>
+              </div>
+            </Reveal>
           </div>
         </div>
       </section>
 
-      {/* ── FOOTER ───────────────────────────────────────────────────────────── */}
-      <footer className="relative z-10 bg-slate-950 text-slate-400 pt-16 pb-12 border-t border-slate-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* ── 14 · FAQ ───────────────────────────────────────────────────── */}
+      <section id="faq" className="relative bg-white text-[#0A1C3F] scroll-mt-24">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
+          <Reveal className="text-center">
+            <Eyebrow>09 · Got questions?</Eyebrow>
+            <h2 className="font-display text-[clamp(2rem,4.5vw,3.25rem)] tracking-tight mt-5" style={{ color: NAVY }}>Asked by every committee, <em className="blue-gradient-text">answered honestly.</em></h2>
+          </Reveal>
+          <div className="space-y-3.5 mt-12">
+            {FAQS.map((faq, idx) => {
+              const open = activeFaq === idx;
+              return (
+                <Reveal key={idx} delay={Math.min(idx * 50, 250)}>
+                  <div className={`bg-white rounded-2xl border overflow-hidden transition-all ${open ? "border-blue-300 shadow-[0_16px_40px_rgba(29,78,216,0.12)]" : "border-blue-100 shadow-sm"}`}>
+                    <button
+                      onClick={() => setActiveFaq(open ? null : idx)}
+                      aria-expanded={open}
+                      aria-controls={`faq-panel-${idx}`}
+                      className="w-full p-5 sm:p-6 text-left flex items-center justify-between gap-4 font-bold text-[15px] sm:text-base hover:text-blue-700 transition-colors cursor-pointer min-h-[56px]"
+                      style={{ color: NAVY }}
+                    >
+                      <span>{faq.q}</span>
+                      <span className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-all ${open ? "bg-blue-700 text-white rotate-180 shadow-md shadow-blue-700/30" : "bg-blue-50 text-blue-700"}`}>
+                        <ChevronDown className="w-4 h-4" />
+                      </span>
+                    </button>
+                    {open && (
+                      <div id={`faq-panel-${idx}`} className="px-5 sm:px-6 pb-6 pt-1 text-sm text-slate-500 leading-relaxed border-t border-blue-50 animate-fade-in">
+                        <p className="pt-4">{faq.a}</p>
+                      </div>
+                    )}
+                  </div>
+                </Reveal>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ── 15 · ROYAL FINALE ──────────────────────────────────────────── */}
+      <section className="relative royal-canvas overflow-hidden">
+        <div className="aurora absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[380px] rounded-full bg-sky-400/25 blur-[140px]" aria-hidden="true" />
+        <div className="absolute inset-0 blueprint-grid opacity-40" aria-hidden="true" />
+        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-24 sm:py-32 text-center">
+          <Reveal>
+            <div className="relative w-16 h-16 rounded-2xl overflow-hidden border-2 border-white/30 mx-auto mb-8 shadow-2xl">
+              <Image src="/aapp.jpeg" alt="AapkiSociety logo" fill sizes="64px" className="object-cover" />
+            </div>
+            <h2 className="font-display text-white tracking-tight leading-[1.03] text-[clamp(2.5rem,6.5vw,5rem)]">
+              Give your society
+              <br /> the <em className="text-sky-300">upgrade it deserves.</em>
+            </h2>
+            <p className="text-sky-100/70 text-base sm:text-lg mt-6 max-w-2xl mx-auto">
+              Join 500+ RWAs running on autopilot. Live in 48 hours — Excel import, guard training and CA handover included.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 mt-10">
+              <Magnetic strength={12}>
+                <Link href="/register" className="btn-shine w-full sm:w-auto px-8 py-4 rounded-2xl bg-white text-[#0A1C3F] hover:bg-blue-50 font-extrabold text-[15px] shadow-[0_18px_50px_rgba(255,255,255,0.2)] hover:-translate-y-0.5 active:scale-[0.98] transition-all flex items-center justify-center gap-2 min-h-[52px]">
+                  Register Society — 30 Days Free <ArrowRight className="w-5 h-5" />
+                </Link>
+              </Magnetic>
+              <button onClick={() => setDemoModalOpen(true)} className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-white/10 text-white font-bold text-[15px] border border-white/25 hover:bg-white/20 hover:border-white/40 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer backdrop-blur-sm min-h-[52px]">
+                <PhoneCall className="w-5 h-5 text-sky-300" /> Talk to a Specialist
+              </button>
+            </div>
+            <p className="text-[11px] text-sky-200/50 font-bold tracking-wide mt-7 uppercase">
+              No credit card · Full access · 100% data-export guarantee
+            </p>
+          </Reveal>
+        </div>
+        <p className="ghost-word relative font-display font-semibold text-center text-[clamp(2.5rem,9vw,7rem)] leading-none pb-8 tracking-tight" aria-hidden="true">
+          AAPKI&nbsp;SOCIETY
+        </p>
+      </section>
+
+      {/* ── 16 · FOOTER ────────────────────────────────────────────────── */}
+      <footer className="relative bg-[#081738] text-sky-100/60">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-10">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 mb-12">
-            {/* Brand Col (2 cols on lg) */}
             <div className="lg:col-span-2">
               <div className="flex items-center gap-3 mb-4">
-                <div className="relative w-10 h-10 rounded-2xl overflow-hidden shadow-lg border border-slate-700/60 bg-white shrink-0">
-                  <Image
-                    src="/aapp.jpeg"
-                    alt="AapkiSociety Logo"
-                    fill
-                    sizes="40px"
-                    className="object-cover"
-                  />
+                <div className="relative w-10 h-10 rounded-xl overflow-hidden border border-white/20 bg-white shrink-0">
+                  <Image src="/aapp.jpeg" alt="AapkiSociety logo" fill sizes="40px" className="object-cover" />
                 </div>
-                <span className="text-xl font-black text-white">Aapki<span className="text-indigo-400">Society</span></span>
+                <span className="text-xl font-black text-white">Aapki<span className="text-sky-300">Society</span></span>
               </div>
-              <p className="text-sm text-slate-400 leading-relaxed font-normal max-w-sm mb-6">
-                India&apos;s leading platform-driven Housing Society OS. Built to empower managing committees with 100% financial transparency, bank-grade data security, and effortless gate governance.
+              <p className="text-sm leading-relaxed max-w-sm">
+                India&apos;s society operating system — financial transparency, bank-grade security and effortless gate governance for modern communities.
               </p>
-              <div className="flex items-center gap-2 text-xs font-bold text-emerald-400 bg-emerald-950/40 border border-emerald-800/60 px-3 py-1.5 rounded-full w-fit">
-                <ShieldCheck className="w-4 h-4" />
-                <span>ISO 27001 Certified &amp; Indian Data Sovereignty</span>
+              <div className="flex items-center gap-2 text-xs font-bold text-emerald-300 bg-emerald-400/10 border border-emerald-300/20 px-3 py-2 rounded-full w-fit mt-5">
+                <ShieldCheck className="w-4 h-4" /> ISO 27001 · Indian Data Sovereignty
               </div>
             </div>
-
-            {/* Links 1: Platform */}
-            <div>
-              <h4 className="text-white text-xs font-black uppercase tracking-wider mb-4">Platform</h4>
-              <ul className="space-y-2.5 text-sm">
-                <li><a href="#features" className="hover:text-indigo-400 transition-colors">Automated GST Billing</a></li>
-                <li><a href="#features" className="hover:text-indigo-400 transition-colors">Smart Gate Security</a></li>
-                <li><a href="#features" className="hover:text-indigo-400 transition-colors">Tally Prime Export</a></li>
-                <li><a href="#features" className="hover:text-indigo-400 transition-colors">Helpdesk &amp; SLA Timers</a></li>
-                <li><a href="#features" className="hover:text-indigo-400 transition-colors">Property Listings</a></li>
-                <li><a href="#calculator" className="hover:text-indigo-400 transition-colors">ROI Calculator</a></li>
+            <nav aria-label="Platform">
+              <h4 className="text-white text-[11px] font-black uppercase tracking-[0.2em] mb-4">Platform</h4>
+              <ul className="space-y-2.5 text-sm font-medium">
+                {[["GST Billing", "#features"], ["Gate Security", "#features"], ["Tally Export", "#features"], ["Helpdesk SLA", "#features"], ["Listings", "#features"], ["ROI Calculator", "#calculator"]].map(([l, h]) => (
+                  <li key={l}><a href={h} className="hover:text-sky-300 transition-colors">{l}</a></li>
+                ))}
               </ul>
-            </div>
-
-            {/* Links 2: Solutions */}
-            <div>
-              <h4 className="text-white text-xs font-black uppercase tracking-wider mb-4">Solutions</h4>
-              <ul className="space-y-2.5 text-sm">
-                <li><a href="/register" className="hover:text-indigo-400 transition-colors">Cooperative Housing (CHS)</a></li>
-                <li><a href="/register" className="hover:text-indigo-400 transition-colors">Apartment Associations (AOA)</a></li>
-                <li><a href="/register" className="hover:text-indigo-400 transition-colors">Resident Welfare (RWA)</a></li>
-                <li><a href="/register" className="hover:text-indigo-400 transition-colors">Chartered Accountants &amp; CAs</a></li>
-                <li><a href="#pricing" className="hover:text-indigo-400 transition-colors">Pricing Plans</a></li>
+            </nav>
+            <nav aria-label="Solutions">
+              <h4 className="text-white text-[11px] font-black uppercase tracking-[0.2em] mb-4">Solutions</h4>
+              <ul className="space-y-2.5 text-sm font-medium">
+                {[["Cooperative Housing (CHS)", "/register"], ["Apartments (AOA)", "/register"], ["Resident Welfare (RWA)", "/register"], ["CAs & Auditors", "/register"], ["Pricing", "#pricing"]].map(([l, h]) => (
+                  <li key={l}><a href={h} className="hover:text-sky-300 transition-colors">{l}</a></li>
+                ))}
               </ul>
-            </div>
-
-            {/* Links 3: Trust & Legal */}
-            <div>
-              <h4 className="text-white text-xs font-black uppercase tracking-wider mb-4">Compliance</h4>
-              <ul className="space-y-2.5 text-sm">
-                <li><Link href="/privacy-policy" className="hover:text-indigo-400 transition-colors">Privacy Policy</Link></li>
-                <li><Link href="/data-deletion" className="hover:text-indigo-400 transition-colors">Data Deletion Policy</Link></li>
-                <li><a href="#security" className="hover:text-indigo-400 transition-colors">DPDP Act 2023 Guidelines</a></li>
-                <li><a href="#security" className="hover:text-indigo-400 transition-colors">Security Architecture</a></li>
-                <li><Link href="/login" className="hover:text-indigo-400 transition-colors">Platform Admin Portal</Link></li>
+            </nav>
+            <nav aria-label="Compliance">
+              <h4 className="text-white text-[11px] font-black uppercase tracking-[0.2em] mb-4">Compliance</h4>
+              <ul className="space-y-2.5 text-sm font-medium">
+                <li><Link href="/privacy-policy" className="hover:text-sky-300 transition-colors">Privacy Policy</Link></li>
+                <li><Link href="/data-deletion" className="hover:text-sky-300 transition-colors">Data Deletion</Link></li>
+                <li><a href="#security" className="hover:text-sky-300 transition-colors">DPDP Act 2023</a></li>
+                <li><a href="#security" className="hover:text-sky-300 transition-colors">Security</a></li>
+                <li><Link href="/login" className="hover:text-sky-300 transition-colors">Admin Portal</Link></li>
               </ul>
-            </div>
+            </nav>
           </div>
-
-          <div className="pt-8 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-slate-500">
-            <p>© {new Date().getFullYear()} AapkiSociety. All rights reserved. Powered by <span className="text-indigo-400 font-bold">Datatrack</span>.</p>
-            <div className="flex items-center gap-4">
-              <span>Made with ❤️ for Housing Societies across India 🇮🇳</span>
-            </div>
+          <div className="pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-semibold">
+            <p>© {new Date().getFullYear()} AapkiSociety · Powered by <span className="text-sky-300 font-bold">Datatrack</span></p>
+            <p>Made with pride for housing societies across India</p>
           </div>
         </div>
       </footer>
 
-      {/* ── INTERACTIVE "BOOK A LIVE DEMO" MODAL ──────────────────────────────── */}
+      {/* ── 17 · DEMO MODAL ────────────────────────────────────────────── */}
+      <BackToTop visible={showTop} />
       {demoModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-fade-in">
-          <div className="relative bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl border border-slate-200">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0A1C3F]/60 backdrop-blur-md animate-fade-in overflow-y-auto"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Book a live demo"
+          onClick={() => !submittingDemo && setDemoModalOpen(false)}
+        >
+          <div
+            className="relative bg-white text-[#0A1C3F] rounded-[1.75rem] p-6 sm:p-8 max-w-lg w-full shadow-2xl shadow-blue-900/30 border border-blue-100 my-8"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               onClick={() => setDemoModalOpen(false)}
-              className="absolute top-5 right-5 p-2 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+              className="absolute top-4 right-4 p-2.5 rounded-full text-slate-400 hover:text-[#0A1C3F] hover:bg-blue-50 transition-colors cursor-pointer min-w-[44px] min-h-[44px] flex items-center justify-center"
+              aria-label="Close demo dialog"
             >
               <X className="w-5 h-5" />
             </button>
 
             {demoSubmitted ? (
               <div className="text-center py-8">
-                <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 rounded-full bg-blue-700 text-white flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-700/30">
                   <CheckCircle2 className="w-8 h-8" />
                 </div>
-                <h3 className="text-2xl font-black text-slate-900">Demo Scheduled!</h3>
-                <p className="text-sm text-slate-600 mt-2 max-w-xs mx-auto">
-                  Thank you! Our RWA specialist will call you shortly on <strong>{demoForm.phone || "your number"}</strong> to walk through your society setup.
+                <h3 className="font-display text-3xl" style={{ color: NAVY }}>Demo scheduled.</h3>
+                <p className="text-sm text-slate-500 mt-2 max-w-xs mx-auto">
+                  Our RWA specialist will call <strong>{demoForm.phone || "you"}</strong> shortly for your walkthrough.
                 </p>
-                <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[11px] font-bold text-emerald-700">
-                  <Check className="w-3.5 h-3.5 text-emerald-600" /> Walkthrough requested &amp; team notified
+                <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-[11px] font-bold text-emerald-700">
+                  <Check className="w-3.5 h-3.5" /> Request received · Team notified
                 </div>
               </div>
             ) : (
               <div>
                 <div className="mb-6">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="relative w-9 h-9 rounded-xl overflow-hidden shadow-sm border border-slate-200 bg-white shrink-0">
-                      <Image
-                        src="/aapp.jpeg"
-                        alt="AapkiSociety Logo"
-                        fill
-                        sizes="36px"
-                        className="object-cover"
-                      />
-                    </div>
-                    <span className="text-[11px] font-black uppercase tracking-wider text-indigo-600 bg-indigo-50 border border-indigo-200 px-3 py-1 rounded-full">
-                      1-on-1 Personalized Walkthrough
-                    </span>
-                  </div>
-                  <h3 className="text-2xl font-black text-slate-950 mt-2">
-                    Book a Live AapkiSociety Demo
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-1">
-                    See how your society can automate billing, gate, and accounting in under 30 minutes.
-                  </p>
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-700 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-full">
+                    1-on-1 walkthrough
+                  </span>
+                  <h3 className="font-display text-3xl mt-3 tracking-tight" style={{ color: NAVY }}>Book your live demo</h3>
+                  <p className="text-[13px] text-slate-400 mt-1.5">Billing, gate and accounts — explained for <em>your</em> society in 30 minutes.</p>
                 </div>
 
-                <form onSubmit={handleDemoSubmit} className="space-y-4 text-xs font-bold text-slate-700">
+                <form onSubmit={handleDemoSubmit} className="space-y-4 text-xs font-bold">
                   <div>
-                    <label className="block mb-1">Society Name *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Prestige Lakeside CHS"
-                      value={demoForm.societyName}
+                    <label htmlFor="demo-society" className="block mb-1.5">Society name *</label>
+                    <input id="demo-society" type="text" required placeholder="e.g. Prestige Lakeside CHS" value={demoForm.societyName}
                       onChange={(e) => setDemoForm({ ...demoForm, societyName: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-indigo-600 focus:outline-none"
-                    />
+                      className="w-full px-4 py-3 rounded-xl border border-blue-200 bg-blue-50/40 text-sm font-medium focus:border-blue-600 focus:outline-none focus:bg-white min-h-[48px]" />
                   </div>
-
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block mb-1">City *</label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="e.g. Mumbai / Pune"
-                        value={demoForm.city}
+                      <label htmlFor="demo-city" className="block mb-1.5">City *</label>
+                      <input id="demo-city" type="text" required placeholder="Mumbai / Pune" value={demoForm.city}
                         onChange={(e) => setDemoForm({ ...demoForm, city: e.target.value })}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-indigo-600 focus:outline-none"
-                      />
+                        className="w-full px-4 py-3 rounded-xl border border-blue-200 bg-blue-50/40 text-sm font-medium focus:border-blue-600 focus:outline-none focus:bg-white min-h-[48px]" />
                     </div>
                     <div>
-                      <label className="block mb-1">Total Flats / Units *</label>
-                      <input
-                        type="number"
-                        required
-                        placeholder="e.g. 120"
-                        value={demoForm.flatCount}
+                      <label htmlFor="demo-flats" className="block mb-1.5">Total flats *</label>
+                      <input id="demo-flats" type="number" required min={1} placeholder="120" value={demoForm.flatCount}
                         onChange={(e) => setDemoForm({ ...demoForm, flatCount: e.target.value })}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-indigo-600 focus:outline-none"
-                      />
+                        className="w-full px-4 py-3 rounded-xl border border-blue-200 bg-blue-50/40 text-sm font-medium focus:border-blue-600 focus:outline-none focus:bg-white min-h-[48px]" />
                     </div>
                   </div>
-
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="block mb-1">Your Name *</label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="e.g. Rajesh Sharma"
-                        value={demoForm.name}
+                      <label htmlFor="demo-name" className="block mb-1.5">Your name *</label>
+                      <input id="demo-name" type="text" required placeholder="Rajesh Sharma" value={demoForm.name}
                         onChange={(e) => setDemoForm({ ...demoForm, name: e.target.value })}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-indigo-600 focus:outline-none"
-                      />
+                        className="w-full px-4 py-3 rounded-xl border border-blue-200 bg-blue-50/40 text-sm font-medium focus:border-blue-600 focus:outline-none focus:bg-white min-h-[48px]" />
                     </div>
                     <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="block">Phone Number (WhatsApp) *</label>
+                      <div className="flex items-center justify-between mb-1.5 gap-2">
+                        <label htmlFor="demo-phone" className="block">WhatsApp number *</label>
                         {demoForm.phone.trim() && (
-                          <span className={`text-[10px] ${normalizePhone(demoForm.phone).isValid ? 'text-emerald-600 font-bold' : 'text-amber-600 font-medium'}`}>
-                            {normalizePhone(demoForm.phone).isValid ? `✓ ${normalizePhone(demoForm.phone).display}` : 'Enter 10 digits (e.g. 98200...)'}
+                          <span className={`text-[10px] ${normalizePhone(demoForm.phone).isValid ? "text-emerald-600 font-bold" : "text-amber-600 font-medium"}`}>
+                            {normalizePhone(demoForm.phone).isValid ? `✓ ${normalizePhone(demoForm.phone).display}` : "10 digits"}
                           </span>
                         )}
                       </div>
-                      <input
-                        type="tel"
-                        required
-                        placeholder="e.g. 9820012345, 098200... or +91..."
-                        value={demoForm.phone}
+                      <input id="demo-phone" type="tel" required placeholder="98200 12345" value={demoForm.phone}
                         onChange={(e) => setDemoForm({ ...demoForm, phone: e.target.value })}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-indigo-600 focus:outline-none"
-                      />
+                        className="w-full px-4 py-3 rounded-xl border border-blue-200 bg-blue-50/40 text-sm font-medium focus:border-blue-600 focus:outline-none focus:bg-white min-h-[48px]" />
                     </div>
                   </div>
-
                   <div>
-                    <label className="block mb-1">Email Address</label>
-                    <input
-                      type="email"
-                      placeholder="e.g. secretary@society.com"
-                      value={demoForm.email}
+                    <label htmlFor="demo-email" className="block mb-1.5">Email <span className="font-medium text-slate-400">(optional)</span></label>
+                    <input id="demo-email" type="email" placeholder="secretary@society.com" value={demoForm.email}
                       onChange={(e) => setDemoForm({ ...demoForm, email: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm focus:border-indigo-600 focus:outline-none"
-                    />
+                      className="w-full px-4 py-3 rounded-xl border border-blue-200 bg-blue-50/40 text-sm font-medium focus:border-blue-600 focus:outline-none focus:bg-white min-h-[48px]" />
                   </div>
-
-                  <button
-                    type="submit"
-                    disabled={submittingDemo}
-                    className="w-full py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white font-black text-sm shadow-lg shadow-indigo-600/30 active:scale-95 transition-all mt-2 cursor-pointer flex items-center justify-center gap-2"
-                  >
+                  <button type="submit" disabled={submittingDemo}
+                    className="w-full py-4 rounded-xl bg-blue-700 hover:bg-blue-800 disabled:opacity-60 text-white font-extrabold text-sm shadow-xl shadow-blue-700/25 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2 min-h-[52px]">
                     {submittingDemo ? (
-                      <>
-                        <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        Scheduling Demo &amp; Notifying Team...
-                      </>
-                    ) : (
-                      "Confirm & Schedule Demo"
-                    )}
+                      <><span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Scheduling…</>
+                    ) : "Confirm & Schedule Demo"}
                   </button>
-
-                  <p className="text-[10px] text-slate-400 text-center font-normal">
-                    By submitting, you agree to receive a demo confirmation on WhatsApp/Call. No spam.
-                  </p>
+                  <p className="text-[10px] text-slate-400 text-center font-medium">Confirmation on WhatsApp / call. No spam, ever.</p>
                 </form>
               </div>
             )}
