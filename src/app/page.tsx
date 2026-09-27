@@ -7,7 +7,7 @@ import {
   ArrowRight, ArrowUpRight, ArrowUp, Building2, Shield, CheckCircle2,
   PhoneCall, Wallet, Star, Lock, Smartphone, ShieldCheck,
   TrendingUp, Bell, Car, Vote, ChevronDown, ChevronLeft,
-  Check, X, Download,
+  Check, X, Download, MessageCircle, Apple, Play, ChevronsLeftRight,
   HelpCircle, Sparkles, Menu, ChevronRight, Send,
   Landmark, Clock, BadgeCheck, QrCode, Fingerprint, IndianRupee,
 } from "lucide-react";
@@ -467,6 +467,178 @@ const HEADLINE_PHRASES = [
   { lead: "balances", accent: "every rupee." },
 ];
 
+const HEADLINE_PHRASES_HI = [
+  { lead: "खुद", accent: "चलती है।" },
+  { lead: "समय पर", accent: "वसूली।" },
+  { lead: "हर गेट", accent: "सुरक्षित।" },
+  { lead: "पाई-पाई का", accent: "हिसाब।" },
+];
+
+// ─── Landing Hindi/English dictionary ────────────────────────────────
+type Lang = "en" | "hi";
+const STR: Record<Lang, Record<string, string>> = {
+  en: {
+    signIn: "Sign In", startTrial: "Start Free Trial", trialShort: "Trial",
+    trialHero: "Start 30-Day Free Trial", bookDemo: "Book Live Demo", dashboard: "Dashboard",
+    navModules: "Modules", navDemo: "Live Demo", navRoi: "ROI", navApp: "App", navWhy: "Why Us", navPricing: "Pricing", navFaq: "FAQs",
+    walkthrough: "Schedule walkthrough",
+    heroEyebrowA: "Built for Indian RWAs & CHSs", heroEyebrowB: "DPDP Act 2023 Compliant",
+    heroStatic: "The society that",
+    heroSub: "Billing, gate, helpdesk and accounts — one calm operating system replacing WhatsApp chaos, lost receipts and Excel ledgers.",
+    heroCta2: "Watch It Work Live",
+    trust1: "10,000+ verified residents", trust3: "ISO 27001 · AWS Mumbai",
+    e01: "01 · Why societies switch", chaosT1: "From 47 unread groups", chaosT2: "one calm dashboard.",
+    chaosBefore: "Before · The chaos", chaosAfter: "After · AapkiSociety", dragHint: "Drag the handle to compare",
+    featE: "02 · Complete operating system", featT1: "Every committee job,", featT2: "beautifully boxed.",
+    featSub: "Nine modules, one login. Filter by your society's biggest headache — billing, gate, accounts or governance.",
+    simE: "03 · Don't take our word for it", simT1: "Press the buttons.", simT2: "It actually responds.",
+    simSub: "A live sandbox — pick a viewpoint and try the real interactions.",
+    tabResident: "Resident App", tabCommittee: "Committee Command", tabGuard: "Gate Tablet",
+    calcE: "04 · Interactive ROI calculator", calcT1: "What is chaos", calcT2: "costing you?",
+    calcSub: "Slide to your society's size. Watch the recovered dues add up.",
+    calcFlats: "Flats / apartments in your society", calcFee: "Avg. monthly maintenance per flat",
+    calcNote: "Based on real RWA data: automated UPI reminders on WhatsApp recover ~11.5% of delayed payments within 60 days.",
+    calcImpact: "Estimated annual impact", calcRec: "Recovered dues / month", calcYear: "extra cashflow / year",
+    calcHours: "Committee hours saved", calcRoi: "Return multiple", calcLock: "Lock In Trial",
+    stat1: "Active societies", stat2: "Happy residents", stat3: "Maintenance processed", stat4: "Complaints resolved",
+    appE: "05 · Resident mobile app", appT1: "Your society,", appT2: "in every pocket.",
+    appSub: "The same operating system residents already love — now as a native-style app with UPI AutoPay, instant gate approvals and SOS.",
+    appB1t: "UPI payments & AutoPay", appB1s: "Maintenance, NACH mandates and instant digital receipts.",
+    appB2t: "One-tap gate approvals", appB2s: "Guests, deliveries, maids and drivers — from anywhere.",
+    appB3t: "Complaints with photos", appB3s: "Raise tickets with evidence and watch the live SLA timer.",
+    appB4t: "SOS, notices & parcels", appB4s: "Emergencies, circulars and package pickups — instantly.",
+    appCta: "Get App Download Link", appNote: "Free with every trial · Android & iOS", appScan: "Personal download link on WhatsApp after signup",
+    compE: "06 · Transparent comparison", compT1: "Why societies leave", compT2: "the old tools behind.",
+    secE: "07 · 100% data sovereignty", secT1: "Your society's data belongs to", secT2: "you. Only you.",
+    secPara: "\u201CFree\u201D apps monetise residents with loan offers and business popups. AapkiSociety is paid B2B software — you are our customer, never our product. Records live in isolated schemas inside Indian data centres.",
+    testiE: "08 · Real case studies", testiT1: "Loved by the people who", testiT2: "sign the cheques.",
+    priceE: "09 · Predictable pricing", priceT1: "Per flat. Per month.", priceT2: "No surprises.",
+    priceSub: "All modules, unlimited residents, free Excel migration, mobile apps included.",
+    monthly: "Monthly", annual: "Annual", perFlat: "/ flat / mo",
+    coreBtn: "Start Free Trial", compBtn: "Start 30-Day Free Trial", aiBtn: "Talk to Enterprise Team", popular: "Most popular",
+    faqE: "10 · Got questions?", faqT1: "Asked by every committee,", faqT2: "answered honestly.",
+    finT1: "Give your society", finT2: "the upgrade it deserves.",
+    finSub: "Join 500+ RWAs running on autopilot. Live in 48 hours — Excel import, guard training and CA handover included.",
+    finCta1: "Register Society — 30 Days Free", finCta2: "Talk to a Specialist",
+    finNote: "No credit card · Full access · 100% data-export guarantee",
+    stickyTrial: "Start Free Trial", stickyDemo: "Live Demo",
+    waTooltip: "Questions? Chat with us",
+    footTag: "India's society operating system — financial transparency, bank-grade security and effortless gate governance for modern communities.",
+  },
+  hi: {
+    signIn: "साइन इन", startTrial: "फ्री ट्रायल शुरू करें", trialShort: "ट्रायल",
+    trialHero: "30-दिन का फ्री ट्रायल शुरू करें", bookDemo: "लाइव डेमो बुक करें", dashboard: "डैशबोर्ड",
+    navModules: "मॉड्यूल", navDemo: "लाइव डेमो", navRoi: "ROI", navApp: "ऐप", navWhy: "क्यों हम", navPricing: "प्राइसिंग", navFaq: "सवाल-जवाब",
+    walkthrough: "वॉकथ्रू शेड्यूल करें",
+    heroEyebrowA: "भारतीय RWA और CHS के लिए निर्मित", heroEyebrowB: "DPDP Act 2023 अनुरूप",
+    heroStatic: "वह सोसाइटी जो",
+    heroSub: "बिलिंग, गेट, हेल्पडेस्क और अकाउंट — एक शांत ऑपरेटिंग सिस्टम, जो WhatsApp की अव्यवस्था, खोई रसीदों और Excel खातों की जगह लेता है।",
+    heroCta2: "इसे लाइव काम करते देखें",
+    trust1: "10,000+ सत्यापित निवासी", trust3: "ISO 27001 · AWS मुंबई",
+    e01: "01 · सोसाइटी क्यों बदल रही हैं", chaosT1: "बिना पढ़े 47 ग्रुपों से", chaosT2: "एक शांत डैशबोर्ड तक।",
+    chaosBefore: "पहले · अव्यवस्था", chaosAfter: "बाद में · AapkiSociety", dragHint: "तुलना के लिए हैंडल खींचें",
+    featE: "02 · संपूर्ण ऑपरेटिंग सिस्टम", featT1: "कमेटी का हर काम,", featT2: "अब एक ही जगह।",
+    featSub: "नौ मॉड्यूल, एक लॉगिन। अपनी सबसे बड़ी परेशानी चुनें — बिलिंग, गेट, अकाउंट या गवर्नेंस।",
+    simE: "03 · हमारी बात पर यकीन न करें", simT1: "बटन दबाकर देखें।", simT2: "यह सच में जवाब देता है।",
+    simSub: "लाइव सैंडबॉक्स — नज़रिया चुनें और असली इंटरैक्शन आज़माएं।",
+    tabResident: "निवासी ऐप", tabCommittee: "कमेटी कमांड", tabGuard: "गेट टैबलेट",
+    calcE: "04 · इंटरैक्टिव ROI कैलकुलेटर", calcT1: "अव्यवस्था की कीमत", calcT2: "क्या है?",
+    calcSub: "अपनी सोसाइटी के आकार तक स्लाइड करें। बढ़ती वसूली खुद देखें।",
+    calcFlats: "आपकी सोसाइटी में फ्लैट / अपार्टमेंट", calcFee: "प्रति फ्लैट औसत मासिक मेंटेनेंस",
+    calcNote: "असली RWA डेटा पर आधारित: WhatsApp पर ऑटोमेटेड UPI रिमाइंडर 60 दिनों में ~11.5% रुका भुगतान वसूल लेते हैं।",
+    calcImpact: "अनुमानित वार्षिक प्रभाव", calcRec: "वसूल बकाया / माह", calcYear: "अतिरिक्त कैशफ्लो / वर्ष",
+    calcHours: "कमेटी के घंटे बचे", calcRoi: "रिटर्न गुणक", calcLock: "ट्रायल पक्का करें",
+    stat1: "सक्रिय सोसाइटी", stat2: "खुश निवासी", stat3: "प्रोसेस्ड मेंटेनेंस", stat4: "सुलझी शिकायतें",
+    appE: "05 · निवासी मोबाइल ऐप", appT1: "आपकी सोसाइटी,", appT2: "अब हर जेब में।",
+    appSub: "वही ऑपरेटिंग सिस्टम जिसे निवासी पहले से पसंद करते हैं — अब UPI ऑटोपे, तुरंत गेट अप्रूवल और SOS के साथ ऐप में।",
+    appB1t: "UPI भुगतान व ऑटोपे", appB1s: "मेंटेनेंस, NACH मैंडेट और तुरंत डिजिटल रसीद।",
+    appB2t: "एक टैप में गेट अप्रूवल", appB2s: "मेहमान, डिलीवरी, मेड और ड्राइवर — कहीं से भी।",
+    appB3t: "फोटो वाली शिकायतें", appB3s: "सबूत के साथ टिकट उठाएं और लाइव SLA टाइमर देखें।",
+    appB4t: "SOS, नोटिस व पार्सल", appB4s: "आपात स्थिति, सूचना और पैकेज — तुरंत।",
+    appCta: "ऐप डाउनलोड लिंक पाएं", appNote: "हर ट्रायल के साथ मुफ़्त · Android व iOS", appScan: "साइनअप के बाद WhatsApp पर पर्सनल डाउनलोड लिंक",
+    compE: "06 · पारदर्शी तुलना", compT1: "सोसाइटी पुराने औज़ार", compT2: "क्यों छोड़ रही हैं।",
+    secE: "07 · 100% डेटा संप्रभुता", secT1: "आपकी सोसाइटी का डेटा", secT2: "सिर्फ़ आपका है।",
+    secPara: "\u201Cमुफ़्त\u201D ऐप लोन ऑफर और व्यापारिक पॉपअप से निवासियों से कमाते हैं। AapkiSociety पेड B2B सॉफ्टवेयर है — आप हमारे ग्राहक हैं, प्रोडक्ट कभी नहीं। रिकॉर्ड भारतीय डेटा सेंटरों में अलग स्कीमा में रहते हैं।",
+    testiE: "08 · असली केस स्टडी", testiT1: "उन लोगों के प्रिय जो", testiT2: "चेक पर दस्तख़त करते हैं।",
+    priceE: "09 · अनुमानित प्राइसिंग", priceT1: "प्रति फ्लैट। प्रति माह।", priceT2: "कोई छिपा खर्च नहीं।",
+    priceSub: "सभी मॉड्यूल, असीमित निवासी, मुफ़्त Excel माइग्रेशन, मोबाइल ऐप शामिल।",
+    monthly: "मासिक", annual: "वार्षिक", perFlat: "/ फ्लैट / माह",
+    coreBtn: "फ्री ट्रायल शुरू करें", compBtn: "30-दिन का फ्री ट्रायल", aiBtn: "एंटरप्राइज़ टीम से बात करें", popular: "सबसे लोकप्रिय",
+    faqE: "10 · सवाल हैं?", faqT1: "हर कमेटी पूछती है,", faqT2: "ईमानदार जवाब पाएं।",
+    finT1: "अपनी सोसाइटी को दें", finT2: "वह अपग्रेड जिसकी वह हकदार है।",
+    finSub: "48 घंटों में लाइव — Excel इम्पोर्ट, गार्ड ट्रेनिंग और CA हैंडओवर सहित, 500+ RWA से जुड़ें जो ऑटोपायलट पर चल रहे हैं।",
+    finCta1: "सोसाइटी रजिस्टर करें — 30 दिन मुफ़्त", finCta2: "विशेषज्ञ से बात करें",
+    finNote: "कोई क्रेडिट कार्ड नहीं · पूर्ण एक्सेस · 100% डेटा-एक्सपोर्ट गारंटी",
+    stickyTrial: "फ्री ट्रायल", stickyDemo: "लाइव डेमो",
+    waTooltip: "सवाल हैं? हमसे बात करें",
+    footTag: "भारत का सोसाइटी ऑपरेटिंग सिस्टम — आधुनिक समुदायों के लिए वित्तीय पारदर्शिता, बैंक-ग्रेड सुरक्षा और सहज गेट गवर्नेंस।",
+  },
+};
+
+// ─── CTA analytics (GTM-ready dataLayer) ─────────────────────────────
+function trackCTA(label: string) {
+  try {
+    const w = window as unknown as { dataLayer?: Record<string, string>[] };
+    w.dataLayer = w.dataLayer || [];
+    w.dataLayer.push({ event: "cta_click", label });
+  } catch {
+    /* analytics unavailable — never break UX */
+  }
+}
+
+// ─── Brand preloader ─────────────────────────────────────────────────
+function Preloader({ done }: { done: boolean }) {
+  const [gone, setGone] = useState(false);
+  useEffect(() => {
+    if (!done) return;
+    const id = setTimeout(() => setGone(true), 550);
+    return () => clearTimeout(id);
+  }, [done]);
+  if (gone) return null;
+  return (
+    <div
+      className={`preloader-shell fixed inset-0 z-[100] bg-[#F7FAFF] flex flex-col items-center justify-center gap-5 ${done ? "preloader-hide" : ""}`}
+      role="status"
+      aria-label="Loading AapkiSociety"
+    >
+      <div className="loader-logo relative w-16 h-16 rounded-2xl overflow-hidden border border-blue-100 shadow-xl shadow-blue-900/10 bg-white">
+        <Image src="/aapp.jpeg" alt="" fill sizes="64px" className="object-cover" priority />
+      </div>
+      <p className="font-display text-2xl" style={{ color: NAVY }}>
+        Aapki<span className="text-blue-700">Society</span>
+      </p>
+      <div className="w-48 h-1.5 rounded-full bg-blue-100 overflow-hidden">
+        <div className="loader-bar h-full rounded-full bg-gradient-to-r from-blue-800 via-blue-500 to-sky-400" />
+      </div>
+    </div>
+  );
+}
+
+// ─── Live social-proof toasts ────────────────────────────────────────
+const TOASTS = [
+  { icon: Wallet, text: "Flat 402 · Prestige Lakeside just paid ₹4,250 via UPI", time: "just now" },
+  { icon: Shield, text: "Gate 1 verified a guest OTP for Flat 502-A", time: "2m ago" },
+  { icon: CheckCircle2, text: "Plumber complaint #TCK-482 resolved in 2.1 hrs", time: "9m ago" },
+  { icon: Building2, text: "A 180-flat society in Pune went live today", time: "26m ago" },
+  { icon: Landmark, text: "Treasurer approved ₹18,400 voucher · Tally synced", time: "41m ago" },
+];
+
+// ─── Chaos / Calm compare content ────────────────────────────────────
+const CHAOS_ITEMS = [
+  "\u201CMaintenance reminder\u201D buried under 300 Good-Mornings",
+  "Receipt book lost — again. Treasurer vs Secretary fight.",
+  "Guard calls at midnight: \u201CSahab, Swiggy wala aaya hai\u201D",
+  "Plumber promised Tuesday. It is now\u2026 next month.",
+  "CA returns the Excel: \u201Cyeh tally nahi hoga.\u201D",
+];
+const CALM_ITEMS = [
+  "Auto-bills on the 1st. UPI reminders recover 11.5% dues.",
+  "Every rupee Maker-Checker approved & Tally-synced.",
+  "One-tap gate approvals — from office, cab or couch.",
+  "SLA timers chase the plumber so you don't have to.",
+  "CA gets a clean XML import. Zero re-entry.",
+];
+
 // ─── Scroll progress hairline ────────────────────────────────────────
 function ScrollProgress() {
   const ref = useRef<HTMLDivElement>(null);
@@ -491,24 +663,24 @@ function ScrollProgress() {
 }
 
 // ─── Rotating hero headline (filmstrip) ──────────────────────────────
-function RotatingHeadline() {
+function RotatingHeadline({ phrases }: { phrases: { lead: string; accent: string }[] }) {
   const [index, setIndex] = useState(0);
   useEffect(() => {
     if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const id = setInterval(() => setIndex((i) => (i + 1) % HEADLINE_PHRASES.length), 2800);
+    const id = setInterval(() => setIndex((i) => (i + 1) % phrases.length), 2800);
     return () => clearInterval(id);
-  }, []);
+  }, [phrases.length]);
   return (
     <span className="filmstrip-viewport block h-[1.14em]" aria-live="polite">
       <span className="filmstrip-reel" style={{ transform: `translateY(-${index * 1.14}em)` }}>
-        {HEADLINE_PHRASES.map((p, i) => (
+        {phrases.map((p, i) => (
           <span key={p.lead} className="block h-[1.14em] leading-[1.14]" aria-hidden={i !== index}>
             {p.lead} <em className="blue-sheen font-semibold">{p.accent}</em>
           </span>
         ))}
       </span>
       <span className="sr-only">
-        {HEADLINE_PHRASES.map((p) => `${p.lead} ${p.accent}`).join(" ")}
+        {phrases.map((p) => `${p.lead} ${p.accent}`).join(" ")}
       </span>
     </span>
   );
@@ -542,7 +714,7 @@ function BackToTop({ visible }: { visible: boolean }) {
       onClick={() => window.scrollTo({ behavior: "smooth", top: 0 })}
       aria-label="Back to top"
       tabIndex={visible ? 0 : -1}
-      className={`fixed bottom-6 right-6 z-40 w-12 h-12 rounded-full bg-[#0A1C3F] text-white shadow-xl shadow-blue-900/30 items-center justify-center transition-all duration-300 hover:bg-blue-700 hover:-translate-y-1 cursor-pointer flex ${
+      className={`fixed bottom-40 right-4 md:bottom-24 md:right-6 z-40 w-12 h-12 rounded-full bg-[#0A1C3F] text-white shadow-xl shadow-blue-900/30 items-center justify-center transition-all duration-300 hover:bg-blue-700 hover:-translate-y-1 cursor-pointer flex ${
         visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
       }`}
     >
@@ -566,7 +738,16 @@ export default function Home() {
   const [showTop, setShowTop] = useState(false);
   const [quoteIndex, setQuoteIndex] = useState(0);
   const [quotePaused, setQuotePaused] = useState(false);
+  const [lang, setLang] = useState<Lang>("en");
+  const [booted, setBooted] = useState(false);
+  const [toastIndex, setToastIndex] = useState(0);
+  const [comparePos, setComparePos] = useState(50);
+  const compareRef = useRef<HTMLDivElement>(null);
+  const compareDrag = useRef(false);
   const tiltRef = useRef<HTMLDivElement>(null);
+
+  const L = (key: string) => STR[lang][key] ?? STR.en[key] ?? key;
+  const phrases = lang === "hi" ? HEADLINE_PHRASES_HI : HEADLINE_PHRASES;
 
   // Interactive Calculator State
   const [calcFlats, setCalcFlats] = useState<number>(120);
@@ -595,9 +776,60 @@ export default function Home() {
       if (typeof window !== "undefined" && localStorage.getItem("token")) {
         setIsLoggedIn(true);
       }
+      try {
+        const saved = localStorage.getItem("as-lang");
+        if (saved === "hi" || saved === "en") {
+          setLang(saved);
+          document.documentElement.setAttribute("lang", saved === "hi" ? "hi" : "en");
+        }
+      } catch {
+        /* private mode — stay English */
+      }
     });
     return () => cancelAnimationFrame(id);
   }, []);
+
+  // Brand preloader: dismiss on window load (with a hard fallback)
+  useEffect(() => {
+    const dismiss = () => {
+      setTimeout(() => setBooted(true), 850);
+    };
+    if (typeof document !== "undefined" && document.readyState === "complete") {
+      dismiss();
+      return;
+    }
+    const fallback = setTimeout(() => setBooted(true), 2800);
+    window.addEventListener("load", dismiss, { once: true });
+    return () => {
+      clearTimeout(fallback);
+      window.removeEventListener("load", dismiss);
+    };
+  }, []);
+
+  // Social-proof toast rotation
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const start = setTimeout(() => {
+      const id = setInterval(() => setToastIndex((i) => (i + 1) % TOASTS.length), 5500);
+      (window as unknown as { __toastTimer?: number }).__toastTimer = id as unknown as number;
+    }, 4000);
+    return () => {
+      clearTimeout(start);
+      const w = window as unknown as { __toastTimer?: number };
+      if (w.__toastTimer) clearInterval(w.__toastTimer);
+    };
+  }, []);
+
+  const switchLang = (next: Lang) => {
+    setLang(next);
+    try {
+      localStorage.setItem("as-lang", next);
+      document.documentElement.setAttribute("lang", next === "hi" ? "hi" : "en");
+    } catch {
+      /* noop */
+    }
+    trackCTA(`lang_${next}`);
+  };
 
   // Lock body scroll when modal is open
   useEffect(() => {
@@ -639,6 +871,17 @@ export default function Home() {
   };
   const handleTiltLeave = () => {
     if (tiltRef.current) tiltRef.current.style.transform = "rotateX(0deg) rotateY(0deg)";
+  };
+
+  // Before/After drag-compare slider
+  const moveCompare = (clientX: number) => {
+    const el = compareRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    setComparePos(Math.min(94, Math.max(6, ((clientX - r.left) / r.width) * 100)));
+  };
+  const endCompare = () => {
+    compareDrag.current = false;
   };
 
   if (!isMounted) return null;
@@ -687,6 +930,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#F7FAFF] text-slate-900 font-sans selection:bg-blue-700 selection:text-white relative overflow-x-hidden">
       <ScrollProgress />
+      <Preloader done={booted} />
 
       {/* ── 01 · ANNOUNCEMENT HAIRLINE ─────────────────────────────────── */}
       <div className="relative z-50 bg-gradient-to-r from-blue-50 via-sky-50 to-blue-50 text-[#0A1C3F] text-xs border-b border-blue-100">
@@ -694,9 +938,6 @@ export default function Home() {
           <span className="flex items-center gap-2 shrink-0">
             <span className="relative flex h-1.5 w-1.5">
               <span className="ticker-dot absolute inline-flex h-full w-full rounded-full bg-blue-600" />
-            </span>
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white bg-blue-700 px-2 py-0.5 rounded-full shadow-sm shadow-blue-700/30">
-              v4.0 Live
             </span>
           </span>
           <div className="overflow-hidden whitespace-nowrap flex-1 marquee-mask">
@@ -712,7 +953,7 @@ export default function Home() {
             onClick={() => setDemoModalOpen(true)}
             className="hidden sm:inline-flex items-center gap-1 text-[11px] font-bold text-blue-700 hover:text-blue-900 transition-colors underline underline-offset-4 shrink-0 cursor-pointer"
           >
-            Schedule walkthrough <ArrowRight className="w-3 h-3" />
+            {L("walkthrough")} <ArrowRight className="w-3 h-3" />
           </button>
         </div>
       </div>
@@ -737,34 +978,48 @@ export default function Home() {
             </div>
           </Link>
 
-          <nav aria-label="Primary" className="hidden lg:flex items-center gap-1 text-[13px] font-semibold text-slate-500">
-            <a href="#features" className="link-sweep px-3.5 py-2 hover:text-blue-700 transition-colors">Modules</a>
-            <a href="#simulator" className="link-sweep px-3.5 py-2 hover:text-blue-700 transition-colors">Live Demo</a>
-            <a href="#calculator" className="link-sweep px-3.5 py-2 hover:text-blue-700 transition-colors">ROI</a>
-            <a href="#comparison" className="link-sweep px-3.5 py-2 hover:text-blue-700 transition-colors">Why Us</a>
-            <a href="#pricing" className="link-sweep px-3.5 py-2 hover:text-blue-700 transition-colors">Pricing</a>
-            <a href="#faq" className="link-sweep px-3.5 py-2 hover:text-blue-700 transition-colors">FAQs</a>
+          <nav aria-label="Primary" className="hidden lg:flex items-center gap-0.5 text-[13px] font-semibold text-slate-500">
+            <a href="#features" className="link-sweep px-3 py-2 hover:text-blue-700 transition-colors">{L("navModules")}</a>
+            <a href="#simulator" className="link-sweep px-3 py-2 hover:text-blue-700 transition-colors">{L("navDemo")}</a>
+            <a href="#calculator" className="link-sweep px-3 py-2 hover:text-blue-700 transition-colors">{L("navRoi")}</a>
+            <a href="#app" className="link-sweep px-3 py-2 hover:text-blue-700 transition-colors">{L("navApp")}</a>
+            <a href="#comparison" className="link-sweep px-3 py-2 hover:text-blue-700 transition-colors">{L("navWhy")}</a>
+            <a href="#pricing" className="link-sweep px-3 py-2 hover:text-blue-700 transition-colors">{L("navPricing")}</a>
+            <a href="#faq" className="link-sweep px-3 py-2 hover:text-blue-700 transition-colors">{L("navFaq")}</a>
           </nav>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <div className="hidden md:flex items-center p-1 rounded-full bg-blue-50/70 border border-blue-100 text-[11px] font-black" role="group" aria-label="Language / भाषा">
+              {(["en", "hi"] as Lang[]).map((l) => (
+                <button
+                  key={l}
+                  onClick={() => switchLang(l)}
+                  aria-pressed={lang === l}
+                  className={`px-2.5 py-1.5 rounded-full transition-all cursor-pointer min-h-[32px] ${lang === l ? "bg-[#0A1C3F] text-white shadow" : "text-slate-500 hover:text-blue-700"}`}
+                >
+                  {l === "en" ? "EN" : "हिं"}
+                </button>
+              ))}
+            </div>
             {isLoggedIn ? (
               <Link
                 href="/dashboard"
                 className="inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl bg-blue-700 text-white font-bold text-[13px] hover:bg-blue-800 shadow-lg shadow-blue-700/25 active:scale-95 transition-all min-h-[44px]"
               >
-                Dashboard <ArrowRight className="w-4 h-4" />
+                {L("dashboard")} <ArrowRight className="w-4 h-4" />
               </Link>
             ) : (
               <>
                 <Link href="/login" className="hidden sm:inline-flex px-3 py-2 text-[13px] font-bold text-slate-500 hover:text-blue-700 transition-colors min-h-[44px] items-center">
-                  Sign In
+                  {L("signIn")}
                 </Link>
                 <Link
                   href="/register"
+                  onClick={() => trackCTA("nav_trial")}
                   className="inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl bg-blue-700 text-white font-bold text-[13px] hover:bg-blue-800 shadow-lg shadow-blue-700/25 active:scale-95 transition-all min-h-[44px]"
                 >
-                  <span className="hidden sm:inline">Start Free Trial</span>
-                  <span className="sm:hidden">Trial</span>
+                  <span className="hidden sm:inline">{L("startTrial")}</span>
+                  <span className="sm:hidden">{L("trialShort")}</span>
                   <ArrowUpRight className="w-4 h-4" />
                 </Link>
               </>
@@ -783,25 +1038,37 @@ export default function Home() {
         {mobileMenuOpen && (
           <div className="lg:hidden max-w-6xl mx-auto mt-2 rounded-2xl border border-blue-100 bg-white/95 backdrop-blur-xl px-5 py-4 shadow-2xl shadow-blue-900/10 animate-fade-in">
             <nav aria-label="Mobile" className="flex flex-col text-[15px] font-semibold text-slate-600">
-              {[["Modules", "#features"], ["Live Demo", "#simulator"], ["ROI Calculator", "#calculator"], ["Why Us", "#comparison"], ["Pricing", "#pricing"], ["FAQs", "#faq"]].map(([label, href]) => (
+              {[["Modules", "#features", L("navModules")], ["Live Demo", "#simulator", L("navDemo")], ["ROI Calculator", "#calculator", L("navRoi")], ["Mobile App", "#app", L("navApp")], ["Why Us", "#comparison", L("navWhy")], ["Pricing", "#pricing", L("navPricing")], ["FAQs", "#faq", L("navFaq")]].map(([, href, text]) => (
                 <a key={href} onClick={() => setMobileMenuOpen(false)} href={href} className="py-3 border-b border-slate-100 last:border-0 hover:text-blue-700">
-                  {label}
+                  {text}
                 </a>
               ))}
             </nav>
             <div className="pt-2 flex flex-col gap-2.5">
+              <div className="flex items-center justify-center gap-1 p-1 rounded-full bg-blue-50/70 border border-blue-100 text-xs font-black" role="group" aria-label="Language / भाषा">
+                {(["en", "hi"] as Lang[]).map((l) => (
+                  <button
+                    key={l}
+                    onClick={() => switchLang(l)}
+                    aria-pressed={lang === l}
+                    className={`flex-1 py-2 rounded-full transition-all cursor-pointer min-h-[40px] ${lang === l ? "bg-[#0A1C3F] text-white shadow" : "text-slate-500"}`}
+                  >
+                    {l === "en" ? "English" : "हिंदी"}
+                  </button>
+                ))}
+              </div>
               <button
-                onClick={() => { setMobileMenuOpen(false); setDemoModalOpen(true); }}
+                onClick={() => { setMobileMenuOpen(false); trackCTA("mobile_demo"); setDemoModalOpen(true); }}
                 className="w-full py-3 rounded-xl bg-blue-50 border border-blue-100 text-blue-800 font-bold text-sm flex items-center justify-center gap-2 min-h-[44px]"
               >
-                <PhoneCall className="w-4 h-4" /> Book Live Demo
+                <PhoneCall className="w-4 h-4" /> {L("bookDemo")}
               </button>
               <Link
                 href="/register"
-                onClick={() => setMobileMenuOpen(false)}
+                onClick={() => { setMobileMenuOpen(false); trackCTA("mobile_trial"); }}
                 className="w-full py-3 rounded-xl bg-blue-700 text-white font-bold text-sm text-center flex items-center justify-center gap-2 min-h-[44px]"
               >
-                Start 30-Day Free Trial <ArrowRight className="w-4 h-4" />
+                {L("trialHero")} <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
           </div>
@@ -818,26 +1085,25 @@ export default function Home() {
           <Reveal>
             <div className="inline-flex flex-wrap items-center justify-center gap-x-3 gap-y-2 px-4 py-2 rounded-full bg-white/80 border border-blue-100 shadow-sm backdrop-blur-md text-[11px] font-bold text-slate-600 mb-8">
               <span className="flex items-center gap-1.5 text-blue-700">
-                <Sparkles className="w-3.5 h-3.5" /> Built for Indian RWAs &amp; CHSs
+                <Sparkles className="w-3.5 h-3.5" /> {L("heroEyebrowA")}
               </span>
               <span className="w-1 h-1 rounded-full bg-blue-200" aria-hidden="true" />
               <span className="flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> DPDP Act 2023 Compliant
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> {L("heroEyebrowB")}
               </span>
             </div>
           </Reveal>
 
           <Reveal delay={90}>
             <h1 className="font-display font-medium tracking-[-0.02em] leading-[1.04] text-[clamp(2.75rem,7.5vw,6.25rem)] max-w-5xl mx-auto" style={{ color: NAVY }}>
-              The society that
-              <RotatingHeadline />
+              {L("heroStatic")}
+              <RotatingHeadline phrases={phrases} />
             </h1>
           </Reveal>
 
           <Reveal delay={180}>
             <p className="text-slate-500 text-base sm:text-xl leading-relaxed max-w-2xl mx-auto mt-7 font-normal">
-              Billing, gate, helpdesk and accounts — one calm operating system
-              replacing WhatsApp chaos, lost receipts and Excel ledgers.
+              {L("heroSub")}
             </p>
           </Reveal>
 
@@ -846,20 +1112,21 @@ export default function Home() {
               <Magnetic>
                 <Link
                   href="/register"
+                  onClick={() => trackCTA("hero_trial")}
                   className="btn-shine group w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl bg-blue-700 text-white font-extrabold text-[15px] hover:bg-blue-800 shadow-[0_18px_45px_rgba(29,78,216,0.35)] hover:shadow-[0_22px_55px_rgba(29,78,216,0.45)] hover:-translate-y-0.5 active:scale-[0.98] transition-all min-h-[52px]"
                 >
-                  Start 30-Day Free Trial
+                  {L("trialHero")}
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </Magnetic>
               <button
-                onClick={() => setDemoModalOpen(true)}
+                onClick={() => { trackCTA("hero_demo"); setDemoModalOpen(true); }}
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl bg-white text-[#0A1C3F] font-bold text-[15px] border border-blue-200 shadow-sm hover:border-blue-400 hover:shadow-lg hover:shadow-blue-100 active:scale-[0.98] transition-all cursor-pointer min-h-[52px]"
               >
                 <span className="relative flex h-2 w-2">
                   <span className="ticker-dot absolute inline-flex h-full w-full rounded-full bg-blue-600" />
                 </span>
-                Watch It Work Live
+                {L("heroCta2")}
               </button>
             </div>
           </Reveal>
@@ -874,7 +1141,7 @@ export default function Home() {
                     </span>
                   ))}
                 </span>
-                <span className="font-bold text-slate-700">10,000+ verified residents</span>
+                <span className="font-bold text-slate-700">{L("trust1")}</span>
               </span>
               <span className="hidden sm:block h-4 w-px bg-blue-100" aria-hidden="true" />
               <span className="flex items-center gap-1.5">
@@ -886,7 +1153,7 @@ export default function Home() {
               <span className="hidden sm:block h-4 w-px bg-blue-100" aria-hidden="true" />
               <span className="flex items-center gap-1.5">
                 <Lock className="w-3.5 h-3.5 text-emerald-600" />
-                <span className="font-bold text-slate-700">ISO 27001 · AWS Mumbai</span>
+                <span className="font-bold text-slate-700">{L("trust3")}</span>
               </span>
             </div>
           </Reveal>
@@ -1038,62 +1305,80 @@ export default function Home() {
       <section className="relative bg-white text-[#0A1C3F]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
           <Reveal className="text-center max-w-2xl mx-auto">
-            <Eyebrow>01 · Why societies switch</Eyebrow>
+            <Eyebrow>{L("e01")}</Eyebrow>
             <h2 className="font-display text-[clamp(2rem,4.5vw,3.5rem)] leading-[1.05] tracking-tight mt-5" style={{ color: NAVY }}>
-              From 47 unread groups
-              <br /> to <em className="blue-gradient-text">one calm dashboard.</em>
+              {L("chaosT1")}
+              <br /> <em className="blue-gradient-text">{L("chaosT2")}</em>
             </h2>
           </Reveal>
 
-          <div className="grid md:grid-cols-[1fr_auto_1fr] gap-5 items-stretch mt-14 max-w-5xl mx-auto">
-            <Reveal>
-              <div className="h-full rounded-3xl border border-slate-200 bg-slate-50/70 p-6 sm:p-8">
-                <p className="text-[11px] font-black uppercase tracking-[0.22em] text-rose-600">Before · The chaos</p>
-                <div className="mt-5 space-y-2.5 text-[13px] font-medium">
-                  {[
-                    "“Maintenance reminder” buried under 300 Good-Mornings",
-                    "Receipt book lost — again. Treasurer vs Secretary fight.",
-                    "Guard calls at midnight: “Sahab, Swiggy wala aaya hai”",
-                    "Plumber promised Tuesday. It is now… next month.",
-                    "CA returns the Excel: “yeh tally nahi hoga.”",
-                  ].map((t, i) => (
-                    <div key={i} className="flex items-start gap-2.5 rounded-2xl bg-white border border-rose-100 px-4 py-3 text-slate-600 shadow-sm">
-                      <X className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" /> {t}
+          <Reveal>
+            <div className="mt-14 max-w-5xl mx-auto">
+              <div
+                ref={compareRef}
+                role="slider"
+                tabIndex={0}
+                aria-label={L("dragHint")}
+                aria-valuenow={Math.round(comparePos)}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowLeft") setComparePos((p) => Math.max(6, p - 5));
+                  if (e.key === "ArrowRight") setComparePos((p) => Math.min(94, p + 5));
+                  if (e.key === "Home") setComparePos(6);
+                  if (e.key === "End") setComparePos(94);
+                }}
+                onPointerDown={(e) => {
+                  compareDrag.current = true;
+                  e.currentTarget.setPointerCapture(e.pointerId);
+                  moveCompare(e.clientX);
+                }}
+                onPointerMove={(e) => {
+                  if (compareDrag.current) moveCompare(e.clientX);
+                }}
+                onPointerUp={endCompare}
+                onPointerCancel={endCompare}
+                className="relative rounded-[2rem] overflow-hidden border border-blue-100 shadow-[0_30px_80px_rgba(11,42,107,0.16)] select-none cursor-ew-resize touch-pan-y"
+              >
+                {/* Base layer — BEFORE */}
+                <div className="bg-slate-50 p-6 sm:p-10">
+                  <p className="text-[11px] font-black uppercase tracking-[0.22em] text-rose-600">{L("chaosBefore")}</p>
+                  <div className="mt-5 space-y-2.5 text-[13px] font-medium">
+                    {CHAOS_ITEMS.map((t, i) => (
+                      <div key={i} className="flex items-start gap-2.5 rounded-2xl bg-white border border-rose-100 px-4 py-3 text-slate-600 shadow-sm">
+                        <X className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" /> {t}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {/* Overlay layer — AFTER, clipped by handle */}
+                <div className="absolute inset-0" style={{ clipPath: `inset(0 ${100 - comparePos}% 0 0)` }} aria-hidden="true">
+                  <div className="h-full bg-gradient-to-br from-[#0B2A6B] to-[#081738] text-white p-6 sm:p-10 relative overflow-hidden">
+                    <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-sky-400/25 blur-[80px]" />
+                    <div className="absolute inset-0 blueprint-grid opacity-60" />
+                    <p className="text-[11px] font-black uppercase tracking-[0.22em] text-sky-300 relative">{L("chaosAfter")}</p>
+                    <div className="mt-5 space-y-2.5 text-[13px] font-medium relative">
+                      {CALM_ITEMS.map((t, i) => (
+                        <div key={i} className="flex items-start gap-2.5 rounded-2xl bg-white/10 border border-white/15 px-4 py-3 text-white/90 backdrop-blur-sm">
+                          <Check className="w-4 h-4 text-emerald-300 shrink-0 mt-0.5" /> {t}
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  </div>
+                </div>
+                {/* Drag handle */}
+                <div className="absolute top-0 bottom-0 z-10" style={{ left: `${comparePos}%` }} aria-hidden="true">
+                  <div className="absolute inset-y-0 -left-[1.5px] w-[3px] bg-white shadow-[0_0_24px_rgba(29,78,216,0.7)]" />
+                  <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-12 h-12 rounded-full bg-white text-blue-700 flex items-center justify-center shadow-2xl border-2 border-blue-100">
+                    <ChevronsLeftRight className="w-5 h-5" />
+                  </div>
                 </div>
               </div>
-            </Reveal>
-
-            <Reveal delay={120} className="flex md:flex-col items-center justify-center gap-3">
-              <span className="hidden md:block w-px flex-1 bg-gradient-to-b from-transparent via-blue-400 to-transparent" aria-hidden="true" />
-              <span className="w-12 h-12 rounded-full bg-blue-700 text-white flex items-center justify-center shadow-xl shadow-blue-700/30 shrink-0">
-                <ArrowRight className="w-5 h-5 rotate-90 md:rotate-0" />
-              </span>
-              <span className="hidden md:block w-px flex-1 bg-gradient-to-b from-transparent via-blue-400 to-transparent" aria-hidden="true" />
-            </Reveal>
-
-            <Reveal delay={200}>
-              <div className="h-full rounded-3xl bg-gradient-to-br from-[#0B2A6B] to-[#081738] text-white p-6 sm:p-8 relative overflow-hidden shadow-2xl shadow-blue-900/30">
-                <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-sky-400/25 blur-[80px]" aria-hidden="true" />
-                <div className="absolute inset-0 blueprint-grid opacity-60" aria-hidden="true" />
-                <p className="text-[11px] font-black uppercase tracking-[0.22em] text-sky-300 relative">After · AapkiSociety</p>
-                <div className="mt-5 space-y-2.5 text-[13px] font-medium relative">
-                  {[
-                    "Auto-bills on the 1st. UPI reminders recover 11.5% dues.",
-                    "Every rupee Maker-Checker approved & Tally-synced.",
-                    "One-tap gate approvals — from office, cab or couch.",
-                    "SLA timers chase the plumber so you don't have to.",
-                    "CA gets a clean XML import. Zero re-entry.",
-                  ].map((t, i) => (
-                    <div key={i} className="flex items-start gap-2.5 rounded-2xl bg-white/10 border border-white/15 px-4 py-3 text-white/90 backdrop-blur-sm">
-                      <Check className="w-4 h-4 text-emerald-300 shrink-0 mt-0.5" /> {t}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </Reveal>
-          </div>
+              <p className="text-center text-xs font-bold text-slate-400 mt-4 flex items-center justify-center gap-2">
+                <ChevronsLeftRight className="w-4 h-4 text-blue-500" /> {L("dragHint")}
+              </p>
+            </div>
+          </Reveal>
         </div>
       </section>
 
@@ -1103,14 +1388,14 @@ export default function Home() {
           <Reveal className="relative flex flex-col md:flex-row md:items-end md:justify-between gap-6 max-w-none">
             <span aria-hidden="true" className="ghost-numeral font-display font-semibold absolute -top-16 right-0 text-[6rem] sm:text-[8rem] hidden lg:block">02</span>
             <div className="max-w-xl">
-              <Eyebrow>02 · Complete operating system</Eyebrow>
+              <Eyebrow>{L("featE")}</Eyebrow>
               <h2 className="font-display text-[clamp(2rem,4.5vw,3.5rem)] leading-[1.05] tracking-tight mt-5" style={{ color: NAVY }}>
-                Every committee job,
-                <br /> <em className="blue-gradient-text">beautifully boxed.</em>
+                {L("featT1")}
+                <br /> <em className="blue-gradient-text">{L("featT2")}</em>
               </h2>
             </div>
             <p className="text-[15px] text-slate-500 leading-relaxed max-w-sm">
-              Nine modules, one login. Filter by your society&apos;s biggest headache — billing, gate, accounts or governance.
+              {L("featSub")}
             </p>
           </Reveal>
 
@@ -1173,21 +1458,21 @@ export default function Home() {
       <section id="simulator" className="relative bg-white scroll-mt-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
           <Reveal className="text-center max-w-2xl mx-auto">
-            <Eyebrow>03 · Don&apos;t take our word for it</Eyebrow>
+            <Eyebrow>{L("simE")}</Eyebrow>
             <h2 className="font-display text-[clamp(2rem,4.5vw,3.5rem)] leading-[1.05] tracking-tight mt-5" style={{ color: NAVY }}>
-              Press the buttons.
-              <br /> <em className="blue-gradient-text">It actually responds.</em>
+              {L("simT1")}
+              <br /> <em className="blue-gradient-text">{L("simT2")}</em>
             </h2>
-            <p className="text-slate-500 text-[15px] mt-4">A live sandbox — pick a viewpoint and try the real interactions.</p>
+            <p className="text-slate-500 text-[15px] mt-4">{L("simSub")}</p>
           </Reveal>
 
           <Reveal delay={120}>
             <div className="flex justify-center mt-10">
               <div className="inline-flex flex-wrap justify-center p-1.5 bg-blue-50/70 rounded-2xl border border-blue-100 gap-1" role="tablist" aria-label="Simulator viewpoint">
                 {([
-                  ["resident", Smartphone, "Resident App"],
-                  ["committee", Landmark, "Committee Command"],
-                  ["guard", Shield, "Gate Tablet"],
+                  ["resident", Smartphone, L("tabResident")],
+                  ["committee", Landmark, L("tabCommittee")],
+                  ["guard", Shield, L("tabGuard")],
                 ] as const).map(([id, Icon, label]) => (
                   <button
                     key={id}
@@ -1480,12 +1765,12 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28 relative">
           <span aria-hidden="true" className="ghost-numeral font-display font-semibold absolute top-6 right-4 sm:right-8 text-[6rem] sm:text-[8rem] hidden lg:block">04</span>
           <Reveal className="text-center max-w-2xl mx-auto">
-            <Eyebrow>04 · Interactive ROI calculator</Eyebrow>
+            <Eyebrow>{L("calcE")}</Eyebrow>
             <h2 className="font-display text-[clamp(2rem,4.5vw,3.5rem)] leading-[1.05] tracking-tight mt-5" style={{ color: NAVY }}>
-              What is chaos
-              <br /> <em className="blue-gradient-text">costing you?</em>
+              {L("calcT1")}
+              <br /> <em className="blue-gradient-text">{L("calcT2")}</em>
             </h2>
-            <p className="text-[15px] text-slate-500 mt-4">Slide to your society&apos;s size. Watch the recovered dues add up.</p>
+            <p className="text-[15px] text-slate-500 mt-4">{L("calcSub")}</p>
           </Reveal>
 
           <Reveal delay={140}>
@@ -1493,7 +1778,7 @@ export default function Home() {
               <div className="lg:col-span-7 space-y-9">
                 <div>
                   <div className="flex justify-between items-center mb-4 gap-3">
-                    <label htmlFor="calc-flats" className="text-sm font-bold" style={{ color: NAVY }}>Flats / apartments in your society</label>
+                    <label htmlFor="calc-flats" className="text-sm font-bold" style={{ color: NAVY }}>{L("calcFlats")}</label>
                     <span className="font-display text-2xl tnum bg-[#0A1C3F] text-white px-4 py-1.5 rounded-xl shrink-0">{calcFlats}</span>
                   </div>
                   <input
@@ -1510,7 +1795,7 @@ export default function Home() {
                 </div>
                 <div>
                   <div className="flex justify-between items-center mb-4 gap-3">
-                    <label htmlFor="calc-fee" className="text-sm font-bold" style={{ color: NAVY }}>Avg. monthly maintenance per flat</label>
+                    <label htmlFor="calc-fee" className="text-sm font-bold" style={{ color: NAVY }}>{L("calcFee")}</label>
                     <span className="font-display text-2xl tnum bg-[#0A1C3F] text-white px-4 py-1.5 rounded-xl shrink-0">₹{calcFee.toLocaleString("en-IN")}</span>
                   </div>
                   <input
@@ -1527,31 +1812,31 @@ export default function Home() {
                 </div>
                 <div className="p-4 rounded-2xl bg-blue-50/70 border border-blue-100 text-xs text-slate-500 flex items-start gap-3">
                   <HelpCircle className="w-4 h-4 text-blue-700 shrink-0 mt-0.5" />
-                  <p>Based on real RWA data: automated UPI reminders on WhatsApp recover ~11.5% of delayed payments within 60 days.</p>
+                  <p>{L("calcNote")}</p>
                 </div>
               </div>
 
               <div className="lg:col-span-5 relative rounded-[1.75rem] overflow-hidden bg-gradient-to-br from-[#0B2A6B] via-[#123a8f] to-[#0EA5E9] text-white p-8 sm:p-9 shadow-2xl shadow-blue-900/30">
                 <div className="absolute inset-0 blueprint-grid opacity-50" aria-hidden="true" />
                 <span className="relative text-[10px] font-black uppercase tracking-[0.22em] text-sky-200 border border-white/25 bg-white/10 px-3 py-1.5 rounded-full backdrop-blur-sm">
-                  Estimated annual impact
+                  {L("calcImpact")}
                 </span>
                 <div className="relative mt-7">
-                  <p className="text-xs font-semibold text-sky-200">Recovered dues / month</p>
+                  <p className="text-xs font-semibold text-sky-200">{L("calcRec")}</p>
                   <p className="font-display text-[2.6rem] leading-none mt-1.5 tnum">+₹{estimatedRecovery.toLocaleString("en-IN")}</p>
-                  <p className="text-xs text-sky-200/80 mt-1.5 tnum">₹{(estimatedRecovery * 12).toLocaleString("en-IN")} extra cashflow / year</p>
+                  <p className="text-xs text-sky-200/80 mt-1.5 tnum">₹{(estimatedRecovery * 12).toLocaleString("en-IN")} {L("calcYear")}</p>
                 </div>
                 <div className="relative pt-5 mt-5 border-t border-white/15">
-                  <p className="text-xs font-semibold text-sky-200">Committee hours saved</p>
+                  <p className="text-xs font-semibold text-sky-200">{L("calcHours")}</p>
                   <p className="font-display text-3xl mt-1 tnum">~{hoursSaved} hrs<span className="text-base text-sky-200/70"> / mo</span></p>
                 </div>
                 <div className="relative pt-5 mt-5 border-t border-white/15 flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-xs font-semibold text-sky-200">Return multiple</p>
+                    <p className="text-xs font-semibold text-sky-200">{L("calcRoi")}</p>
                     <p className="font-display text-2xl text-emerald-300 tnum">{netRoiMultiplier}× ROI</p>
                   </div>
-                  <button onClick={() => setDemoModalOpen(true)} className="px-5 py-3 rounded-xl bg-white text-[#0A1C3F] font-extrabold text-xs hover:bg-blue-50 active:scale-95 transition-all cursor-pointer shadow-lg min-h-[44px]">
-                    Lock In Trial
+                  <button onClick={() => { trackCTA("calc_trial"); setDemoModalOpen(true); }} className="px-5 py-3 rounded-xl bg-white text-[#0A1C3F] font-extrabold text-xs hover:bg-blue-50 active:scale-95 transition-all cursor-pointer shadow-lg min-h-[44px]">
+                    {L("calcLock")}
                   </button>
                 </div>
               </div>
@@ -1565,29 +1850,142 @@ export default function Home() {
         <div className="absolute inset-0 blueprint-grid opacity-40" aria-hidden="true" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 grid grid-cols-2 md:grid-cols-4 gap-8">
           {[
-            ["Active societies", 500, "+", ""],
-            ["Happy residents", 85000, "+", ""],
-            ["Maintenance processed", 500, " Cr+", "₹"],
-            ["Complaints resolved", 48000, "+", ""],
+            ["stat1", 500, "+", ""],
+            ["stat2", 85000, "+", ""],
+            ["stat3", 500, " Cr+", "₹"],
+            ["stat4", 48000, "+", ""],
           ].map(([label, target, suffix, prefix], idx) => (
             <Reveal key={idx} delay={idx * 80} className="text-center">
               <div className="font-display text-4xl sm:text-5xl text-white tracking-tight drop-shadow-sm">
                 <Counter target={target as number} suffix={suffix as string} prefix={prefix as string} />
               </div>
-              <div className="text-[11px] font-bold text-sky-100/80 uppercase tracking-[0.2em] mt-2">{label}</div>
+              <div className="text-[11px] font-bold text-sky-100/80 uppercase tracking-[0.2em] mt-2">{L(label as string)}</div>
             </Reveal>
           ))}
         </div>
       </div>
 
+      {/* ── 09b · MOBILE APP ───────────────────────────────────────────── */}
+      <section id="app" className="relative bg-white text-[#0A1C3F] scroll-mt-24 overflow-hidden">
+        <div className="aurora absolute top-20 right-[6%] w-[420px] h-[420px] rounded-full bg-sky-200/50 blur-[130px]" aria-hidden="true" />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28 grid lg:grid-cols-2 gap-14 items-center">
+          {/* Phone mockup */}
+          <Reveal className="order-2 lg:order-1">
+            <div className="relative mx-auto w-[270px] sm:w-[300px]">
+              <div className="absolute -inset-8 bg-gradient-to-b from-blue-200/60 to-transparent blur-2xl rounded-full" aria-hidden="true" />
+              <div className="console-float relative rounded-[3rem] border-[10px] border-[#0A1C3F] bg-[#F7FAFF] shadow-[0_40px_90px_rgba(11,42,107,0.28)] overflow-hidden">
+                <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-24 h-6 bg-[#0A1C3F] rounded-full z-10" aria-hidden="true" />
+                <div className="pt-12 px-4 pb-4">
+                  <p className="text-[10px] font-bold text-slate-400">Namaste 🙏</p>
+                  <p className="text-sm font-black" style={{ color: NAVY }}>Flat 402 · Wing B</p>
+                  <div className="mt-3 rounded-2xl bg-[#0A1C3F] text-white p-3.5 shadow-lg">
+                    <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-sky-300">August bill</p>
+                    <p className="font-display text-2xl tnum">₹4,250</p>
+                    <div className="mt-2 py-2 rounded-lg bg-blue-600 text-center text-[11px] font-extrabold">Pay via UPI</div>
+                  </div>
+                  <div className="mt-2.5 rounded-2xl bg-white border border-blue-100 p-3 flex items-center gap-2.5 shadow-sm">
+                    <span className="w-8 h-8 rounded-full bg-blue-700 text-white flex items-center justify-center text-[10px] font-black shrink-0">SW</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] font-bold truncate" style={{ color: NAVY }}>Delivery at gate</p>
+                      <p className="text-[9px] text-slate-400">Tap to approve</p>
+                    </div>
+                    <span className="text-[9px] font-black text-white bg-emerald-500 px-2 py-1 rounded-full shrink-0">✓</span>
+                  </div>
+                  <div className="mt-2.5 rounded-2xl bg-blue-50 border border-blue-100 p-3 flex items-center gap-2">
+                    <Clock className="w-3.5 h-3.5 text-blue-700 shrink-0" />
+                    <p className="text-[10px] font-bold text-slate-600">#TCK-482 · Plumber arriving in 40m</p>
+                  </div>
+                  <div className="mt-3 pt-2.5 border-t border-blue-100 flex justify-around">
+                    {[Smartphone, Wallet, Bell, ShieldCheck].map((Icon, i) => (
+                      <span key={i} className={`p-1.5 rounded-lg ${i === 0 ? "text-blue-700 bg-blue-50" : "text-slate-300"}`}>
+                        <Icon className="w-[18px] h-[18px]" />
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="hidden sm:flex absolute -left-24 top-20 -rotate-6 items-center gap-2 rounded-2xl border border-blue-100 bg-white/95 px-3.5 py-2.5 shadow-xl shadow-blue-900/10" aria-hidden="true">
+                <span className="w-7 h-7 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center">
+                  <Check className="w-3.5 h-3.5 text-emerald-600" />
+                </span>
+                <span className="text-[11px] font-bold" style={{ color: NAVY }}>Receipt sent ✓</span>
+              </div>
+              <div className="hidden sm:flex absolute -right-20 bottom-24 rotate-3 items-center gap-2 rounded-2xl border border-blue-100 bg-white/95 px-3.5 py-2.5 shadow-xl shadow-blue-900/10" aria-hidden="true">
+                <span className="w-7 h-7 rounded-full bg-red-50 border border-red-200 flex items-center justify-center">
+                  <Bell className="w-3.5 h-3.5 text-red-500" />
+                </span>
+                <span className="text-[11px] font-bold" style={{ color: NAVY }}>SOS · Guard alerted</span>
+              </div>
+            </div>
+          </Reveal>
+          {/* Copy + bullets + badges */}
+          <Reveal delay={120} className="order-1 lg:order-2">
+            <Eyebrow>{L("appE")}</Eyebrow>
+            <h2 className="font-display text-[clamp(2rem,4.5vw,3.5rem)] leading-[1.05] tracking-tight mt-5" style={{ color: NAVY }}>
+              {L("appT1")}
+              <br /> <em className="blue-gradient-text">{L("appT2")}</em>
+            </h2>
+            <p className="text-[15px] text-slate-500 leading-relaxed mt-4 max-w-md">{L("appSub")}</p>
+            <ul className="mt-8 space-y-4">
+              {[
+                ["appB1t", "appB1s", Wallet],
+                ["appB2t", "appB2s", QrCode],
+                ["appB3t", "appB3s", CheckCircle2],
+                ["appB4t", "appB4s", Bell],
+              ].map(([tk, sk, Icon]) => {
+                const I = Icon as typeof Wallet;
+                return (
+                  <li key={tk as string} className="flex items-start gap-3.5">
+                    <span className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-100 text-blue-700 flex items-center justify-center shrink-0">
+                      <I className="w-[18px] h-[18px]" />
+                    </span>
+                    <span>
+                      <span className="block text-sm font-bold" style={{ color: NAVY }}>{L(tk as string)}</span>
+                      <span className="block text-[13px] text-slate-500 mt-0.5">{L(sk as string)}</span>
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+            <div className="flex flex-wrap gap-3 mt-8">
+              <button
+                onClick={() => { trackCTA("app_ios"); setDemoModalOpen(true); }}
+                className="flex items-center gap-3 bg-[#0A1C3F] text-white rounded-2xl pl-4 pr-6 py-3 hover:bg-blue-900 active:scale-[0.98] transition-all cursor-pointer shadow-lg shadow-blue-900/25 min-h-[56px]"
+              >
+                <Apple className="w-7 h-7" />
+                <span className="text-left">
+                  <span className="block text-[10px] text-white/55 font-semibold">Download on the</span>
+                  <span className="block font-bold leading-tight">App Store</span>
+                </span>
+              </button>
+              <button
+                onClick={() => { trackCTA("app_android"); setDemoModalOpen(true); }}
+                className="flex items-center gap-3 bg-[#0A1C3F] text-white rounded-2xl pl-4 pr-6 py-3 hover:bg-blue-900 active:scale-[0.98] transition-all cursor-pointer shadow-lg shadow-blue-900/25 min-h-[56px]"
+              >
+                <Play className="w-6 h-6 fill-current" />
+                <span className="text-left">
+                  <span className="block text-[10px] text-white/55 font-semibold">Get it on</span>
+                  <span className="block font-bold leading-tight">Google Play</span>
+                </span>
+              </button>
+              <div className="flex items-center gap-3 rounded-2xl border-2 border-dashed border-blue-200 bg-blue-50/50 px-4 py-2 min-h-[56px]">
+                <QrCode className="w-8 h-8 text-blue-700" />
+                <span className="text-[11px] font-semibold text-slate-500 max-w-[150px] leading-snug">{L("appScan")}</span>
+              </div>
+            </div>
+            <p className="text-xs font-bold text-slate-400 mt-4">{L("appNote")}</p>
+          </Reveal>
+        </div>
+      </section>
+
       {/* ── 10 · COMPARISON ────────────────────────────────────────────── */}
       <section id="comparison" className="relative bg-white text-[#0A1C3F] scroll-mt-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
           <Reveal className="text-center max-w-2xl mx-auto">
-            <Eyebrow>05 · Transparent comparison</Eyebrow>
+            <Eyebrow>{L("compE")}</Eyebrow>
             <h2 className="font-display text-[clamp(2rem,4.5vw,3.5rem)] leading-[1.05] tracking-tight mt-5" style={{ color: NAVY }}>
-              Why societies leave
-              <br /> <em className="blue-gradient-text">the old tools behind.</em>
+              {L("compT1")}
+              <br /> <em className="blue-gradient-text">{L("compT2")}</em>
             </h2>
           </Reveal>
 
@@ -1670,14 +2068,12 @@ export default function Home() {
             </div>
           </Reveal>
           <Reveal delay={140}>
-            <Eyebrow>06 · 100% data sovereignty</Eyebrow>
+            <Eyebrow>{L("secE")}</Eyebrow>
             <h2 className="font-display text-[clamp(2rem,4.5vw,3.25rem)] leading-[1.06] tracking-tight mt-5" style={{ color: NAVY }}>
-              Your society&apos;s data belongs to <em className="blue-gradient-text">you. Only you.</em>
+              {L("secT1")} <em className="blue-gradient-text">{L("secT2")}</em>
             </h2>
             <p className="text-slate-500 text-[15px] sm:text-base leading-relaxed mt-5">
-              “Free” apps monetise residents with loan offers and business popups.
-              AapkiSociety is paid B2B software — <strong className="font-bold" style={{ color: NAVY }}>you are our customer, never our product.</strong> Records
-              live in isolated schemas inside Indian data centres.
+              {L("secPara")}
             </p>
             <div className="pt-6 flex flex-wrap gap-3 text-[13px] font-bold">
               {[["ISO 27001 Certified", Shield], ["SOC 2 Compliant", CheckCircle2], ["₹ INR Invoicing", IndianRupee]].map(([label, Icon], i) => {
@@ -1696,11 +2092,11 @@ export default function Home() {
       {/* ── 12 · TESTIMONIALS ──────────────────────────────────────────── */}
       <section id="testimonials" className="relative bg-white text-[#0A1C3F] scroll-mt-24 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28 relative">
-          <span aria-hidden="true" className="ghost-numeral font-display font-semibold absolute top-6 right-4 sm:right-8 text-[6rem] sm:text-[8rem] hidden lg:block">07</span>
+          <span aria-hidden="true" className="ghost-numeral font-display font-semibold absolute top-6 right-4 sm:right-8 text-[6rem] sm:text-[8rem] hidden lg:block">08</span>
           <Reveal className="text-center max-w-2xl mx-auto">
-            <Eyebrow>07 · Real case studies</Eyebrow>
+            <Eyebrow>{L("testiE")}</Eyebrow>
             <h2 className="font-display text-[clamp(2rem,4.5vw,3.5rem)] leading-[1.05] tracking-tight mt-5" style={{ color: NAVY }}>
-              Loved by the people who <em className="blue-gradient-text">sign the cheques.</em>
+              {L("testiT1")} <em className="blue-gradient-text">{L("testiT2")}</em>
             </h2>
           </Reveal>
           <Reveal delay={120}>
@@ -1724,10 +2120,11 @@ export default function Home() {
                     </span>
                   </div>
                   <div className="flex items-center justify-center gap-3.5 mt-7">
-                    <img
+                    <Image
                       src={TESTIMONIALS[quoteIndex].avatar}
                       alt={`Portrait of ${TESTIMONIALS[quoteIndex].name}`}
-                      loading="lazy"
+                      width={52}
+                      height={52}
                       className="w-13 h-13 rounded-full object-cover border-[3px] border-white shadow-lg shadow-blue-900/15"
                     />
                     <div className="text-left">
@@ -1777,7 +2174,7 @@ export default function Home() {
                     aria-label={`Show ${t.name}'s testimonial`}
                     className={`rounded-full transition-all cursor-pointer ${quoteIndex === i ? "ring-[3px] ring-blue-600 ring-offset-2 ring-offset-white scale-110" : "opacity-50 hover:opacity-90 grayscale-[35%]"}`}
                   >
-                    <img src={t.avatar} alt="" loading="lazy" className="w-11 h-11 rounded-full object-cover" />
+                    <Image src={t.avatar} alt="" width={44} height={44} className="w-11 h-11 rounded-full object-cover" />
                   </button>
                 ))}
               </div>
@@ -1789,28 +2186,28 @@ export default function Home() {
       {/* ── 13 · PRICING ───────────────────────────────────────────────── */}
       <section id="pricing" className="relative mist-canvas text-[#0A1C3F] scroll-mt-24 border-t border-blue-100/70 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28 relative">
-          <span aria-hidden="true" className="ghost-numeral font-display font-semibold absolute top-6 right-4 sm:right-8 text-[6rem] sm:text-[8rem] hidden lg:block">08</span>
+          <span aria-hidden="true" className="ghost-numeral font-display font-semibold absolute top-6 right-4 sm:right-8 text-[6rem] sm:text-[8rem] hidden lg:block">09</span>
           <Reveal className="text-center max-w-2xl mx-auto">
-            <Eyebrow>08 · Predictable pricing</Eyebrow>
+            <Eyebrow>{L("priceE")}</Eyebrow>
             <h2 className="font-display text-[clamp(2rem,4.5vw,3.5rem)] leading-[1.05] tracking-tight mt-5" style={{ color: NAVY }}>
-              Per flat. Per month.
-              <br /> <em className="blue-gradient-text">No surprises.</em>
+              {L("priceT1")}
+              <br /> <em className="blue-gradient-text">{L("priceT2")}</em>
             </h2>
-            <p className="text-[15px] text-slate-500 mt-4">All modules, unlimited residents, free Excel migration, mobile apps included.</p>
+            <p className="text-[15px] text-slate-500 mt-4">{L("priceSub")}</p>
             <div className="mt-8 inline-flex items-center gap-1 bg-white p-1.5 rounded-full border border-blue-100 shadow-sm" role="group" aria-label="Billing period">
               <button
                 onClick={() => setAnnualBilling(false)}
                 aria-pressed={!annualBilling}
                 className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all cursor-pointer min-h-[40px] ${!annualBilling ? "bg-[#0A1C3F] text-white shadow" : "text-slate-400 hover:text-[#0A1C3F]"}`}
               >
-                Monthly
+                {L("monthly")}
               </button>
               <button
                 onClick={() => setAnnualBilling(true)}
                 aria-pressed={annualBilling}
                 className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 min-h-[40px] ${annualBilling ? "bg-blue-700 text-white shadow-lg shadow-blue-700/25" : "text-slate-400 hover:text-[#0A1C3F]"}`}
               >
-                Annual
+                {L("annual")}
                 <span className="px-2 py-0.5 rounded-full bg-sky-300 text-[#0A1C3F] text-[10px] font-black">−17%</span>
               </button>
             </div>
@@ -1822,15 +2219,15 @@ export default function Home() {
                 <div>
                   <h3 className="font-display text-2xl" style={{ color: NAVY }}>Core OS</h3>
                   <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">Gate, billing and resident communication for small societies.</p>
-                  <p className="mt-6"><span className="font-display text-5xl tnum" style={{ color: NAVY }}><span key={annualBilling ? "a-core" : "m-core"} className="price-pop">₹{annualBilling ? 25 : 30}</span></span> <span className="text-xs font-bold text-slate-400">/ flat / mo</span></p>
+                  <p className="mt-6"><span className="font-display text-5xl tnum" style={{ color: NAVY }}><span key={annualBilling ? "a-core" : "m-core"} className="price-pop">₹{annualBilling ? 25 : 30}</span></span> <span className="text-xs font-bold text-slate-400">{L("perFlat")}</span></p>
                   <ul className="space-y-3 text-[13px] font-semibold text-slate-600 mt-7 border-t border-blue-50 pt-6">
                     {["Smart gate & visitor OTP pass", "Automated maintenance invoices", "Digital notice board & polls", "Resident app (Android & iOS)", "Free Excel data import"].map((f, i) => (
                       <li key={i} className="flex items-center gap-2.5"><Check className="w-4 h-4 text-emerald-600 shrink-0" /> {f}</li>
                     ))}
                   </ul>
                 </div>
-                <Link href="/register?plan=core" className="mt-8 w-full py-3.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-800 font-extrabold text-sm text-center block transition-all active:scale-[0.98] min-h-[48px] flex items-center justify-center">
-                  Start Free Trial
+                <Link href="/register?plan=core" onClick={() => trackCTA("pricing_core")} className="mt-8 w-full py-3.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-800 font-extrabold text-sm text-center block transition-all active:scale-[0.98] min-h-[48px] flex items-center justify-center">
+                  {L("coreBtn")}
                 </Link>
               </div>
             </Reveal>
@@ -1840,20 +2237,20 @@ export default function Home() {
                 <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-72 h-48 bg-sky-400/30 blur-[70px]" aria-hidden="true" />
                 <div className="absolute inset-0 blueprint-grid opacity-40" aria-hidden="true" />
                 <div className="absolute top-5 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-white text-blue-800 text-[10px] font-black rounded-full uppercase tracking-[0.16em] shadow-lg whitespace-nowrap">
-                  Most popular
+                  {L("popular")}
                 </div>
                 <div className="relative">
                   <h3 className="font-display text-2xl mt-8">Compliance OS</h3>
                   <p className="text-xs text-sky-100/75 mt-1.5 leading-relaxed">GST/TDS engine, Tally sync and audit-ready governance.</p>
-                  <p className="mt-6"><span className="font-display text-5xl tnum"><span key={annualBilling ? "a-comp" : "m-comp"} className="price-pop">₹{annualBilling ? 42 : 50}</span></span> <span className="text-xs font-bold text-sky-200/70">/ flat / mo</span></p>
+                  <p className="mt-6"><span className="font-display text-5xl tnum"><span key={annualBilling ? "a-comp" : "m-comp"} className="price-pop">₹{annualBilling ? 42 : 50}</span></span> <span className="text-xs font-bold text-sky-200/70">{L("perFlat")}</span></p>
                   <ul className="space-y-3 text-[13px] font-semibold text-white/85 mt-7 border-t border-white/15 pt-6">
                     {["Everything in Core OS", "1-click Tally Prime XML sync", "Automated GST & TDS engine", "Maker-Checker dual approval", "Helpdesk SLA timers", "Paid property listings", "Excel + PDF audit reports"].map((f, i) => (
                       <li key={i} className="flex items-center gap-2.5"><Check className="w-4 h-4 text-sky-300 shrink-0" /> {f}</li>
                     ))}
                   </ul>
                 </div>
-                <Link href="/register?plan=compliance" className="relative mt-8 w-full py-4 rounded-xl bg-white hover:bg-blue-50 text-[#0A1C3F] font-black text-sm text-center block shadow-lg active:scale-[0.98] transition-all min-h-[52px] flex items-center justify-center">
-                  Start 30-Day Free Trial
+                <Link href="/register?plan=compliance" onClick={() => trackCTA("pricing_compliance")} className="relative mt-8 w-full py-4 rounded-xl bg-white hover:bg-blue-50 text-[#0A1C3F] font-black text-sm text-center block shadow-lg active:scale-[0.98] transition-all min-h-[52px] flex items-center justify-center">
+                  {L("compBtn")}
                 </Link>
               </div>
             </Reveal>
@@ -1863,15 +2260,15 @@ export default function Home() {
                 <div>
                   <h3 className="font-display text-2xl" style={{ color: NAVY }}>AI Pro OS</h3>
                   <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">Predictive AI, 50 GB vault and a dedicated manager for large complexes.</p>
-                  <p className="mt-6"><span className="font-display text-5xl tnum" style={{ color: NAVY }}><span key={annualBilling ? "a-ai" : "m-ai"} className="price-pop">₹{annualBilling ? 66 : 80}</span></span> <span className="text-xs font-bold text-slate-400">/ flat / mo</span></p>
+                  <p className="mt-6"><span className="font-display text-5xl tnum" style={{ color: NAVY }}><span key={annualBilling ? "a-ai" : "m-ai"} className="price-pop">₹{annualBilling ? 66 : 80}</span></span> <span className="text-xs font-bold text-slate-400">{L("perFlat")}</span></p>
                   <ul className="space-y-3 text-[13px] font-semibold text-slate-600 mt-7 border-t border-blue-50 pt-6">
                     {["Everything in Compliance OS", "AI anomaly detection in expenses", "24×7 society AI assistant", "50 GB encrypted document vault", "Dedicated relationship manager", "Custom bye-law workflows"].map((f, i) => (
                       <li key={i} className="flex items-center gap-2.5"><Check className="w-4 h-4 text-emerald-600 shrink-0" /> {f}</li>
                     ))}
                   </ul>
                 </div>
-                <button onClick={() => setDemoModalOpen(true)} className="mt-8 w-full py-3.5 rounded-xl bg-[#0A1C3F] hover:bg-blue-900 text-white font-extrabold text-sm transition-all active:scale-[0.98] cursor-pointer min-h-[48px]">
-                  Talk to Enterprise Team
+                <button onClick={() => { trackCTA("pricing_enterprise"); setDemoModalOpen(true); }} className="mt-8 w-full py-3.5 rounded-xl bg-[#0A1C3F] hover:bg-blue-900 text-white font-extrabold text-sm transition-all active:scale-[0.98] cursor-pointer min-h-[48px]">
+                  {L("aiBtn")}
                 </button>
               </div>
             </Reveal>
@@ -1883,8 +2280,8 @@ export default function Home() {
       <section id="faq" className="relative bg-white text-[#0A1C3F] scroll-mt-24">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
           <Reveal className="text-center">
-            <Eyebrow>09 · Got questions?</Eyebrow>
-            <h2 className="font-display text-[clamp(2rem,4.5vw,3.25rem)] tracking-tight mt-5" style={{ color: NAVY }}>Asked by every committee, <em className="blue-gradient-text">answered honestly.</em></h2>
+            <Eyebrow>{L("faqE")}</Eyebrow>
+            <h2 className="font-display text-[clamp(2rem,4.5vw,3.25rem)] tracking-tight mt-5" style={{ color: NAVY }}>{L("faqT1")} <em className="blue-gradient-text">{L("faqT2")}</em></h2>
           </Reveal>
           <div className="space-y-3.5 mt-12">
             {FAQS.map((faq, idx) => {
@@ -1927,24 +2324,24 @@ export default function Home() {
               <Image src="/aapp.jpeg" alt="AapkiSociety logo" fill sizes="64px" className="object-cover" />
             </div>
             <h2 className="font-display text-white tracking-tight leading-[1.03] text-[clamp(2.5rem,6.5vw,5rem)]">
-              Give your society
-              <br /> the <em className="text-sky-300">upgrade it deserves.</em>
+              {L("finT1")}
+              <br /> <em className="text-sky-300">{L("finT2")}</em>
             </h2>
             <p className="text-sky-100/70 text-base sm:text-lg mt-6 max-w-2xl mx-auto">
-              Join 500+ RWAs running on autopilot. Live in 48 hours — Excel import, guard training and CA handover included.
+              {L("finSub")}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 mt-10">
               <Magnetic strength={12}>
-                <Link href="/register" className="btn-shine w-full sm:w-auto px-8 py-4 rounded-2xl bg-white text-[#0A1C3F] hover:bg-blue-50 font-extrabold text-[15px] shadow-[0_18px_50px_rgba(255,255,255,0.2)] hover:-translate-y-0.5 active:scale-[0.98] transition-all flex items-center justify-center gap-2 min-h-[52px]">
-                  Register Society — 30 Days Free <ArrowRight className="w-5 h-5" />
+                <Link href="/register" onClick={() => trackCTA("finale_trial")} className="btn-shine w-full sm:w-auto px-8 py-4 rounded-2xl bg-white text-[#0A1C3F] hover:bg-blue-50 font-extrabold text-[15px] shadow-[0_18px_50px_rgba(255,255,255,0.2)] hover:-translate-y-0.5 active:scale-[0.98] transition-all flex items-center justify-center gap-2 min-h-[52px]">
+                  {L("finCta1")} <ArrowRight className="w-5 h-5" />
                 </Link>
               </Magnetic>
-              <button onClick={() => setDemoModalOpen(true)} className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-white/10 text-white font-bold text-[15px] border border-white/25 hover:bg-white/20 hover:border-white/40 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer backdrop-blur-sm min-h-[52px]">
-                <PhoneCall className="w-5 h-5 text-sky-300" /> Talk to a Specialist
+              <button onClick={() => { trackCTA("finale_specialist"); setDemoModalOpen(true); }} className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-white/10 text-white font-bold text-[15px] border border-white/25 hover:bg-white/20 hover:border-white/40 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer backdrop-blur-sm min-h-[52px]">
+                <PhoneCall className="w-5 h-5 text-sky-300" /> {L("finCta2")}
               </button>
             </div>
             <p className="text-[11px] text-sky-200/50 font-bold tracking-wide mt-7 uppercase">
-              No credit card · Full access · 100% data-export guarantee
+              {L("finNote")}
             </p>
           </Reveal>
         </div>
@@ -1965,7 +2362,7 @@ export default function Home() {
                 <span className="text-xl font-black text-white">Aapki<span className="text-sky-300">Society</span></span>
               </div>
               <p className="text-sm leading-relaxed max-w-sm">
-                India&apos;s society operating system — financial transparency, bank-grade security and effortless gate governance for modern communities.
+                {L("footTag")}
               </p>
               <div className="flex items-center gap-2 text-xs font-bold text-emerald-300 bg-emerald-400/10 border border-emerald-300/20 px-3 py-2 rounded-full w-fit mt-5">
                 <ShieldCheck className="w-4 h-4" /> ISO 27001 · Indian Data Sovereignty
@@ -2004,6 +2401,86 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {/* ── FLOATING GROWTH WIDGETS ──────────────────────────────────── */}
+      {/* Live social-proof toast */}
+      {!demoModalOpen && (
+        <div
+          key={toastIndex}
+          className="quote-enter fixed z-40 left-4 bottom-40 md:bottom-6 max-w-[calc(100vw-2rem)] sm:max-w-xs"
+          role="status"
+          aria-live="polite"
+        >
+          <div className="flex items-start gap-3 rounded-2xl border border-blue-100 bg-white/95 backdrop-blur-xl pl-3 pr-2 py-2.5 shadow-[0_16px_45px_rgba(11,42,107,0.18)]">
+            <span className="w-9 h-9 rounded-xl bg-blue-700 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-700/30">
+              {(() => {
+                const Icon = TOASTS[toastIndex].icon;
+                return <Icon className="w-4 h-4" />;
+              })()}
+            </span>
+            <span className="min-w-0">
+              <span className="block text-xs font-bold leading-snug" style={{ color: NAVY }}>{TOASTS[toastIndex].text}</span>
+              <span className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-400 mt-1">
+                <span className="flex text-amber-400" aria-hidden="true">
+                  {[1, 2, 3, 4, 5].map((s) => (<Star key={s} className="w-2.5 h-2.5 fill-current" />))}
+                </span>
+                Verified activity · {TOASTS[toastIndex].time}
+              </span>
+            </span>
+            <button
+              onClick={() => setToastIndex((toastIndex + 1) % TOASTS.length)}
+              aria-label="Show next activity"
+              className="p-1.5 rounded-lg text-slate-300 hover:text-slate-500 hover:bg-slate-100 transition-colors cursor-pointer shrink-0"
+            >
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* WhatsApp chat float */}
+      {!demoModalOpen && (
+        <button
+          onClick={() => { trackCTA("whatsapp_float"); setDemoModalOpen(true); }}
+          aria-label={L("waTooltip")}
+          title={L("waTooltip")}
+          className="group fixed z-40 right-4 bottom-24 md:right-6 md:bottom-6 w-14 h-14 rounded-full bg-[#25D366] hover:bg-[#1eb856] text-white flex items-center justify-center shadow-[0_14px_35px_rgba(37,211,102,0.45)] hover:scale-105 active:scale-95 transition-all cursor-pointer"
+        >
+          <MessageCircle className="w-6 h-6 fill-current" />
+          <span className="hidden md:block absolute right-full mr-3 whitespace-nowrap text-xs font-bold bg-[#0A1C3F] text-white px-3 py-2 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+            {L("waTooltip")}
+          </span>
+          <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5" aria-hidden="true">
+            <span className="ticker-dot absolute inline-flex h-full w-full rounded-full bg-red-500 border-2 border-white" />
+          </span>
+        </button>
+      )}
+
+      {/* Sticky mobile conversion bar */}
+      {!demoModalOpen && (
+        <div
+          className={`md:hidden fixed bottom-0 inset-x-0 z-40 transition-transform duration-300 ${showTop ? "translate-y-0" : "translate-y-full"}`}
+          aria-hidden={!showTop}
+        >
+          <div className="bg-white/95 backdrop-blur-xl border-t border-blue-100 px-4 pt-3 flex gap-2.5 shadow-[0_-10px_35px_rgba(11,42,107,0.12)]" style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
+            <Link
+              href="/register"
+              onClick={() => trackCTA("sticky_trial")}
+              tabIndex={showTop ? 0 : -1}
+              className="flex-1 py-3 rounded-xl bg-blue-700 text-white font-extrabold text-sm text-center flex items-center justify-center gap-1.5 min-h-[48px]"
+            >
+              {L("stickyTrial")} <ArrowRight className="w-4 h-4" />
+            </Link>
+            <button
+              onClick={() => { trackCTA("sticky_demo"); setDemoModalOpen(true); }}
+              tabIndex={showTop ? 0 : -1}
+              className="flex-1 py-3 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 font-extrabold text-sm flex items-center justify-center gap-1.5 min-h-[48px]"
+            >
+              <PhoneCall className="w-4 h-4" /> {L("stickyDemo")}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ── 17 · DEMO MODAL ────────────────────────────────────────────── */}
       <BackToTop visible={showTop} />

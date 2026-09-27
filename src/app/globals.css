@@ -961,4 +961,28 @@ input[type="range"].slider-ink::-moz-range-thumb {
   }
 }
 
+/* Brand preloader */
+@keyframes loader-fill {
+  0% { width: 6%; }
+  55% { width: 68%; }
+  100% { width: 94%; }
+}
+.loader-bar {
+  animation: loader-fill 2.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@keyframes loader-logo {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+.loader-logo {
+  animation: loader-logo 1.6s ease-in-out infinite;
+}
+.preloader-shell {
+  transition: opacity 0.5s ease;
+}
+.preloader-hide {
+  opacity: 0;
+  pointer-events: none;
+}
+
 
