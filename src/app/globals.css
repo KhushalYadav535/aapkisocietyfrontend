@@ -80,56 +80,61 @@ html.dark .bg-mesh {
   animation: bg-mesh-drift 15s ease-in-out infinite alternate;
 }
 
-html.dark .bg-white,
-html.dark [class*="bg-white"] {
-  background-color: #1e293b !important;
+/* Landing page strict light isolation */
+.landing-page {
+  color-scheme: light !important;
 }
 
-html.dark .bg-gray-50 { background-color: #1e293b; }
-html.dark .bg-gray-100 { background-color: #334155; }
+/* Dark mode overrides scoped ONLY to dashboard - never affecting marketing/landing pages */
+html.dark:not(.light) .dashboard-root .bg-white {
+  background-color: #1e293b;
+}
 
-html.dark .text-gray-900,
-html.dark .text-gray-800 {
+html.dark:not(.light) .dashboard-root .bg-gray-50 { background-color: #1e293b; }
+html.dark:not(.light) .dashboard-root .bg-gray-100 { background-color: #334155; }
+
+html.dark:not(.light) .dashboard-root .text-gray-900,
+html.dark:not(.light) .dashboard-root .text-gray-800 {
   color: #f1f5f9;
 }
 
-html.dark .text-gray-700 { color: #e2e8f0; }
-html.dark .text-gray-600 { color: #cbd5e1; }
-html.dark .text-gray-500 { color: #94a3b8; }
-html.dark .text-gray-400 { color: #64748b; }
+html.dark:not(.light) .dashboard-root .text-gray-700 { color: #e2e8f0; }
+html.dark:not(.light) .dashboard-root .text-gray-600 { color: #cbd5e1; }
+html.dark:not(.light) .dashboard-root .text-gray-500 { color: #94a3b8; }
+html.dark:not(.light) .dashboard-root .text-gray-400 { color: #64748b; }
 
-html.dark .border-gray-100,
-html.dark .border-gray-200 {
+html.dark:not(.light) .dashboard-root .border-gray-100,
+html.dark:not(.light) .dashboard-root .border-gray-200 {
   border-color: #334155;
 }
 
-html.dark .border-white\/60 {
+html.dark:not(.light) .dashboard-root .border-white\/60 {
   border-color: rgba(51, 65, 85, 0.6);
 }
 
-html.dark .border-b {
+html.dark:not(.light) .dashboard-root .border-b {
   border-bottom-color: #334155;
 }
 
-html.dark input,
-html.dark select,
-html.dark textarea {
+html.dark:not(.light) .dashboard-root input,
+html.dark:not(.light) .dashboard-root select,
+html.dark:not(.light) .dashboard-root textarea {
   background-color: #1e293b;
   border-color: #334155;
   color: #f1f5f9;
 }
 
-html.dark input::placeholder {
+html.dark:not(.light) .dashboard-root input::placeholder {
   color: #64748b;
 }
 
-html.dark .skeleton {
+html.dark:not(.light) .dashboard-root .skeleton {
   background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
   background-size: 200% 100%;
 }
 
-html.dark header {
-  background-color: rgba(15, 23, 42, 0.8) !important;
+html.dark:not(.light) .dashboard-root header {
+  background-color: rgba(15, 23, 42, 0.8);
 }
 
 /* Premium Scrollbar */

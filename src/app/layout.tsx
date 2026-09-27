@@ -41,6 +41,7 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: "#1d4ed8",
+  colorScheme: "light",
 };
 
 const ORG_JSON_LD = {

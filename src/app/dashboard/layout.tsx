@@ -241,7 +241,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="h-screen w-full flex overflow-hidden bg-mesh">
+    <div className="dashboard-root h-screen w-full flex overflow-hidden bg-mesh">
       {sidebarOpen && (
         <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-40 lg:hidden animate-fade-in" onClick={() => setSidebarOpen(false)} />
       )}

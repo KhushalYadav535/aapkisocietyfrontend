@@ -2,6 +2,8 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
+import { usePathname } from 'next/navigation';
+
 type Theme = 'light' | 'dark';
 
 interface ThemeContextType {
@@ -15,23 +17,35 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>('light');
   const [mounted, setMounted] = useState(false);
+  const pathname = usePathname();
+
+  const isDashboard = pathname ? pathname.startsWith('/dashboard') : false;
 
   useEffect(() => {
     setMounted(true);
     const stored = localStorage.getItem('theme') as Theme | null;
     if (stored) {
       setThemeState(stored);
-    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    } else if (isDashboard && typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
       setThemeState('dark');
     }
-  }, []);
+  }, [isDashboard]);
 
   useEffect(() => {
-    if (!mounted) return;
+    if (!mounted || typeof document === 'undefined') return;
+
+    // Public marketing and auth pages must strictly maintain their light brand styling
+    if (!isDashboard) {
+      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.add('light');
+      return;
+    }
+
+    // Inside dashboard, apply user's chosen theme
     document.documentElement.classList.remove('light', 'dark');
     document.documentElement.classList.add(theme);
     localStorage.setItem('theme', theme);
-  }, [theme, mounted]);
+  }, [theme, mounted, isDashboard]);
 
   const toggleTheme = () => {
     setThemeState(prev => prev === 'light' ? 'dark' : 'light');
@@ -40,8 +54,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme);
   };
-
-  if (!mounted) return <>{children}</>;
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme, setTheme }}>

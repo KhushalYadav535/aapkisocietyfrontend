@@ -928,7 +928,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7FAFF] text-slate-900 font-sans selection:bg-blue-700 selection:text-white relative overflow-x-hidden">
+    <div className="landing-page light min-h-screen bg-[#F7FAFF] text-slate-900 font-sans selection:bg-blue-700 selection:text-white relative overflow-x-hidden" style={{ colorScheme: 'light' }}>
       <ScrollProgress />
       <Preloader done={booted} />
 
@@ -1400,17 +1400,17 @@ export default function Home() {
           </Reveal>
 
           <Reveal delay={120}>
-            <div className="flex flex-wrap gap-2 mt-10" role="tablist" aria-label="Filter modules by category">
+            <div className="flex items-center gap-2 mt-8 overflow-x-auto no-scrollbar py-2 sm:flex-wrap" role="tablist" aria-label="Filter modules by category">
               {MODULE_CATEGORIES.map((cat) => (
                 <button
                   key={cat.id}
                   role="tab"
                   aria-selected={selectedCategory === cat.id}
                   onClick={() => setSelectedCategory(cat.id)}
-                  className={`px-4 py-2.5 rounded-full text-xs font-bold transition-all cursor-pointer min-h-[40px] ${
+                  className={`px-4 py-2.5 rounded-full text-xs font-bold transition-all cursor-pointer min-h-[40px] whitespace-nowrap shrink-0 sm:shrink ${
                     selectedCategory === cat.id
                       ? "bg-blue-700 text-white shadow-lg shadow-blue-700/30 scale-[1.03]"
-                      : "bg-white text-slate-500 border border-blue-100 hover:border-blue-300 hover:text-blue-700 shadow-sm"
+                      : "bg-white text-slate-600 border border-blue-100/90 hover:border-blue-300 hover:text-blue-700 shadow-xs"
                   }`}
                 >
                   {cat.label}
@@ -1436,7 +1436,7 @@ export default function Home() {
                       </span>
                     </div>
                     <h3 className="font-display text-xl sm:text-[1.35rem] leading-snug tracking-tight" style={{ color: NAVY }}>{feat.title}</h3>
-                    <p className="text-[13.5px] text-slate-500 leading-relaxed mt-2">{feat.desc}</p>
+                    <p className="text-[13.5px] text-slate-600 leading-relaxed mt-2">{feat.desc}</p>
                     <BentoVisual kind={feat.visual} />
                   </div>
                   <div className="pt-5 mt-6 border-t border-blue-50 flex items-center justify-between text-xs">
