@@ -73,10 +73,11 @@ export default function MembersPage() {
     try {
       const res = await memberAPI.getAll();
       setMembers(res.data.members || []);
-      if (user?.society_id) {
+      const sid = user?.society_id || res.data.members?.[0]?.society_id;
+      if (sid) {
         const [wRes, fRes] = await Promise.all([
-          societyAPI.getWings(user.society_id),
-          societyAPI.getFlats(user.society_id)
+          societyAPI.getWings(sid).catch(() => ({ data: { wings: [] } })),
+          societyAPI.getFlats(sid).catch(() => ({ data: { flats: [] } }))
         ]);
         setWings(wRes.data.wings || []);
         setFlats(fRes.data.flats || []);

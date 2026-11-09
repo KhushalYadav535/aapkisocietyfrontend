@@ -73,15 +73,19 @@ export default function BillingPage() {
   const load = async () => {
     setLoading(true);
     try {
-      const promises = [billingAPI.getAllBills(), billingAPI.getPayments(), billingAPI.getSummary()];
+      const promises: Promise<any>[] = [
+        billingAPI.getAllBills().catch(() => ({ data: { bills: [] } })),
+        billingAPI.getPayments().catch(() => ({ data: { payments: [] } })),
+        billingAPI.getSummary().catch(() => ({ data: { summary: { total_billed: 0, total_collected: 0, outstanding: 0, pending_bills: 0, overdue_bills: 0, collection_rate: 0 } } }))
+      ];
       if (isAdmin) {
-        promises.push(mandateAPI.list());
+        promises.push(mandateAPI.list().catch(() => ({ data: { mandates: [] } })));
         if (tab === "Arrears Aging") promises.push(Promise.resolve({ data: { buckets: [] }, status: 200, statusText: 'OK', headers: {}, config: {} } as any));
         if (tab === "Defaulters") promises.push(billingAPI.getDefaulters().catch(() => ({ data: [], status: 200, statusText: 'OK', headers: {}, config: {} } as any)));
         if (tab === "Dunning") promises.push(billingAPI.getDunningHistory().catch(() => ({ data: [], status: 200, statusText: 'OK', headers: {}, config: {} } as any)));
       }
       const [b, p, s, ...rest] = await Promise.all(promises);
-      setBills(b.data.bills); setPayments(p.data.payments); setSummary(s.data.summary);
+      setBills(b.data?.bills || []); setPayments(p.data?.payments || []); setSummary(s.data?.summary || { total_billed: 0, total_collected: 0, outstanding: 0, pending_bills: 0, overdue_bills: 0, collection_rate: 0 });
       if (tab === "Mandates") setMandates(rest[0]?.data?.mandates || []);
       if (tab === "Defaulters") setDefaulters(rest[0]?.data?.defaulters || rest[0]?.data || []);
       if (tab === "Dunning") setDunningHistory(rest[0]?.data?.records || rest[0]?.data || []);

@@ -536,7 +536,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="w-full h-64 sm:h-72">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <AreaChart data={collectionData} margin={{ top: 10, right: 10, bottom: 0, left: -10 }}>
                 <defs>
                   <linearGradient id="collectionGradient" x1="0" y1="0" x2="0" y2="1">
@@ -583,7 +583,7 @@ export default function DashboardPage() {
           <div className="relative flex items-center justify-center my-2">
             {pieData.length > 0 ? (
               <div className="w-full h-44 relative">
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                   <PieChart>
                     <Pie
                       data={pieData}

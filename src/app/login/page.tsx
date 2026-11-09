@@ -79,7 +79,6 @@ export default function LoginPage() {
                 fill
                 sizes="48px"
                 className="object-cover"
-                priority
               />
             </div>
             <div>

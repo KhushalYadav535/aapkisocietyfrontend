@@ -53,9 +53,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const storedToken = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
     if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
+      try {
+        const parsed = JSON.parse(storedUser);
+        setToken(storedToken);
+        setUser(parsed);
+      } catch (e) {
+        console.error('Failed to parse stored user', e);
+      }
       fetchPermissions();
+
+      // Refresh profile to keep user synced (especially society_id after auto-assignment)
+      authAPI.getProfile().then(res => {
+        if (res.data?.user) {
+          setUser(res.data.user);
+          localStorage.setItem('user', JSON.stringify(res.data.user));
+        }
+      }).catch(() => {});
     }
     setLoading(false);
   }, [fetchPermissions]);

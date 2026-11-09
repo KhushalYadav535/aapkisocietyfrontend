@@ -418,7 +418,7 @@ export default function ReportsPage() {
           </div>
 
           <div className="h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <ComposedChart
                 data={[
                   { month: "Apr (Summer)", baseline: 35000, projected: 48500, tankerSurge: 9500, powerSurge: 4000 },
