@@ -150,9 +150,13 @@ export default function EmergencyContactsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Remove this contact?")) return;
-    try { await emergencyContactAPI.remove(id); toast.success("Removed"); load(); }
-    catch { toast.error("Failed"); }
+    try { 
+      await emergencyContactAPI.remove(id); 
+      toast.success("Contact removed successfully"); 
+      load(); 
+    } catch (err: any) { 
+      toast.error(err.response?.data?.error || "Failed to remove contact"); 
+    }
   };
 
   const handleUpdateMyBloodGroup = async (group: string) => {
@@ -160,10 +164,25 @@ export default function EmergencyContactsPage() {
       setUpdatingGroup(true);
       await bloodAPI.updateMyGroup(group);
       setMyBloodGroup(group);
+      if (user) {
+        setDonors(prev => {
+          const filtered = prev.filter(d => d.id !== user.id);
+          const newDonor: BloodDonor = {
+            id: user.id,
+            first_name: user.first_name,
+            last_name: user.last_name,
+            phone: user.phone || "",
+            flat_number: user.flat_number || "",
+            wing: user.wing || "",
+            blood_group: group,
+          };
+          return [newDonor, ...filtered];
+        });
+      }
       toast.success(`Blood group updated to ${group}! Thank you for being a potential donor.`);
-      load();
+      await load();
     } catch (err: any) {
-      toast.error("Failed to update blood group");
+      toast.error(err.response?.data?.error || "Failed to update blood group");
     } finally {
       setUpdatingGroup(false);
     }

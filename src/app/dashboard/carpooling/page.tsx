@@ -124,13 +124,12 @@ export default function CarpoolingPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to remove this carpool offer?")) return;
     try {
       await carpoolAPI.deleteCarpool(id);
-      toast.success("Ride offer removed");
+      toast.success("Ride offer removed successfully");
       fetchRides();
     } catch (err: any) {
-      toast.error("Failed to delete ride");
+      toast.error(err.response?.data?.error || "Failed to delete ride");
     }
   };
 

@@ -11,7 +11,7 @@ import { getInitials } from "@/lib/utils";
 import {
   Users, Plus, Search, Mail, Phone, Home, Shield, X, UserPlus,
   Filter, ChevronDown, MoreVertical, UserMinus, UserCheck2, ShieldCheck,
-  Building2, ArrowRight, KeyRound, CheckCircle2, Car, UploadCloud
+  Building2, ArrowRight, KeyRound, CheckCircle2, Car, UploadCloud, Download
 } from "lucide-react";
 import Pagination from "@/components/Pagination";
 
@@ -107,12 +107,40 @@ export default function MembersPage() {
   };
 
   const handleDeactivate = async (id: string) => {
-    if (!confirm("Deactivate this member?")) return;
     try {
       await memberAPI.deactivate(id);
-      toast.success("Member deactivated");
+      toast.success("Member deactivated successfully");
       loadData();
-    } catch { toast.error("Failed to deactivate"); }
+    } catch (err: any) { toast.error(err.response?.data?.error || "Failed to deactivate"); }
+  };
+
+  const handleExportCsv = () => {
+    if (!members || members.length === 0) {
+      toast.error("No members found to export");
+      return;
+    }
+    const headers = ["Name", "Email", "Phone", "Role", "Wing", "Flat", "Status", "Joined"];
+    const rows = members.map(m => [
+      `"${(`${m.first_name || ""} ${m.last_name || ""}`).trim().replace(/"/g, '""')}"`,
+      `"${(m.email || "").replace(/"/g, '""')}"`,
+      `"${(m.phone || "").replace(/"/g, '""')}"`,
+      `"${m.role || ""}"`,
+      `"${m.wing || ""}"`,
+      `"${m.flat_number || ""}"`,
+      `"${m.is_active === 0 ? "Inactive" : "Active"}"`,
+      `"${m.created_at ? String(m.created_at).split("T")[0] : ""}"`,
+    ].join(","));
+    const csvContent = [headers.join(","), ...rows].join("\r\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `members_directory_${new Date().toISOString().split("T")[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    toast.success(`Exported ${members.length} members successfully`);
   };
 
   const roles = useMemo(() => ["ALL", ...Array.from(new Set(members.map(m => m.role)))], [members]);
@@ -156,6 +184,14 @@ export default function MembersPage() {
 
         {isAdmin && (
           <div className="flex items-center gap-2.5">
+            <button
+              data-testid="export-members"
+              onClick={handleExportCsv}
+              className="inline-flex items-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-500/40 text-slate-700 dark:text-slate-200 hover:text-emerald-600 px-4 py-2.5 rounded-xl font-bold text-xs transition-all shadow-xs active:scale-95"
+            >
+              <Download className="w-4 h-4 text-emerald-500" />
+              <span>Export CSV</span>
+            </button>
             <button
               data-testid="bulk-import"
               onClick={() => {}}
@@ -272,7 +308,7 @@ export default function MembersPage() {
                                 e.stopPropagation();
                                 handleDeactivate(member.id);
                               }}
-                              className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition-all text-slate-400 hover:text-rose-600 shrink-0"
+                              className="p-1.5 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition-all text-slate-400 hover:text-rose-600 shrink-0"
                               title="Deactivate member"
                             >
                               <UserMinus className="w-3.5 h-3.5" />

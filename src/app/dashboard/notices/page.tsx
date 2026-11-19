@@ -170,13 +170,12 @@ export default function NoticesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this notice?")) return;
     try { 
       await noticeAPI.remove(id); 
-      toast.success("Notice deleted"); 
+      toast.success("Notice deleted successfully"); 
       loadNotices(); 
-    } catch { 
-      toast.error("Failed to delete notice"); 
+    } catch (err: any) { 
+      toast.error(err.response?.data?.error || "Failed to delete notice"); 
     }
   };
 

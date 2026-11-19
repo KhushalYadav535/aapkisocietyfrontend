@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { rbacAPI, memberAPI, platformAPI } from '@/lib/api';
 import { X, Building2, RefreshCw } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function RBACManagement() {
   const { user, hasPermission } = useAuth();
@@ -91,10 +92,22 @@ export default function RBACManagement() {
       setSelectedPosition('');
       setStartDate('');
       setEndDate('');
-      alert('Position assigned successfully');
-    } catch (err) {
+      toast.success('Position assigned successfully');
+    } catch (err: any) {
       console.error('Failed to assign position', err);
-      alert('Failed to assign position. Check if user already has an active assignment for this term.');
+      toast.error(err.response?.data?.error || 'Failed to assign position. Check if user already has an active assignment for this term.');
+    }
+  };
+
+  const handleEndTerm = async (assignmentId: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    try {
+      await rbacAPI.endAssignment(selectedSocietyId, assignmentId);
+      toast.success('Position term ended successfully');
+      fetchData(selectedSocietyId);
+    } catch (err: any) {
+      console.error('Failed to end term', err);
+      toast.error(err.response?.data?.error || 'Failed to end term');
     }
   };
 
@@ -254,6 +267,7 @@ export default function RBACManagement() {
                 <th className="p-4 font-medium">Start Date</th>
                 <th className="p-4 font-medium">End Date</th>
                 <th className="p-4 font-medium">Status</th>
+                <th className="p-4 font-medium text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -279,6 +293,17 @@ export default function RBACManagement() {
                       <span className="text-green-600 bg-green-50 px-2 py-1 rounded-full text-xs">Active</span>
                     ) : (
                       <span className="text-gray-500 bg-gray-100 px-2 py-1 rounded-full text-xs">Inactive</span>
+                    )}
+                  </td>
+                  <td className="p-4 text-right">
+                    {a.status === 'ACTIVE' && (
+                      <button
+                        onClick={(e) => handleEndTerm(a.id, e)}
+                        className="text-xs bg-rose-50 hover:bg-rose-100 text-rose-700 px-3 py-1.5 rounded-lg font-semibold transition-all border border-rose-200"
+                        title="End position term"
+                      >
+                        End Term
+                      </button>
                     )}
                   </td>
                 </tr>

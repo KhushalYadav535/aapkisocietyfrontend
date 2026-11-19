@@ -123,23 +123,41 @@ export default function MemberHistoryPage() {
     let rows: string[] = [];
     let filename = "member-history.csv";
     if (activeTab === "BILLS") {
+      const targetBills = filteredBills.length > 0 ? filteredBills : bills;
+      if (!targetBills || targetBills.length === 0) {
+        toast.error("No billing records found to export");
+        return;
+      }
       filename = "member-bills.csv";
       rows = [
         "Bill Number,Billing Period,Due Date,Amount,Status",
-        ...filteredBills.map((b) => `${b.bill_number},${b.billing_period || ""},${b.due_date || ""},${Number(b.total_amount || 0)},${b.status}`)
+        ...targetBills.map((b) => `${b.bill_number},${b.billing_period || ""},${b.due_date || ""},${Number(b.total_amount || 0)},${b.status}`)
       ];
+      toast.success(`Exported ${targetBills.length} bill records`);
     } else if (activeTab === "PAYMENTS") {
+      const targetPayments = filteredPayments.length > 0 ? filteredPayments : payments;
+      if (!targetPayments || targetPayments.length === 0) {
+        toast.error("No payment records found to export");
+        return;
+      }
       filename = "member-payments.csv";
       rows = [
         "Payment Date,Method,Amount,Status,Reference",
-        ...filteredPayments.map((p) => `${p.payment_date},${p.payment_method},${Number(p.amount || 0)},${p.status},${p.payment_reference || ""}`)
+        ...targetPayments.map((p) => `${p.payment_date},${p.payment_method},${Number(p.amount || 0)},${p.status},${p.payment_reference || ""}`)
       ];
+      toast.success(`Exported ${targetPayments.length} payment records`);
     } else {
+      const targetComplaints = filteredComplaints.length > 0 ? filteredComplaints : complaints;
+      if (!targetComplaints || targetComplaints.length === 0) {
+        toast.error("No complaint records found to export");
+        return;
+      }
       filename = "member-complaints.csv";
       rows = [
         "Created At,Title,Category,Priority,Status",
-        ...filteredComplaints.map((c) => `${c.created_at},"${c.title.replace(/"/g, '""')}",${c.category},${c.priority},${c.status}`)
+        ...targetComplaints.map((c) => `${c.created_at},"${c.title.replace(/"/g, '""')}",${c.category},${c.priority},${c.status}`)
       ];
+      toast.success(`Exported ${targetComplaints.length} complaint records`);
     }
     const blob = new Blob([rows.join("\n")], { type: "text/csv;charset=utf-8;" });
     const url = window.URL.createObjectURL(blob);

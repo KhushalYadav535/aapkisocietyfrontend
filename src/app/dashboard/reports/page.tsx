@@ -1,14 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { dashboardAPI, billingAPI } from "@/lib/api";
+import { dashboardAPI, billingAPI, exportAPI } from "@/lib/api";
 import { useLocale } from "@/context/LocaleContext";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import Link from "next/link";
+import toast from "react-hot-toast";
 import { 
   BarChart3, TrendingUp, IndianRupee, Receipt, MessageSquareWarning, 
   Users, Download, Calendar, TrendingDown, Sparkles, Sun, CloudRain, 
-  ShieldAlert, ArrowUpRight, CheckCircle2, Droplets, Zap
+  ShieldAlert, ArrowUpRight, CheckCircle2, Droplets, Zap, Loader2
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -37,10 +38,57 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 export default function ReportsPage() {
   const { t } = useLocale();
   const [loading, setLoading] = useState(true);
+  const [exportingPdf, setExportingPdf] = useState(false);
   const [collectionData, setCollectionData] = useState<any[]>([]);
   const [complaintStats, setComplaintStats] = useState<any>(null);
   const [billingSummary, setBillingSummary] = useState<any>(null);
   const [billTypeData, setBillTypeData] = useState<any[]>([]);
+
+  const handleExportPDF = async () => {
+    try {
+      setExportingPdf(true);
+      const reportRows = [
+        { Metric: "Total Billed Amount", Value: formatCurrency(billingSummary?.total_billed || 0) },
+        { Metric: "Total Collected Amount", Value: formatCurrency(billingSummary?.total_collected || 0) },
+        { Metric: "Total Outstanding Dues", Value: formatCurrency(billingSummary?.total_outstanding || 0) },
+        { Metric: "Total Complaints Logged", Value: String(complaintStats?.total || 0) },
+        { Metric: "Resolved Complaints", Value: String(complaintStats?.resolved || 0) },
+        { Metric: "Open Complaints", Value: String(complaintStats?.open || 0) },
+        ...collectionData.map((c) => ({
+          Metric: `Monthly Collection (${c.month})`,
+          Value: formatCurrency(c.collected),
+        })),
+      ];
+
+      const res = await exportAPI.pdfExport({
+        report_type: "Society_Financial_Analytics",
+        title: "Society Financial & Operational Analytics Report",
+        from_date: "Recent 6 Months",
+        to_date: new Date().toISOString().split("T")[0],
+        society_name: "AapkiSociety",
+        generated_by: "Administrator",
+        data: reportRows,
+      });
+
+      const blob = new Blob([res.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Society_Analytics_Report_${new Date().toISOString().split("T")[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success("PDF report downloaded successfully");
+    } catch (err: any) {
+      console.error("PDF export failed:", err);
+      // Fallback: trigger print/save as PDF dialog if backend PDF export returns format notice
+      window.print();
+      toast.success("Print dialog opened for PDF export");
+    } finally {
+      setExportingPdf(false);
+    }
+  };
 
   useEffect(() => { loadData(); }, []);
 
@@ -138,8 +186,13 @@ export default function ReportsPage() {
           <p className="text-gray-400 text-sm mt-1">{t("reportsSubtitle")}</p>
         </div>
         <div className="flex items-center gap-2">
-          <button className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium transition-all shadow-lg shadow-indigo-200">
-            <Download className="w-4 h-4" /> Export PDF
+          <button
+            onClick={handleExportPDF}
+            disabled={exportingPdf}
+            className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium transition-all shadow-lg shadow-indigo-200 disabled:opacity-50"
+          >
+            {exportingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+            Export PDF
           </button>
         </div>
       </div>

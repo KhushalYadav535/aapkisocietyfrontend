@@ -71,9 +71,13 @@ export default function PatrolPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Deactivate this checkpoint?")) return;
-    try { await patrolAPI.deleteCheckpoint(id); toast.success("Removed"); loadAll(); }
-    catch { toast.error("Failed"); }
+    try { 
+      await patrolAPI.deleteCheckpoint(id); 
+      toast.success("Checkpoint removed successfully"); 
+      loadAll(); 
+    } catch (err: any) { 
+      toast.error(err.response?.data?.error || "Failed to remove checkpoint"); 
+    }
   };
 
   const handleScan = async (e: React.FormEvent) => {

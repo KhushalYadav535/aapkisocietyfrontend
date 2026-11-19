@@ -61,6 +61,17 @@ export default function MessagesPage() {
       const r = await messageAPI.send({ receiver_id: targetId, content: content.trim() });
       setMessages(prev => [...prev, r.data.message]);
       setContent("");
+      if (receiver && !selectedConv) {
+        setSelectedConv({
+          conversation_id: [user?.id, receiver.id].sort().join("-"),
+          other_name: receiver.first_name,
+          other_last_name: receiver.last_name,
+          other_flat: receiver.flat_number,
+          other_wing: receiver.wing,
+        });
+        setReceiver(null);
+        setShowCompose(false);
+      }
       load();
     } catch (err: any) { toast.error(err.response?.data?.error || "Failed to send"); }
     finally { setSending(false); }
@@ -89,7 +100,7 @@ export default function MessagesPage() {
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden h-[calc(100vh-220px)] min-h-[500px]">
         <div className="flex h-full">
           {/* Sidebar */}
-          <div className={`${selectedConv || showCompose ? "hidden md:flex" : "flex"} flex-col w-full md:w-80 border-r border-gray-100`}>
+          <div className={`${selectedConv || showCompose || receiver ? "hidden md:flex" : "flex"} flex-col w-full md:w-80 border-r border-gray-100`}>
             <div className="p-3 border-b border-gray-100"><div className="relative"><Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" /><input value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Search conversations..." /></div></div>
             <div className="flex-1 overflow-y-auto">
               {loading ? [...Array(5)].map((_, i) => <div key={i} className="h-20 border-b border-gray-50 px-4 py-3"><div className="h-4 skeleton rounded mb-2" /><div className="h-3 skeleton rounded w-3/4" /></div>) : paginated.length === 0 ? (
@@ -110,16 +121,32 @@ export default function MessagesPage() {
           </div>
 
           {/* Chat Area */}
-          <div className={`flex-1 flex flex-col ${!selectedConv && !showCompose ? "hidden md:flex" : ""}`}>
-            {selectedConv || showCompose ? (
+          <div className={`flex-1 flex flex-col ${!selectedConv && !showCompose && !receiver ? "hidden md:flex" : ""}`}>
+            {selectedConv || receiver || showCompose ? (
               <>
                 {/* Chat Header */}
                 <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-3">
-                  {selectedConv && <button type="button" onClick={() => setSelectedConv(null)} className="md:hidden p-2 hover:bg-gray-100 rounded-xl" aria-label="Go back"><ArrowLeft className="w-4 h-4" /></button>}
-                  <div className="w-9 h-9 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-bold text-sm">{selectedConv ? selectedConv.other_name?.[0] : user?.first_name?.[0]}</div>
+                  {(selectedConv || receiver || showCompose) && (
+                    <button type="button" onClick={() => { setSelectedConv(null); setReceiver(null); setShowCompose(false); }} className="md:hidden p-2 hover:bg-gray-100 rounded-xl" aria-label="Go back">
+                      <ArrowLeft className="w-4 h-4" />
+                    </button>
+                  )}
+                  <div className="w-9 h-9 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-bold text-sm">
+                    {selectedConv ? selectedConv.other_name?.[0] : receiver ? receiver.first_name?.[0] : user?.first_name?.[0]}
+                  </div>
                   <div>
-                    <p className="font-semibold text-sm text-gray-900">{selectedConv ? `${selectedConv.other_name || ''} ${selectedConv.other_last_name || ''}`.trim() : `To: ${receiver?.first_name || ''} ${receiver?.last_name || ''}`.trim()}</p>
-                    <p className="text-xs text-gray-500">{selectedConv ? (selectedConv.other_flat ? `Wing ${selectedConv.other_wing} - ${selectedConv.other_flat}` : "") : (receiver ? `Wing ${receiver.wing} - ${receiver.flat_number}` : "")}</p>
+                    <p className="font-semibold text-sm text-gray-900">
+                      {selectedConv 
+                        ? `${selectedConv.other_name || ''} ${selectedConv.other_last_name || ''}`.trim() 
+                        : receiver 
+                          ? `${receiver.first_name || ''} ${receiver.last_name || ''}`.trim() 
+                          : "New Message"}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {selectedConv 
+                        ? (selectedConv.other_flat ? `Wing ${selectedConv.other_wing || ''} - ${selectedConv.other_flat}` : "") 
+                        : (receiver ? `Wing ${receiver.wing || ''} - ${receiver.flat_number || ''}` : "Search below to start chatting")}
+                    </p>
                   </div>
                 </div>
 
@@ -127,20 +154,47 @@ export default function MessagesPage() {
                 {showCompose && !receiver && (
                   <div className="px-4 py-3 border-b border-gray-100">
                     <div className="relative"><Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" /><input value={composeSearch} onChange={e => setComposeSearch(e.target.value)} className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Search member to message..." /></div>
-                    {composeSearch && <div className="mt-2 border border-gray-100 rounded-xl overflow-hidden">
-                      {members.filter(u => `${u.first_name} ${u.last_name} ${u.flat_number || ""} ${u.wing || ""}`.toLowerCase().includes(composeSearch.toLowerCase())).slice(0, 5).map(u => (
-                        <button type="button" key={u.conversation_id || u.id} onClick={() => { setReceiver(u); setShowCompose(false); setSelectedConv(null); }} className="w-full text-left px-3 py-2.5 hover:bg-gray-50 flex items-center gap-2 border-b border-gray-50 last:border-0">
+                    {composeSearch && <div className="mt-2 border border-gray-100 rounded-xl overflow-hidden max-h-48 overflow-y-auto">
+                      {members.filter(u => `${u.first_name} ${u.last_name} ${u.flat_number || ""} ${u.wing || ""}`.toLowerCase().includes(composeSearch.toLowerCase())).slice(0, 10).map(u => (
+                        <button
+                          type="button"
+                          key={u.id}
+                          onClick={() => {
+                            const existingConv = conversations.find(c => 
+                              c.other_id === u.id || 
+                              (c.conversation_id && c.conversation_id.includes(u.id))
+                            );
+                            if (existingConv) {
+                              loadMessages(existingConv);
+                            } else {
+                              setReceiver(u);
+                              setShowCompose(true);
+                              setSelectedConv(null);
+                              setMessages([]);
+                              const convId = [user?.id, u.id].sort().join("-");
+                              messageAPI.getMessages(convId).then(r => setMessages(r.data?.messages || [])).catch(() => setMessages([]));
+                            }
+                          }}
+                          className="w-full text-left px-3 py-2.5 hover:bg-gray-50 flex items-center gap-2 border-b border-gray-50 last:border-0"
+                        >
                           <div className="w-7 h-7 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 text-xs font-bold">{u.first_name?.[0]}</div>
-                          <div><p className="text-sm font-medium text-gray-900">{u.first_name} {u.last_name}</p><p className="text-xs text-gray-500">{u.flat_number ? `Wing ${u.wing} - ${u.flat_number}` : ""}</p></div>
+                          <div><p className="text-sm font-medium text-gray-900">{u.first_name} {u.last_name}</p><p className="text-xs text-gray-500">{u.flat_number ? `Wing ${u.wing || ''} - ${u.flat_number}` : ""}</p></div>
                         </button>
                       ))}
                     </div>}
                   </div>
                 )}
 
+                {showCompose && receiver && (
+                  <div className="px-4 py-2 bg-indigo-50/70 border-b border-indigo-100 flex items-center justify-between text-xs text-indigo-700">
+                    <span>Direct chat with: <strong>{receiver.first_name} {receiver.last_name}</strong> {receiver.flat_number ? `(${receiver.wing ? receiver.wing + '-' : ''}${receiver.flat_number})` : ''}</span>
+                    <button type="button" onClick={() => setReceiver(null)} className="text-indigo-600 hover:text-indigo-900 font-semibold underline">Change Recipient</button>
+                  </div>
+                )}
+
                 {/* Messages */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                  {messages.length === 0 && !showCompose ? (
+                  {messages.length === 0 ? (
                     <div className="text-center py-16"><MessageSquare className="w-12 h-12 mx-auto mb-2 text-gray-200" /><p className="text-sm text-gray-400">Start the conversation</p></div>
                   ) : messages.map(m => {
                     const isMe = m.sender_id === user?.id;

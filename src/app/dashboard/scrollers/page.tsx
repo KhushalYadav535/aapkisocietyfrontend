@@ -26,10 +26,7 @@ export default function ScrollersPage() {
 
   const loadScrollers = async () => {
     try {
-      const platform = String(user?.role || "").toUpperCase() === "PLATFORM_ADMIN";
-      const res = await scrollerAPI.getActive(
-        platform ? { include_all: "1" } : undefined
-      );
+      const res = await scrollerAPI.getActive({ include_all: "1" });
       setScrollers(res.data.scrollers || []);
     } catch (error) {
       console.error("Failed to load scrollers:", error);

@@ -98,18 +98,18 @@ export default function BillingPage() {
   };
 
   const handleApprove = async (id: string) => {
-    try { await billingAPI.approveBill(id); toast.success(t("billApproved")); load(); } catch { toast.error(t("failedGeneric")); }
+    try { await billingAPI.approveBill(id); toast.success(t("billApproved")); load(); } catch (err: any) { toast.error(err.response?.data?.error || t("failedGeneric")); }
   };
   const handleReject = async (id: string) => {
-    try { await billingAPI.rejectBill(id); toast.success(t("billRejected")); load(); } catch { toast.error(t("failedGeneric")); }
+    try { await billingAPI.rejectBill(id); toast.success(t("billRejected")); load(); } catch (err: any) { toast.error(err.response?.data?.error || t("failedGeneric")); }
   };
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    try { await billingAPI.createBill({ ...createForm, amount: parseFloat(createForm.amount), tax_amount: parseFloat(createForm.tax_amount) || 0 }); toast.success(t("billCreated")); setShowCreate(false); load(); } catch { toast.error(t("failedToCreate")); }
+    try { await billingAPI.createBill({ ...createForm, amount: parseFloat(createForm.amount), tax_amount: parseFloat(createForm.tax_amount) || 0 }); toast.success(t("billCreated")); setShowCreate(false); load(); } catch (err: any) { toast.error(err.response?.data?.error || t("failedToCreate")); }
   };
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
-    try { const r = await billingAPI.generateMonthly({ ...genForm, amount: parseFloat(genForm.amount) }); toast.success(r.data.message); setShowGenerate(false); load(); } catch { toast.error(t("failedToGenerate")); }
+    try { const r = await billingAPI.generateMonthly({ ...genForm, amount: parseFloat(genForm.amount) }); toast.success(r.data.message); setShowGenerate(false); load(); } catch (err: any) { toast.error(err.response?.data?.error || t("failedToGenerate")); }
   };
   const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();

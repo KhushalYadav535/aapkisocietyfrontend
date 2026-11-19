@@ -153,7 +153,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   useEffect(() => {
     if (!loading && !isAuthenticated) router.push("/login");
-  }, [loading, isAuthenticated, router]);
+    if (!loading && isAuthenticated && user) {
+      const mfaRequiredRoles = ["TREASURER", "CHECKER"];
+      if (mfaRequiredRoles.includes(normalizeRole(user.role)) && !(user as any).mfa_enabled) {
+        router.push("/mfa-setup");
+      }
+    }
+  }, [loading, isAuthenticated, user, router]);
 
   useEffect(() => {
     if (loading || !isAuthenticated || !pathname) return;

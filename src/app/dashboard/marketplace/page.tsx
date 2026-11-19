@@ -139,13 +139,12 @@ export default function MarketplacePage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to remove this listing?")) return;
     try {
       await marketplaceAPI.deleteListing(id);
-      toast.success("Listing removed");
+      toast.success("Listing removed successfully");
       loadItems();
-    } catch (err) {
-      toast.error("Failed to delete item");
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Failed to delete item");
     }
   };
 

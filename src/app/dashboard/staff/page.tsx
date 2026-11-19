@@ -18,6 +18,7 @@ import {
   Star,
   MessageSquare,
   ShieldCheck,
+  Trash2,
   Award,
   Sparkles
 } from "lucide-react";
@@ -136,6 +137,16 @@ export default function StaffPage() {
       load(); 
     } catch (err: any) { 
       toast.error(err.response?.data?.error || "Failed"); 
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await staffAPI.deactivate(id);
+      toast.success("Staff member removed successfully");
+      load();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Failed to remove staff");
     }
   };
 
@@ -352,6 +363,13 @@ export default function StaffPage() {
                                     className="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 px-2.5 py-1.5 rounded-lg font-semibold flex items-center gap-1 transition-all"
                                   >
                                     <CheckCircle className="w-3 h-3" /> Out
+                                  </button>
+                                  <button
+                                    onClick={() => handleDelete(s.id)}
+                                    className="text-xs bg-rose-50 hover:bg-rose-100 text-rose-700 p-1.5 rounded-lg font-semibold transition-all"
+                                    title="Remove staff"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
                                   </button>
                                 </>
                               )}

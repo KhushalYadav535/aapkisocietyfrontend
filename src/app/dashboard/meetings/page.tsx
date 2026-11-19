@@ -72,7 +72,7 @@ export default function MeetingsPage() {
 
   const handleClosePoll = async (pollId: string) => {
     try { await meetingAPI.closePoll(pollId); toast.success("Poll closed"); load(); }
-    catch { toast.error("Failed"); }
+    catch (err: any) { toast.error(err.response?.data?.error || "Failed to close poll"); }
   };
 
   const handleUpdateStatus = async (meetingId: string, status: string) => {

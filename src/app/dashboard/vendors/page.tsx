@@ -60,9 +60,13 @@ export default function VendorsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Remove this vendor?")) return;
-    try { await vendorAPI.delete(id); toast.success("Removed"); load(); }
-    catch { toast.error("Failed"); }
+    try { 
+      await vendorAPI.delete(id); 
+      toast.success("Vendor removed successfully"); 
+      load(); 
+    } catch (err: any) { 
+      toast.error(err.response?.data?.error || "Failed to remove vendor"); 
+    }
   };
 
   const openReviews = async (vendor: any) => {

@@ -4,7 +4,7 @@ import { assetAPI } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import toast from "react-hot-toast";
 import { formatDate } from "@/lib/utils";
-import { Package, QrCode, Plus, Wrench, AlertTriangle, X, Search, ChevronRight, Clock, CalendarX } from "lucide-react";
+import { Package, QrCode, Plus, Wrench, AlertTriangle, X, Search, ChevronRight, Clock, CalendarX, Trash2 } from "lucide-react";
 
 const CATEGORIES = ["Generator", "CCTV", "Pump", "Lift", "Fire Equipment", "Electrical", "Plumbing", "Intercom", "Other"];
 const STATUSES = ["ACTIVE", "UNDER_MAINTENANCE", "DECOMMISSIONED"];
@@ -63,6 +63,18 @@ export default function AssetsPage() {
       const r = await assetAPI.getByQr(qrInput.trim());
       setQrResult(r.data);
     } catch { toast.error("Asset not found for this QR code"); setQrResult(null); }
+  };
+
+  const handleDelete = async (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    try {
+      await assetAPI.remove(id);
+      toast.success("Asset deleted successfully");
+      if (selected?.id === id) setSelected(null);
+      loadAll();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Failed to delete asset");
+    }
   };
 
   const filtered = assets.filter(a => {
@@ -134,7 +146,7 @@ export default function AssetsPage() {
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="bg-gray-50 border-b border-gray-100">
-                          {["Asset", "Category", "Location", "AMC Expiry", "Next Service", "Status", "QR Code"].map(h => (
+                          {["Asset", "Category", "Location", "AMC Expiry", "Next Service", "Status", "QR Code", "Actions"].map(h => (
                             <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">{h}</th>
                           ))}
                         </tr>
@@ -159,6 +171,15 @@ export default function AssetsPage() {
                             </td>
                             <td className="px-4 py-3">
                               <code className="text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded">{a.qr_code?.split("-").slice(-1)[0]}</code>
+                            </td>
+                            <td className="px-4 py-3">
+                              <button
+                                onClick={(e) => handleDelete(a.id, e)}
+                                className="p-1.5 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                                title="Delete asset"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
                             </td>
                           </tr>
                         ))}

@@ -5,7 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useLocale } from "@/context/LocaleContext";
 import toast from "react-hot-toast";
 import { formatDate, getStatusColor } from "@/lib/utils";
-import { CalendarDays, Plus, X, Users, Clock, Zap, BookOpen } from "lucide-react";
+import { CalendarDays, Plus, X, Users, Clock, Zap, BookOpen, Trash2 } from "lucide-react";
 
 interface Facility { id: string; name: string; type: string; capacity: number; rate_per_hour: number; rate_per_day: number; is_active: number; description: string; rules: string; }
 interface Booking { id: string; facility_id: string; booked_by: string; booking_date: string; start_time: string; end_time: string; purpose: string; status: string; created_at: string; }
@@ -38,28 +38,54 @@ export default function FacilitiesPage() {
 
   const loadBookings = async () => {
     try {
-      const allBookings: Booking[] = [];
-      for (const f of facilities) {
-        const r = await facilityAPI.getBookings(f.id);
-        allBookings.push(...r.data.bookings);
-      }
-      setBookings(allBookings.filter(b => b.booked_by === user?.id || isAdmin).sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
-    } catch {}
+      const res = await facilityAPI.getAllBookings();
+      const list = res.data?.bookings || [];
+      setBookings(list);
+    } catch {
+      // Fallback
+      try {
+        const allBookings: Booking[] = [];
+        for (const f of facilities) {
+          const r = await facilityAPI.getBookings(f.id);
+          allBookings.push(...r.data.bookings);
+        }
+        setBookings(allBookings.filter(b => b.booked_by === user?.id || isAdmin).sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+      } catch {}
+    }
   };
 
-  useEffect(() => { if (tab === "My Bookings" && facilities.length > 0) loadBookings(); }, [tab, facilities]);
+  useEffect(() => { loadBookings(); }, [tab, facilities.length]);
 
   const handleBook = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!showBook) return;
-    try { await facilityAPI.book(showBook.id, bookForm); toast.success(`${showBook.name} booked!`); setShowBook(null); setBookForm({ booking_date:"", start_time:"", end_time:"", purpose:"" }); }
-    catch { toast.error("Booking failed"); }
+    try { 
+      await facilityAPI.book(showBook.id, bookForm); 
+      toast.success(`${showBook.name} booked successfully!`); 
+      setShowBook(null); 
+      setBookForm({ booking_date:"", start_time:"", end_time:"", purpose:"" });
+      await loadBookings();
+      setTab("My Bookings");
+    }
+    catch (err: any) { 
+      toast.error(err.response?.data?.error || "Booking failed"); 
+    }
   };
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     try { await facilityAPI.create({ ...addForm, capacity: parseInt(addForm.capacity)||0, rate_per_hour: parseFloat(addForm.rate_per_hour)||0, rate_per_day: parseFloat(addForm.rate_per_day)||0 }); toast.success("Facility added!"); setShowAdd(false); loadFacilities(); }
     catch { toast.error("Failed"); }
+  };
+
+  const handleDeleteFacility = async (id: string) => {
+    try {
+      await facilityAPI.delete(id);
+      toast.success("Facility deleted successfully");
+      loadFacilities();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Failed to delete facility");
+    }
   };
 
   const handleCancel = async (bookingId: string) => {
@@ -100,7 +126,18 @@ export default function FacilitiesPage() {
             {facilities.map((f,i)=>(
               <div key={f.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm card-hover overflow-hidden animate-slide-up">
                 <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-5 relative">
-                  <div className="absolute right-4 top-4 text-3xl opacity-30">{TYPE_ICONS[f.type]||"🏢"}</div>
+                  {isAdmin && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteFacility(f.id);
+                      }}
+                      className="absolute top-3 right-3 p-1.5 bg-black/20 hover:bg-rose-600 text-white rounded-lg transition-colors z-10"
+                      title="Delete facility"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                   <div className="text-3xl mb-2">{TYPE_ICONS[f.type]||"🏢"}</div>
                   <h3 className="font-bold text-white">{f.name}</h3>
                   <span className="text-xs bg-white/20 text-white px-2 py-0.5 rounded-full">{f.type.replace("_"," ")}</span>

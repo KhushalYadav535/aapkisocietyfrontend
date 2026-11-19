@@ -12,7 +12,7 @@ import {
   TrendingUp, Megaphone, ArrowUpRight, Clock, CheckCircle2,
   Building2, Zap, AlertTriangle, Activity, QrCode, ShieldAlert,
   ChevronRight, Sparkles, ShieldCheck,
-  Calendar, X, Wallet, ArrowDownRight
+  Calendar, X, Wallet, ArrowDownRight, Package
 } from "lucide-react";
 
 // Lazy-load recharts
@@ -41,6 +41,7 @@ interface Stats {
   total_collection: number;
   monthly_collection: number;
   active_notices: number;
+  parcels_at_gate?: number;
 }
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -416,11 +417,11 @@ export default function DashboardPage() {
           </div>
 
           <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700/60 shadow-xs hover:border-indigo-300 dark:hover:border-indigo-500/40 transition-all">
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Pending Dues</p>
-            <p className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-1">{stats?.pending_bills || 0}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{isGuard ? "Gate Visitors" : "Pending Dues"}</p>
+            <p className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-1">{isGuard ? (stats?.today_visitors || 0) : (stats?.pending_bills || 0)}</p>
             <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-1 font-semibold flex items-center gap-1">
               <Clock className="w-3 h-3" />
-              Action Required
+              {isGuard ? "Today's Log" : "Action Required"}
             </p>
           </div>
         </div>
@@ -443,31 +444,65 @@ export default function DashboardPage() {
           />
         )}
 
-        <ExecutiveStatCard
-          label={t("monthlyCollection")}
-          value={formatCurrency(stats?.monthly_collection || 0)}
-          subtitle="Collected this current cycle"
-          icon={IndianRupee}
-          gradient="from-emerald-500 to-teal-600"
-          shadowColor="shadow-emerald-500/20"
-          trend="Collection velocity active"
-          trendType="positive"
-          href="/dashboard/billing"
-          delay={100}
-        />
+        {!isGuard && (
+          <>
+            <ExecutiveStatCard
+              label={t("monthlyCollection")}
+              value={formatCurrency(stats?.monthly_collection || 0)}
+              subtitle="Collected this current cycle"
+              icon={IndianRupee}
+              gradient="from-emerald-500 to-teal-600"
+              shadowColor="shadow-emerald-500/20"
+              trend="Collection velocity active"
+              trendType="positive"
+              href="/dashboard/billing"
+              delay={100}
+            />
 
-        <ExecutiveStatCard
-          label={t("pendingBills")}
-          value={stats?.pending_bills || 0}
-          subtitle="Invoices awaiting settlement"
-          icon={Receipt}
-          gradient="from-amber-500 to-orange-600"
-          shadowColor="shadow-amber-500/20"
-          trend={billingSummary?.overdue_bills ? `${billingSummary.overdue_bills} Overdue` : "Tracking active"}
-          trendType={billingSummary?.overdue_bills ? "negative" : "neutral"}
-          href="/dashboard/billing"
-          delay={150}
-        />
+            <ExecutiveStatCard
+              label={t("pendingBills")}
+              value={stats?.pending_bills || 0}
+              subtitle="Invoices awaiting settlement"
+              icon={Receipt}
+              gradient="from-amber-500 to-orange-600"
+              shadowColor="shadow-amber-500/20"
+              trend={billingSummary?.overdue_bills ? `${billingSummary.overdue_bills} Overdue` : "Tracking active"}
+              trendType={billingSummary?.overdue_bills ? "negative" : "neutral"}
+              href="/dashboard/billing"
+              delay={150}
+            />
+          </>
+        )}
+
+        {isGuard && (
+          <>
+            <ExecutiveStatCard
+              label="Visitors Today"
+              value={stats?.today_visitors || 0}
+              subtitle="Gate passes logged"
+              icon={UserCheck}
+              gradient="from-blue-500 to-indigo-600"
+              shadowColor="shadow-blue-500/20"
+              trend="Gate flow active"
+              trendType="positive"
+              href="/dashboard/visitors"
+              delay={100}
+            />
+
+            <ExecutiveStatCard
+              label="Parcels at Gate"
+              value={stats?.parcels_at_gate || 0}
+              subtitle="Pending resident collection"
+              icon={Package}
+              gradient="from-emerald-500 to-teal-600"
+              shadowColor="shadow-emerald-500/20"
+              trend="Courier station"
+              trendType="neutral"
+              href="/dashboard/parcels"
+              delay={150}
+            />
+          </>
+        )}
 
         <ExecutiveStatCard
           label={t("openComplaints")}
@@ -640,7 +675,7 @@ export default function DashboardPage() {
       {/* ── 5. FINANCIAL HEALTH & LIVE ACTIVITY BENTO ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Financial Health Matrix */}
-        {billingSummary && (
+        {!isGuard && billingSummary && (
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-xs hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
@@ -700,7 +735,7 @@ export default function DashboardPage() {
         )}
 
         {/* Live Operations Activity Feed */}
-        <div className={`bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-xs hover:shadow-md transition-shadow ${billingSummary ? "lg:col-span-2" : "lg:col-span-3"}`}>
+        <div className={`bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-xs hover:shadow-md transition-shadow ${(!isGuard && billingSummary) ? "lg:col-span-2" : "lg:col-span-3"}`}>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
             <div>
               <div className="flex items-center gap-2">

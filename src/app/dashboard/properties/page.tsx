@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { societyAPI } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import toast from "react-hot-toast";
-import { Building, Plus, X, Home, Building2, AlignJustify, Info } from "lucide-react";
+import { Building, Plus, X, Home, Building2, AlignJustify, Info, Trash2 } from "lucide-react";
 
 interface Wing { id: string; name: string; total_floors: number; flats_per_floor: number; created_at: string; }
 interface Flat { 
@@ -105,6 +105,23 @@ export default function PropertiesPage() {
     } catch { toast.error("Failed to add flat"); }
   };
 
+  const isAdmin = hasPermission('SOCIETY_MANAGE') || ['ADMIN', 'PLATFORM_ADMIN'].includes(String(user?.role).toUpperCase());
+
+  const handleDeleteFlat = async (flatId: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+    if (!user?.society_id) return;
+    try {
+      await societyAPI.deleteFlat(user.society_id, flatId);
+      toast.success("Flat removed successfully");
+      loadData();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Failed to remove flat");
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between animate-slide-up">
@@ -156,6 +173,15 @@ export default function PropertiesPage() {
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                       {wingFlats.map(f => (
                         <div key={f.id} className={`group relative p-3 rounded-xl border flex flex-col items-center justify-center transition-all ${f.is_occupied ? "bg-emerald-50 border-emerald-100 hover:border-emerald-300" : "bg-white border-gray-200 hover:border-indigo-300 hover:shadow-md"}`}>
+                          {isAdmin && (
+                            <button
+                              onClick={(e) => handleDeleteFlat(f.id, e)}
+                              className="absolute top-2 left-2 p-1 text-gray-400 hover:text-rose-600 rounded transition-colors"
+                              title="Delete flat"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                           <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                             <div className="relative group/tooltip">
                               <Info className="w-4 h-4 text-gray-400 hover:text-indigo-500 cursor-pointer" />

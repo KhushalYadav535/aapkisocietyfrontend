@@ -94,10 +94,18 @@ export default function AccountingPage() {
   }, [activeTab]);
 
   useEffect(() => {
-    if (activeTab === 'accounts' && accounts.length === 0) {
-      accountingAPI.getAccounts().then(res => setAccounts(res.data.accounts || []));
+    accountingAPI.getAccounts()
+      .then(res => setAccounts(res.data.accounts || []))
+      .catch(err => console.error("Failed to fetch accounts:", err));
+  }, []);
+
+  useEffect(() => {
+    if (isCreatingVoucher && accounts.length === 0) {
+      accountingAPI.getAccounts()
+        .then(res => setAccounts(res.data.accounts || []))
+        .catch(err => console.error("Failed to load accounts for voucher:", err));
     }
-  }, [activeTab]);
+  }, [isCreatingVoucher, accounts.length]);
 
   const handleApproveVoucher = async (id: string) => {
     try { await accountingAPI.approveVoucher(id); fetchData(); } catch { alert("Failed to approve voucher."); }

@@ -79,13 +79,12 @@ export default function VehiclesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to remove this vehicle?")) return;
     try { 
       await vehicleAPI.delete(id); 
-      toast.success("Vehicle removed"); 
+      toast.success("Vehicle removed successfully"); 
       load(); 
-    } catch { 
-      toast.error("Failed to remove vehicle"); 
+    } catch (err: any) { 
+      toast.error(err.response?.data?.error || "Failed to remove vehicle"); 
     }
   };
 

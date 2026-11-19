@@ -124,6 +124,7 @@ export const complianceAPI = {
   getCalendar: () => api.get('/compliance/calendar'),
   addEvent: (data: any) => api.post('/compliance/calendar', data),
   updateEvent: (id: string, status: string) => api.put(`/compliance/calendar/${id}`, { status }),
+  deleteEvent: (id: string) => api.delete(`/compliance/calendar/${id}`),
 };
 
 export const featureAPI = {
@@ -200,7 +201,9 @@ export const facilityAPI = {
   getAll: () => api.get('/facilities'),
   getById: (id: string) => api.get(`/facilities/${id}`),
   create: (data: any) => api.post('/facilities', data),
+  delete: (id: string) => api.delete(`/facilities/${id}`),
   getBookings: (id: string) => api.get(`/facilities/${id}/bookings`),
+  getAllBookings: () => api.get('/facilities/all-bookings'),
   book: (id: string, data: any) => api.post(`/facilities/${id}/book`, data),
   cancelBooking: (bookingId: string) => api.put(`/facilities/bookings/${bookingId}/cancel`),
 };
@@ -213,8 +216,9 @@ export const societyAPI = {
   update: (id: string, data: any) => api.put(`/societies/${id}`, data),
   getWings: (id: string) => api.get(`/societies/${id}/wings`),
   addWing: (id: string, data: any) => api.post(`/societies/${id}/wings`, data),
-  getFlats: (id: string) => api.get(`/societies/${id}/flats`),
+  getFlats: (id?: string) => api.get(`/societies/${id || 'current'}/flats`),
   addFlat: (id: string, data: any) => api.post(`/societies/${id}/flats`, data),
+  deleteFlat: (societyId: string, flatId: string) => api.delete(`/societies/${societyId}/flats/${flatId}`),
   getHomeTypeMasters: () => api.get(`/societies/masters/home-types`),
   completeSetup: (id: string, data: any) => api.put(`/societies/${id}/setup`, data),
 };
@@ -479,6 +483,7 @@ export const rbacAPI = {
   getPositions: (societyId: string) => api.get(`/rbac/societies/${societyId}/positions`),
   getAssignments: (societyId: string) => api.get(`/rbac/societies/${societyId}/assignments`),
   assignPosition: (societyId: string, data: any) => api.post(`/rbac/societies/${societyId}/positions/assign`, data),
+  endAssignment: (societyId: string, assignmentId: string) => api.put(`/rbac/societies/${societyId}/assignments/${assignmentId}/end`),
 };
 
 // Parcel Management APIs
