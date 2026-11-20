@@ -71,8 +71,8 @@ export default function ComplaintsPage() {
   const [form, setForm] = useState({ title: "", description: "", category: "GENERAL", priority: "MEDIUM" });
   const [currentPage, setCurrentPage] = useState(1);
 
-  const isAdmin = hasPermission('COMPLAINT_ASSIGN');
-  const canRaise = !hasPermission('COMPLAINT_ASSIGN');
+  const isAdmin = hasPermission('COMPLAINT_ASSIGN') || ['ADMIN', 'COMMITTEE', 'SECRETARY'].includes(user?.role || '');
+  const canRaise = true;
 
   useEffect(() => { load(); }, []);
   const load = async () => {

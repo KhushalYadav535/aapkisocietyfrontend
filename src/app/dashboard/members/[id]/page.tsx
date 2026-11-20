@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { billingAPI, complaintAPI, memberAPI } from "@/lib/api";
 import toast from "react-hot-toast";
-import { ArrowLeft, CreditCard, FileWarning, Receipt, User } from "lucide-react";
+import { ArrowLeft, CreditCard, FileWarning, Receipt, User, UserCheck, UserMinus } from "lucide-react";
 
 interface Member {
   id: string;
@@ -85,6 +85,23 @@ export default function MemberHistoryPage() {
     };
     load();
   }, [memberId]);
+
+  const handleToggleActive = async () => {
+    if (!member) return;
+    try {
+      if (member.is_active) {
+        await memberAPI.deactivate(member.id);
+        toast.success("Member deactivated successfully");
+        setMember(prev => prev ? { ...prev, is_active: 0 } : null);
+      } else {
+        await memberAPI.reactivate(member.id);
+        toast.success("Member reactivated successfully");
+        setMember(prev => prev ? { ...prev, is_active: 1 } : null);
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || "Failed to update member status");
+    }
+  };
 
   const outstanding = useMemo(
     () => bills.filter((b) => !["PAID", "REJECTED"].includes(b.status)).reduce((sum, b) => sum + Number(b.total_amount || 0), 0),
@@ -177,11 +194,42 @@ export default function MemberHistoryPage() {
           </Link>
           <h1 className="text-2xl font-bold text-gray-900">Member History</h1>
           {member && (
-            <p className="text-sm text-gray-500 mt-1">
-              {member.first_name} {member.last_name} - {member.role} {member.flat_number ? `- Flat ${member.flat_number}` : ""}
-            </p>
+            <div className="flex items-center gap-2 mt-1">
+              <p className="text-sm text-gray-500">
+                {member.first_name} {member.last_name} - {member.role} {member.flat_number ? `- Flat ${member.flat_number}` : ""}
+              </p>
+              <span className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                member.is_active
+                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                  : "bg-rose-50 text-rose-700 border border-rose-200"
+              }`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${member.is_active ? "bg-emerald-500" : "bg-rose-500"}`} />
+                {member.is_active ? "Active" : "Inactive"}
+              </span>
+            </div>
           )}
         </div>
+
+        {member && (
+          <button
+            onClick={handleToggleActive}
+            className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm ${
+              member.is_active
+                ? "bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200"
+                : "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20"
+            }`}
+          >
+            {member.is_active ? (
+              <>
+                <UserMinus className="w-3.5 h-3.5" /> Deactivate Member
+              </>
+            ) : (
+              <>
+                <UserCheck className="w-3.5 h-3.5" /> Reactivate Member
+              </>
+            )}
+          </button>
+        )}
       </div>
 
       {loading ? (

@@ -42,6 +42,20 @@ const COURIER_CONFIG: Record<string, { color: string; bg: string; border: string
   Other:     { color: "text-slate-600 dark:text-slate-400", bg: "bg-slate-100 dark:bg-slate-800", border: "border-slate-200 dark:border-slate-700" },
 };
 
+const isUserUnit = (itemFlat?: string | null, itemWing?: string | null, uFlat?: string | null, uWing?: string | null) => {
+  if (!uFlat) return false;
+  const f1 = String(itemFlat || '').trim().toUpperCase();
+  const w1 = String(itemWing || '').trim().toUpperCase();
+  const f2 = String(uFlat || '').trim().toUpperCase();
+  const w2 = String(uWing || '').trim().toUpperCase();
+  if (f1 === f2 && (!w1 || !w2 || w1 === w2)) return true;
+  if (w2 && (f1 === `${w2}-${f2}` || f1 === `${w2}${f2}`)) return true;
+  if (w1 && (f2 === `${w1}-${f1}` || f2 === `${w1}${f1}`)) return true;
+  const c1 = (w1 + f1).replace(/[^A-Z0-9]/g, '');
+  const c2 = (w2 + f2).replace(/[^A-Z0-9]/g, '');
+  return c1 === c2 || c1 === f2.replace(/[^A-Z0-9]/g, '') || c2 === f1.replace(/[^A-Z0-9]/g, '');
+};
+
 export default function ParcelsPage() {
   const { user } = useAuth();
   const [parcels, setParcels] = useState<Parcel[]>([]);
@@ -161,7 +175,7 @@ export default function ParcelsPage() {
   // Resident's incoming parcels at gate
   const residentActiveParcels = useMemo(() => {
     if (user?.role !== "RESIDENT" || !user?.flat_number) return [];
-    return parcels.filter(p => p.flat_number === user.flat_number && p.status === "AT_GATE");
+    return parcels.filter(p => isUserUnit(p.flat_number, p.wing, user.flat_number, user.wing) && p.status === "AT_GATE");
   }, [parcels, user]);
 
   return (
@@ -311,7 +325,7 @@ export default function ParcelsPage() {
               ) : (
                 filteredParcels.map(p => {
                   const courier = COURIER_CONFIG[p.delivery_company] || COURIER_CONFIG.Other;
-                  const canSeePin = isGuardOrAdmin || (user?.role === "RESIDENT" && user?.flat_number === p.flat_number);
+                  const canSeePin = isGuardOrAdmin || (user?.role === "RESIDENT" && isUserUnit(p.flat_number, p.wing, user?.flat_number, user?.wing));
 
                   return (
                     <tr key={p.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors">

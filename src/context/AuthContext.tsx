@@ -102,7 +102,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const hasPermission = (code: string) => {
-    if (user?.role === 'PLATFORM_ADMIN' || user?.role === 'ADMIN') return true;
+    const role = String(user?.role || '').toUpperCase();
+    if (role === 'PLATFORM_ADMIN' || role === 'ADMIN') return true;
+    if (['COMMITTEE', 'SECRETARY'].includes(role)) {
+      if (['COMPLAINT_ASSIGN', 'COMPLAINT_RESOLVE', 'SOCIETY_MANAGE', 'NOC_MANAGE', 'NOC_APPROVE', 'VIOLATION_MANAGE', 'ACCOUNTING_MANAGE', 'AUDIT_VIEW', 'VOUCHER_VIEW', 'REPORT_VIEW', 'COMPLIANCE_MANAGE', 'NOTIFICATION_MANAGE', 'NOTICE_CREATE', 'FACILITY_MANAGE', 'STAFF_MANAGE', 'VEHICLE_MANAGE'].includes(code)) return true;
+    }
+    if (['TREASURER', 'TREASURY'].includes(role)) {
+      if (['ACCOUNTING_MANAGE', 'AUDIT_VIEW', 'VOUCHER_VIEW', 'REPORT_VIEW', 'BILLING_APPROVE', 'BILL_APPROVE', 'BILLING_CREATE', 'COMPLIANCE_MANAGE', 'NOTIFICATION_MANAGE', 'TAX_MANAGE', 'TAX_VIEW'].includes(code)) return true;
+    }
+    if (['CHECKER', 'TREASURY_CHECKER'].includes(role)) {
+      if (['ACCOUNTING_MANAGE', 'AUDIT_VIEW', 'VOUCHER_VIEW', 'REPORT_VIEW', 'BILLING_APPROVE', 'BILL_APPROVE', 'COMPLIANCE_MANAGE', 'TAX_MANAGE', 'TAX_VIEW', 'NOTIFICATION_MANAGE'].includes(code)) return true;
+    }
+    if (['MAKER', 'TREASURY_MAKER'].includes(role)) {
+      if (['ACCOUNTING_MANAGE', 'AUDIT_VIEW', 'VOUCHER_VIEW', 'REPORT_VIEW', 'BILLING_CREATE', 'COMPLIANCE_MANAGE'].includes(code)) return true;
+    }
+    if (role === 'GUARD') {
+      if (['VISITOR_MANAGE', 'PATROL_MANAGE', 'SOS_RESPOND'].includes(code)) return true;
+    }
     return permissions.includes(code);
   };
 

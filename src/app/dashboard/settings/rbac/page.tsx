@@ -84,7 +84,8 @@ export default function RBACManagement() {
         userId: selectedUser,
         positionCode: selectedPosition,
         startDate,
-        endDate
+        endDate,
+        replace_existing: true
       });
       fetchData(selectedSocietyId); // refresh list
       // Reset form

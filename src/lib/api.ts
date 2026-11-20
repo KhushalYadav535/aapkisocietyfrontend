@@ -72,6 +72,7 @@ export const memberAPI = {
   create: (data: any) => api.post('/members', data),
   update: (id: string, data: any) => api.put(`/members/${id}`, data),
   deactivate: (id: string) => api.delete(`/members/${id}`),
+  reactivate: (id: string) => api.put(`/members/${id}/reactivate`),
 };
 
 // Billing APIs

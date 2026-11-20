@@ -72,7 +72,6 @@ export default function ScrollersPage() {
   };
 
   const handleDelete = async (level: string, id: string) => {
-    if (!confirm("Delete this scroller?")) return;
     try {
       await scrollerAPI.remove(level.toLowerCase(), id);
       toast.success("Scroller deleted");

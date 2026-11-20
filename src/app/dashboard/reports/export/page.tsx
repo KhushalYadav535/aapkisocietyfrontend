@@ -59,7 +59,7 @@ export default function ExportPage() {
     setLoading(true);
     try {
       const { start_date, end_date } = getDateFilter();
-      const payload = { report_type: exportType, start_date, end_date };
+      const payload = { report_type: exportType, start_date, end_date, from_date: start_date, to_date: end_date };
 
       let blob: Blob;
       let filename: string;

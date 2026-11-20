@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { accountingAPI } from "@/lib/api";
 import { formatCurrency } from "@/lib/utils";
-import { BookOpen, Plus, CheckCircle2, XCircle, FileText, X, TrendingUp, Scale, Landmark, CreditCard } from "lucide-react";
+import toast from "react-hot-toast";
+import { BookOpen, Plus, CheckCircle2, XCircle, FileText, X, TrendingUp, Scale, Landmark, CreditCard, Loader2 } from "lucide-react";
 
 type Tab = 'vouchers' | 'accounts' | 'trial-balance' | 'income-statement' | 'balance-sheet' | 'bank-reconciliation';
 
@@ -107,21 +108,61 @@ export default function AccountingPage() {
     }
   }, [isCreatingVoucher, accounts.length]);
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleApproveVoucher = async (id: string) => {
-    try { await accountingAPI.approveVoucher(id); fetchData(); } catch { alert("Failed to approve voucher."); }
+    try {
+      await accountingAPI.approveVoucher(id);
+      toast.success("Voucher approved successfully!");
+      fetchData();
+    } catch (e: any) {
+      toast.error(e?.response?.data?.error || "Failed to approve voucher.");
+    }
   };
   const handleReverseVoucher = async (id: string) => {
-    if (!confirm("Reverse this voucher?")) return;
-    try { await accountingAPI.reverseVoucher(id); fetchData(); } catch { alert("Failed to reverse voucher."); }
+    try {
+      await accountingAPI.reverseVoucher(id);
+      toast.success("Voucher reversed successfully!");
+      fetchData();
+    } catch (e: any) {
+      toast.error(e?.response?.data?.error || "Failed to reverse voucher.");
+    }
   };
   const handleCreateVoucher = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!newVoucher.entries || newVoucher.entries.length < 2) {
+      toast.error("Please add at least 2 entries (Debit and Credit).");
+      return;
+    }
+    const hasEmptyAccount = newVoucher.entries.some(ent => !ent.account_id);
+    if (hasEmptyAccount) {
+      toast.error("Please select an account for each line entry.");
+      return;
+    }
+    const totalDr = newVoucher.entries.filter(ent => ent.entry_type === 'DEBIT').reduce((s, ent) => s + parseFloat(ent.amount || "0"), 0);
+    const totalCr = newVoucher.entries.filter(ent => ent.entry_type === 'CREDIT').reduce((s, ent) => s + parseFloat(ent.amount || "0"), 0);
+    if (Math.abs(totalDr - totalCr) > 0.001 || totalDr <= 0) {
+      toast.error(`Debit (₹${totalDr.toFixed(2)}) must equal Credit (₹${totalCr.toFixed(2)}) and be greater than 0.`);
+      return;
+    }
+    setIsSubmitting(true);
     try {
-      await accountingAPI.createVoucher(newVoucher);
+      await accountingAPI.createVoucher({
+        ...newVoucher,
+        entries: newVoucher.entries.map(ent => ({
+          ...ent,
+          amount: parseFloat(ent.amount) || 0
+        }))
+      });
+      toast.success("Voucher created successfully!");
       setIsCreatingVoucher(false);
       setNewVoucher({ voucher_type: "RECEIPT", voucher_date: new Date().toISOString().split('T')[0], narration: "", entries: [{ account_id: "", entry_type: "DEBIT", amount: "" }, { account_id: "", entry_type: "CREDIT", amount: "" }] });
       fetchData();
-    } catch (error: any) { alert(error.response?.data?.error || "Failed to create voucher"); }
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || "Failed to create voucher");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   const handleAddEntry = () => setNewVoucher({ ...newVoucher, entries: [...newVoucher.entries, { account_id: "", entry_type: "DEBIT", amount: "" }] });
   const updateEntry = (i: number, f: string, v: string) => { const e = [...newVoucher.entries]; e[i] = { ...e[i], [f]: v }; setNewVoucher({ ...newVoucher, entries: e }); };
@@ -509,7 +550,10 @@ export default function AccountingPage() {
                   </div>
                   <div className="flex gap-3">
                     <button type="button" onClick={() => setIsCreatingVoucher(false)} className="px-4 py-2 text-gray-600 font-medium hover:bg-gray-100 rounded-lg">Cancel</button>
-                    <button type="submit" className="px-5 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700">Submit Voucher</button>
+                    <button type="submit" disabled={isSubmitting} className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg disabled:opacity-50 flex items-center gap-2">
+                      {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                      Submit Voucher
+                    </button>
                   </div>
                 </div>
               </form>

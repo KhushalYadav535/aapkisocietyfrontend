@@ -114,6 +114,14 @@ export default function MembersPage() {
     } catch (err: any) { toast.error(err.response?.data?.error || "Failed to deactivate"); }
   };
 
+  const handleReactivate = async (id: string) => {
+    try {
+      await memberAPI.reactivate(id);
+      toast.success("Member reactivated successfully");
+      loadData();
+    } catch (err: any) { toast.error(err.response?.data?.error || "Failed to reactivate"); }
+  };
+
   const handleExportCsv = () => {
     if (!members || members.length === 0) {
       toast.error("No members found to export");
@@ -302,17 +310,31 @@ export default function MembersPage() {
                             {member.first_name} {member.last_name}
                           </h3>
                           {isAdmin && (
-                            <button
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                handleDeactivate(member.id);
-                              }}
-                              className="p-1.5 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition-all text-slate-400 hover:text-rose-600 shrink-0"
-                              title="Deactivate member"
-                            >
-                              <UserMinus className="w-3.5 h-3.5" />
-                            </button>
+                            member.is_active ? (
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleDeactivate(member.id);
+                                }}
+                                className="p-1.5 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition-all text-slate-400 hover:text-rose-600 shrink-0"
+                                title="Deactivate member"
+                              >
+                                <UserMinus className="w-3.5 h-3.5" />
+                              </button>
+                            ) : (
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleReactivate(member.id);
+                                }}
+                                className="p-1.5 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 rounded-lg transition-all text-emerald-600 hover:text-emerald-700 shrink-0"
+                                title="Reactivate member"
+                              >
+                                <UserCheck2 className="w-3.5 h-3.5" />
+                              </button>
+                            )
                           )}
                         </div>
 

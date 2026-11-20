@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { authAPI } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import toast from "react-hot-toast";
-import { Mail, ShieldCheck, Lock, RotateCcw, CheckCircle2, ArrowRight, LogOut } from "lucide-react";
+import { Mail, ShieldCheck, Lock, RotateCcw, CheckCircle2, ArrowRight, LogOut, AlertCircle, Clock } from "lucide-react";
 
 export default function MfaSetupPage() {
   const router = useRouter();
@@ -16,6 +16,8 @@ export default function MfaSetupPage() {
   const [sentToEmail, setSentToEmail] = useState("");
   const [countdown, setCountdown] = useState(0);
   const [demoOtp, setDemoOtp] = useState("");
+  const [verifyError, setVerifyError] = useState("");
+  const hasSentInitialOtp = useRef(false);
 
   const getErrorMessage = (error: unknown) => {
     if (typeof error === "object" && error !== null && "response" in error) {
@@ -27,6 +29,7 @@ export default function MfaSetupPage() {
 
   const handleSendOtp = async (isResend = false) => {
     setSending(true);
+    setVerifyError("");
     try {
       const res = await authAPI.setupMfa({ method: "EMAIL_OTP" });
       const targetEmail = res.data?.email || user?.email || "your registered email";
@@ -38,14 +41,17 @@ export default function MfaSetupPage() {
       setCountdown(30);
       toast.success(isResend ? "New OTP sent to your email!" : res.data?.message || `Verification code sent to ${targetEmail}`);
     } catch (error: unknown) {
-      toast.error(getErrorMessage(error) || "Failed to send verification email");
+      const msg = getErrorMessage(error) || "Failed to send verification email";
+      setVerifyError(msg);
+      toast.error(msg);
     } finally {
       setSending(false);
     }
   };
 
   useEffect(() => {
-    if (user?.email && !sentToEmail) {
+    if (user?.email && !hasSentInitialOtp.current) {
+      hasSentInitialOtp.current = true;
       handleSendOtp(false);
     }
   }, [user?.email]);
@@ -59,10 +65,12 @@ export default function MfaSetupPage() {
 
   const handleVerify = async () => {
     if (!otp.trim()) {
+      setVerifyError("Please enter the 6-digit verification code");
       toast.error("Please enter the 6-digit verification code");
       return;
     }
     setLoading(true);
+    setVerifyError("");
     try {
       await authAPI.verifyMfa({ otp: otp.trim() });
       const profileRes = await authAPI.getProfile();
@@ -72,7 +80,9 @@ export default function MfaSetupPage() {
       toast.success("Email verified successfully! Welcome to your dashboard.");
       router.push("/dashboard");
     } catch (error: unknown) {
-      toast.error(getErrorMessage(error) || "Invalid or expired OTP");
+      const msg = getErrorMessage(error) || "Invalid or expired OTP. Please check your email or click Resend OTP.";
+      setVerifyError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -105,6 +115,12 @@ export default function MfaSetupPage() {
           </div>
         </div>
 
+        {/* Expiry & Spam notice */}
+        <div className="flex items-center gap-2 text-[11px] text-slate-500 bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-100">
+          <Clock className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+          <span>Code is valid for <strong>10 minutes</strong>. Check Spam if not in Inbox.</span>
+        </div>
+
         {/* Demo OTP Badge (Convenient for Local / Automated Testing) */}
         {demoOtp && (
           <div className="bg-amber-50 border border-amber-200/90 text-amber-900 text-xs px-4 py-3 rounded-2xl flex items-center justify-between">
@@ -116,11 +132,19 @@ export default function MfaSetupPage() {
             </div>
             <button
               type="button"
-              onClick={() => setOtp(demoOtp)}
+              onClick={() => { setOtp(demoOtp); setVerifyError(""); }}
               className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 underline"
             >
               Fill
             </button>
+          </div>
+        )}
+
+        {/* In-line Error Alert */}
+        {verifyError && (
+          <div className="bg-rose-50 border border-rose-200 text-rose-700 text-xs px-4 py-3 rounded-2xl font-semibold flex items-center gap-2 animate-shake">
+            <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+            <span>{verifyError}</span>
           </div>
         )}
 
@@ -135,7 +159,10 @@ export default function MfaSetupPage() {
               inputMode="numeric"
               pattern="[0-9]*"
               value={otp}
-              onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, "").slice(0, 6))}
+              onChange={(e) => {
+                setOtp(e.target.value.replace(/[^0-9]/g, "").slice(0, 6));
+                if (verifyError) setVerifyError("");
+              }}
               placeholder="000000"
               maxLength={6}
               className="w-full px-4 py-3 border border-gray-200 rounded-2xl text-2xl font-mono tracking-[0.4em] text-center font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-gray-50/50"
