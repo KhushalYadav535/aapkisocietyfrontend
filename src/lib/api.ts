@@ -47,8 +47,10 @@ export const authAPI = {
   getProfile: () => api.get('/auth/me'),
   updateProfile: (data: any) => api.put('/auth/me', data),
   changePassword: (data: { currentPassword: string; newPassword: string }) => api.put('/auth/change-password', data),
-  setupMfa: (data: { method: 'SMS_OTP' | 'TOTP' | 'EMAIL_OTP' }) => api.post('/auth/mfa/setup', data),
+  setupMfa: (data?: { method?: 'SMS_OTP' | 'TOTP' | 'EMAIL_OTP' }) => api.post('/auth/mfa/setup', data || { method: 'EMAIL_OTP' }),
   verifyMfa: (data: { otp: string }) => api.post('/auth/mfa/verify', data),
+  sendEmailOtp: () => api.post('/auth/email-otp/send'),
+  verifyEmailOtp: (data: { otp: string }) => api.post('/auth/email-otp/verify', data),
 };
 
 // Dashboard APIs

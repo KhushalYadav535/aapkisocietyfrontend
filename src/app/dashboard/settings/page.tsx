@@ -129,11 +129,11 @@ export default function SettingsPage() {
           <form onSubmit={changePassword} className="space-y-4">
             <div className="flex items-center justify-between px-3 py-2.5 rounded-xl border border-gray-100 bg-gray-50">
               <div>
-                <p className="text-sm font-medium text-gray-800">{t("multiFactorAuthentication")}</p>
-                <p className="text-xs text-gray-500">{(user as { mfa_enabled?: number } | null)?.mfa_enabled ? t("enabled") : t("requiredForFinancialRoles")}</p>
+                <p className="text-sm font-medium text-gray-800">Two-Step Email Verification (2FA)</p>
+                <p className="text-xs text-gray-500">{(user as { mfa_enabled?: number } | null)?.mfa_enabled ? "Verified & Active" : "Required for Treasury & Checker/Maker roles"}</p>
               </div>
               <Link href="/mfa-setup" className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 text-white">
-                {t("configureMfa")}
+                {(user as { mfa_enabled?: number } | null)?.mfa_enabled ? "Re-verify Email" : "Verify Email OTP"}
               </Link>
             </div>
             <div>

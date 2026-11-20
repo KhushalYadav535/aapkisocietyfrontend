@@ -154,7 +154,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   useEffect(() => {
     if (!loading && !isAuthenticated) router.push("/login");
     if (!loading && isAuthenticated && user) {
-      const mfaRequiredRoles = ["TREASURER", "CHECKER"];
+      const mfaRequiredRoles = ["TREASURER", "CHECKER", "MAKER", "TREASURY_CHECKER", "TREASURY_MAKER"];
       if (mfaRequiredRoles.includes(normalizeRole(user.role)) && !(user as any).mfa_enabled) {
         router.push("/mfa-setup");
       }
