@@ -17,7 +17,7 @@ import {
 import { getInitials } from "@/lib/utils";
 import { useLocale } from "@/context/LocaleContext";
 import { useTheme } from "@/context/ThemeContext";
-import { scrollerAPI } from "@/lib/api";
+import { scrollerAPI, notificationV4API } from "@/lib/api";
 import api from "@/lib/api";
 
 const normalizeRole = (role: string) => {
@@ -129,6 +129,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const [scrollers, setScrollers] = useState<any[]>([]);
   const [renewalBanner, setRenewalBanner] = useState<any>(null);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notificationsList, setNotificationsList] = useState<any[]>([]);
+  const [unreadNotifsCount, setUnreadNotifsCount] = useState(3);
 
   const toggleSection = (secKey: string) => {
     setCollapsedSections(prev => ({
@@ -141,6 +144,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (!isAuthenticated) return;
     scrollerAPI.getActive({}).then(res => setScrollers(res.data?.scrollers || [])).catch(() => { });
     api.get('/notifications/v4/renewal-banner').then(res => setRenewalBanner(res.data?.banner || null)).catch(() => { });
+
+    notificationV4API.list({ limit: 10 }).then(res => {
+      const items = res.data?.notifications || [];
+      setNotificationsList(items);
+      setUnreadNotifsCount(typeof res.data?.unread === 'number' ? res.data.unread : items.filter((n: any) => !n.is_read).length);
+    }).catch(() => {
+      api.get('/notices').then(nRes => {
+        const notices = nRes.data?.notices || [];
+        setNotificationsList(notices.slice(0, 5).map((n: any) => ({
+          id: n.id,
+          title: n.title,
+          message: n.content?.slice(0, 80) || n.description || "Notice published",
+          created_at: n.created_at,
+          type: "NOTICE",
+          is_read: 0,
+        })));
+        setUnreadNotifsCount(Math.min(notices.length, 3));
+      }).catch(() => {});
+    });
     
     if (userRole === 'ADMIN' && user?.society_id) {
       api.get(`/societies/${user.society_id}`).then(res => {
@@ -505,7 +527,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </Link>
                 <ChevronRight className="w-3.5 h-3.5 text-gray-300" />
                 <span className="text-gray-800 font-semibold capitalize tracking-tight">
-                  {pathname.split("/").filter(Boolean).slice(-1)[0]?.replace(/-/g, " ") || "Dashboard"}
+                  {(() => {
+                    const lastSeg = pathname.split("/").filter(Boolean).slice(-1)[0] || "Dashboard";
+                    const isId = /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(lastSeg) || /^[0-9a-f-]{12,}$/i.test(lastSeg) || /^\d+$/.test(lastSeg);
+                    return isId ? "Details" : lastSeg.replace(/-/g, " ");
+                  })()}
                 </span>
               </div>
             </div>
@@ -516,10 +542,109 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <button onClick={() => setLocale(locale === "en" ? "hi" : "en")} className="px-2.5 py-1.5 text-xs font-bold rounded-lg border border-gray-200 hover:border-indigo-300 hover:text-indigo-600 text-gray-600 transition-all" title="Switch language">
                 {locale === "en" ? "EN" : "HI"}
               </button>
-              <button className="relative p-2 hover:bg-indigo-50 rounded-xl transition-colors group">
-                <Bell className="w-4 h-4 text-gray-500 group-hover:text-indigo-600 transition-colors" />
-                <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-red-500 rounded-full ring-2 ring-white animate-pulse" />
-              </button>
+              <div className="relative">
+                <button 
+                  onClick={() => setShowNotifications(prev => !prev)}
+                  className="relative p-2 hover:bg-indigo-50 rounded-xl transition-colors group cursor-pointer"
+                  title="Notifications"
+                >
+                  <Bell className="w-4 h-4 text-gray-500 group-hover:text-indigo-600 transition-colors" />
+                  {unreadNotifsCount > 0 && (
+                    <span className="absolute top-1.5 right-1.5 min-w-[15px] h-[15px] px-1 bg-red-500 text-[9px] font-bold text-white rounded-full flex items-center justify-center ring-2 ring-white animate-pulse">
+                      {unreadNotifsCount > 9 ? '9+' : unreadNotifsCount}
+                    </span>
+                  )}
+                </button>
+
+                {showNotifications && (
+                  <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-200/80 z-50 overflow-hidden animate-fade-in">
+                    <div className="p-3.5 bg-gradient-to-r from-indigo-50/80 via-white to-purple-50/50 border-b border-slate-100 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="p-1.5 bg-indigo-100 text-indigo-600 rounded-lg">
+                          <Bell className="w-3.5 h-3.5" />
+                        </span>
+                        <div>
+                          <h4 className="text-xs font-bold text-slate-800">Notifications & Alerts</h4>
+                          <p className="text-[10px] text-slate-500">{unreadNotifsCount} unread update{unreadNotifsCount === 1 ? '' : 's'}</p>
+                        </div>
+                      </div>
+                      {unreadNotifsCount > 0 && (
+                        <button
+                          onClick={async () => {
+                            try {
+                              await notificationV4API.markAllRead();
+                            } catch (_) {}
+                            setUnreadNotifsCount(0);
+                            setNotificationsList(prev => prev.map(n => ({ ...n, is_read: 1 })));
+                          }}
+                          className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 transition-colors cursor-pointer"
+                        >
+                          Mark all read
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="max-h-80 overflow-y-auto divide-y divide-slate-100">
+                      {notificationsList.length === 0 ? (
+                        <div className="p-6 text-center text-slate-400">
+                          <Bell className="w-8 h-8 mx-auto mb-2 opacity-30 text-indigo-500" />
+                          <p className="text-xs font-medium">No new notifications</p>
+                          <p className="text-[10px] text-slate-400 mt-0.5">You're all caught up!</p>
+                        </div>
+                      ) : (
+                        notificationsList.map((n: any) => (
+                          <div
+                            key={n.id}
+                            onClick={async () => {
+                              if (!n.is_read) {
+                                try {
+                                  await notificationV4API.markRead(n.id);
+                                } catch (_) {}
+                                setNotificationsList(prev => prev.map(item => item.id === n.id ? { ...item, is_read: 1 } : item));
+                                setUnreadNotifsCount(prev => Math.max(0, prev - 1));
+                              }
+                              if (n.action_url) {
+                                router.push(n.action_url);
+                                setShowNotifications(false);
+                              }
+                            }}
+                            className={`p-3 text-left transition-colors cursor-pointer hover:bg-slate-50 flex items-start gap-3 ${!n.is_read ? 'bg-indigo-50/40' : ''}`}
+                          >
+                            <span className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${!n.is_read ? 'bg-indigo-600 ring-4 ring-indigo-100' : 'bg-slate-300'}`} />
+                            <div className="flex-1 min-w-0">
+                              <p className={`text-xs font-semibold leading-tight truncate ${!n.is_read ? 'text-slate-900' : 'text-slate-600'}`}>
+                                {n.title}
+                              </p>
+                              <p className="text-[11px] text-slate-500 line-clamp-2 mt-0.5">
+                                {n.message}
+                              </p>
+                              <span className="text-[9px] text-slate-400 mt-1 block">
+                                {n.created_at ? new Date(n.created_at).toLocaleDateString() : 'Recent'}
+                              </span>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    <div className="p-2.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs">
+                      <Link
+                        href="/dashboard/notices"
+                        onClick={() => setShowNotifications(false)}
+                        className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
+                      >
+                        View all notices & circulars →
+                      </Link>
+                      <button
+                        onClick={() => setShowNotifications(false)}
+                        className="text-[11px] text-slate-500 hover:text-slate-700 cursor-pointer"
+                      >
+                        Close
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
               <div className="w-px h-7 bg-gray-200 mx-1" />
               <Link href="/dashboard/profile" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
                 <div className={`w-8 h-8 bg-gradient-to-br ${currentRoleInfo.gradient} rounded-xl flex items-center justify-center text-xs font-bold text-white shadow-md ring-2 ring-white`}>

@@ -21,7 +21,7 @@ import {
   Hash
 } from "lucide-react";
 
-const VEHICLE_TYPES = ["CAR", "BIKE", "SCOTTY", "BICYCLE", "OTHER"];
+const VEHICLE_TYPES = ["CAR", "BIKE", "SCOOTER", "BICYCLE", "OTHER"];
 
 export default function VehiclesPage() {
   const { user, hasPermission } = useAuth();
@@ -116,7 +116,7 @@ export default function VehiclesPage() {
 
   const filtered = vehicles.filter(v => {
     const matchSearch = `${v.vehicle_number} ${v.make_model || ""} ${v.color || ""}`.toLowerCase().includes(search.toLowerCase());
-    const matchType = typeFilter === "ALL" || v.vehicle_type === typeFilter;
+    const matchType = typeFilter === "ALL" || v.vehicle_type === typeFilter || (typeFilter === "SCOOTER" && v.vehicle_type === "SCOTTY");
     return matchSearch && matchType;
   });
 
@@ -323,7 +323,7 @@ export default function VehiclesPage() {
                       </p>
                       <div className="flex items-center gap-2 mt-1 text-xs text-slate-400">
                         <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 font-semibold">
-                          {v.vehicle_type}
+                          {v.vehicle_type === "SCOTTY" ? "SCOOTER" : v.vehicle_type}
                         </span>
                         {v.color && (
                           <>

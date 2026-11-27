@@ -15,6 +15,8 @@ interface User {
   phone: string | null;
   avatar_url: string | null;
   blood_group?: string | null;
+  society_name?: string | null;
+  registration_number?: string | null;
 }
 
 interface AuthContextType {

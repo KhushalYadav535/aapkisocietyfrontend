@@ -94,13 +94,18 @@ export default function ReportsPage() {
 
   const loadData = async () => {
     try {
-      const [collectionRes, complaintRes, billingRes] = await Promise.all([
+      const [collectionRes, complaintRes, billingRes, headsRes] = await Promise.all([
         dashboardAPI.getCollectionSummary(),
         dashboardAPI.getComplaintStats(),
         billingAPI.getSummary(),
+        billingAPI.getAllHeads().catch(() => ({ data: { heads: [] } })),
       ]);
 
       const raw = collectionRes.data.collection_summary || [];
+      const summaryData = billingRes.data?.summary;
+      const totalBilled = summaryData?.total_billed || 0;
+      const calculatedTarget = totalBilled > 0 ? Math.max(Math.round(totalBilled / 2), 5000) : 30000;
+
       const now = new Date();
       const chartData = raw.map((item: any, i: number) => {
         const d = new Date(now);
@@ -108,19 +113,27 @@ export default function ReportsPage() {
         return {
           month: MONTHS[d.getMonth()],
           collected: item.total || 0,
-          target: 28000,
+          target: calculatedTarget,
         };
       });
       setCollectionData(chartData);
       setComplaintStats(complaintRes.data.complaint_stats);
-      setBillingSummary(billingRes.data.summary);
+      setBillingSummary(summaryData);
 
-      setBillTypeData([
-        { name: "Maintenance", value: 65 },
-        { name: "Water", value: 12 },
-        { name: "Club House", value: 8 },
-        { name: "Others", value: 15 },
-      ]);
+      const heads = headsRes.data?.heads || [];
+      if (heads.length > 0) {
+        const totalHeadAmount = heads.reduce((sum: number, h: any) => sum + (Number(h.default_amount) || 0), 0) || 1;
+        setBillTypeData(heads.map((h: any) => ({
+          name: h.name,
+          value: Math.round(((Number(h.default_amount) || 0) / totalHeadAmount) * 100) || 10
+        })));
+      } else {
+        setBillTypeData([
+          { name: "Maintenance", value: 65 },
+          { name: "Water & Sinking", value: 20 },
+          { name: "Club House & Parking", value: 15 },
+        ]);
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -423,7 +436,7 @@ export default function ReportsPage() {
             </div>
             <div className="text-xl font-extrabold text-amber-950">+38.5% Outflow</div>
             <p className="text-[11px] text-amber-700 mt-1">
-              Water tanker demand surges +42% & common area power surges +28%. Recommended contingency reserve: ₹1,45,000.
+              Water tanker demand surges +42% & common area power surges +28%. Recommended contingency reserve: {formatCurrency(Math.max(Math.round((billingSummary?.total_billed || 50000) * 0.8), 25000))}.
             </p>
           </div>
 
@@ -434,9 +447,9 @@ export default function ReportsPage() {
                 <CloudRain className="w-4 h-4" />
               </div>
             </div>
-            <div className="text-xl font-extrabold text-blue-950">₹32,500 Buffer</div>
+            <div className="text-xl font-extrabold text-blue-950">{formatCurrency(Math.max(Math.round((billingSummary?.total_billed || 50000) * 0.35), 15000))} Buffer</div>
             <p className="text-[11px] text-blue-700 mt-1">
-              Terrace waterproofing, basement sump pump overhaul & stormwater drain clearing scheduled for late May.
+              Terrace waterproofing, basement sump pump overhaul & stormwater drain clearing scheduled before monsoon.
             </p>
           </div>
 

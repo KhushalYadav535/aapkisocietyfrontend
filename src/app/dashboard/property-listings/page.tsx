@@ -50,7 +50,7 @@ export default function PropertyListingsPage() {
     e.preventDefault();
     const fee = listingType === 'FOR_SALE' ? 99 : 49;
     const total = fee * 1.18;
-    if (!confirm(`Listing fee: Rs.${fee} + 18% GST = Rs.${total.toFixed(0)}. Proceed?`)) return;
+    if (!confirm(`Listing fee: ₹${fee} + 18% GST = ₹${total.toFixed(0)}. Proceed?`)) return;
 
     try {
       await propertyListingAPI.create({ listing_type: listingType, ...formData });
@@ -178,8 +178,8 @@ export default function PropertyListingsPage() {
               <h3 className="text-lg font-bold text-gray-900">Flat {l.wing}-{l.flat_number}</h3>
               <p className="text-xs text-gray-400 mt-0.5">Floor {l.floor} | {l.bedrooms}BHK</p>
               <div className="mt-3 space-y-1 text-sm">
-                {l.price && <p className="text-gray-900 font-bold text-lg">Rs.{Number(l.price).toLocaleString()}</p>}
-                {l.rent_amount && <p className="text-gray-900 font-bold text-lg">Rs.{Number(l.rent_amount).toLocaleString()}/mo</p>}
+                {l.price && <p className="text-gray-900 font-bold text-lg">₹{Number(l.price).toLocaleString()}</p>}
+                {l.rent_amount && <p className="text-gray-900 font-bold text-lg">₹{Number(l.rent_amount).toLocaleString()}/mo</p>}
                 <p className="text-gray-500">{l.carpet_area} sq ft</p>
                 <p className="text-gray-500">Bath: {l.bathrooms} | Parking: {l.parking}</p>
                 <p className="text-gray-400 text-xs">{l.furnishing} | Avail: {l.available_from}</p>
@@ -221,13 +221,13 @@ export default function PropertyListingsPage() {
                   <p className="text-xs text-gray-400 mt-0.5">By: {l.first_name} {l.last_name}</p>
                 </div>
                 <span className="text-xs bg-amber-50 text-amber-700 px-2.5 py-1 rounded-lg border border-amber-200">
-                  {l.fee_amount > 0 ? `Rs.${l.fee_amount} paid` : 'PENDING PAYMENT'}
+                  {l.fee_amount > 0 ? `₹${l.fee_amount} paid` : 'PENDING PAYMENT'}
                 </span>
               </div>
               <div className="grid grid-cols-3 gap-3 mb-4 text-sm">
                 <div><span className="text-gray-400">Area:</span> {l.carpet_area} sq ft</div>
                 <div><span className="text-gray-400">BHK:</span> {l.bedrooms}</div>
-                <div><span className="text-gray-400">Price:</span> Rs.{(l.price || l.rent_amount)?.toLocaleString()}</div>
+                <div><span className="text-gray-400">Price:</span> ₹{(l.price || l.rent_amount)?.toLocaleString()}</div>
               </div>
               {l.description && <p className="text-sm text-gray-600 mb-4">{l.description}</p>}
               <div className="flex gap-2">
@@ -272,7 +272,7 @@ export default function PropertyListingsPage() {
               </div>
             ))}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">{listingType === 'FOR_SALE' ? 'Asking Price (Rs.)' : 'Monthly Rent (Rs.)'}</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">{listingType === 'FOR_SALE' ? 'Asking Price (₹)' : 'Monthly Rent (₹)'}</label>
               <input type="number" name={listingType === 'FOR_SALE' ? 'price' : 'rent_amount'} value={listingType === 'FOR_SALE' ? formData.price : formData.rent_amount}
                 onChange={e => setFormData({ ...formData, [listingType === 'FOR_SALE' ? 'price' : 'rent_amount']: e.target.value })}
                 className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500" required />
@@ -312,7 +312,7 @@ export default function PropertyListingsPage() {
           <div className="bg-indigo-50 rounded-xl p-4 text-sm">
             <p className="font-semibold text-indigo-900">Listing Fee</p>
             <p className="text-indigo-700 mt-1">
-              {listingType === 'FOR_SALE' ? 'Rs.99' : 'Rs.49'} + 18% GST = <span className="font-bold">{listingType === 'FOR_SALE' ? 'Rs.117' : 'Rs.58'}</span> per listing (30 days)
+              {listingType === 'FOR_SALE' ? '₹99' : '₹49'} + 18% GST = <span className="font-bold">{listingType === 'FOR_SALE' ? '₹117' : '₹58'}</span> per listing (30 days)
             </p>
           </div>
           <div className="flex gap-3 pt-2">

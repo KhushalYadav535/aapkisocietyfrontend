@@ -1525,11 +1525,11 @@ export default function Home() {
                           </span>
                         </div>
                         <p className="text-[11px] font-semibold text-slate-400">Total payable</p>
-                        <h4 className="font-display text-4xl mt-1 tnum" style={{ color: NAVY }}>₹4,250</h4>
+                        <h4 className="font-display text-4xl mt-1 tnum" style={{ color: NAVY }}>₹4,543</h4>
                         <div className="text-[11px] text-slate-500 mt-3 space-y-1.5 border-t border-blue-50 pt-3">
                           <div className="flex justify-between"><span>Maintenance &amp; sinking</span><span className="font-bold text-slate-700 tnum">₹3,200</span></div>
                           <div className="flex justify-between"><span>Lift &amp; DG AMC</span><span className="font-bold text-slate-700 tnum">₹650</span></div>
-                          <div className="flex justify-between"><span>GST @ 18%</span><span className="font-bold text-slate-700 tnum">₹400</span></div>
+                          <div className="flex justify-between"><span>GST @ 18%</span><span className="font-bold text-slate-700 tnum">₹693</span></div>
                         </div>
                       </div>
                       <div className="mt-6">
@@ -1542,7 +1542,7 @@ export default function Home() {
                             onClick={() => setBillPaid(true)}
                             className="w-full py-3.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-extrabold text-sm shadow-lg shadow-blue-700/25 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2 min-h-[48px]"
                           >
-                            <Wallet className="w-4 h-4" /> Pay ₹4,250 via UPI
+                            <Wallet className="w-4 h-4" /> Pay ₹4,543 via UPI
                           </button>
                         )}
                       </div>

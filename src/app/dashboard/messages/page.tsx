@@ -54,16 +54,22 @@ export default function MessagesPage() {
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    const targetId = selectedConv?.conversation_id?.split("-").find((id: string) => id !== user?.id) || receiver?.id;
-    if (!content.trim()) return;
+    const targetId = selectedConv?.other_id
+      || receiver?.id
+      || (selectedConv?.conversation_id?.includes('__') ? selectedConv.conversation_id.split('__').find((id: string) => id !== user?.id) : null)
+      || (selectedConv?.sender_id === user?.id ? selectedConv?.receiver_id : selectedConv?.sender_id);
+    if (!content.trim() || !targetId) return;
     setSending(true);
     try {
       const r = await messageAPI.send({ receiver_id: targetId, content: content.trim() });
-      setMessages(prev => [...prev, r.data.message]);
+      if (r.data?.message) {
+        setMessages(prev => [...prev, r.data.message]);
+      }
       setContent("");
       if (receiver && !selectedConv) {
         setSelectedConv({
-          conversation_id: [user?.id, receiver.id].sort().join("-"),
+          conversation_id: [user?.id, receiver.id].sort().join("__"),
+          other_id: receiver.id,
           other_name: receiver.first_name,
           other_last_name: receiver.last_name,
           other_flat: receiver.flat_number,
@@ -171,7 +177,7 @@ export default function MessagesPage() {
                               setShowCompose(true);
                               setSelectedConv(null);
                               setMessages([]);
-                              const convId = [user?.id, u.id].sort().join("-");
+                              const convId = [user?.id, u.id].sort().join("__");
                               messageAPI.getMessages(convId).then(r => setMessages(r.data?.messages || [])).catch(() => setMessages([]));
                             }
                           }}

@@ -152,7 +152,7 @@ export default function DashboardPage() {
       const [overviewResult, billingResult, renewalResult] = await Promise.allSettled([
         dashboardAPI.getOverview(),
         billingAPI.getSummary(),
-        isAdminOrTreasurer ? platformAPI.getRenewals({ days: 30 }) : Promise.resolve(null),
+        role === 'PLATFORM_ADMIN' ? platformAPI.getRenewals({ days: 30 }) : Promise.resolve(null),
       ]);
 
       if (overviewResult.status === 'fulfilled') {
@@ -260,7 +260,9 @@ export default function DashboardPage() {
                 {renewalStats && renewalStats.renewals_due > 0 && (
                   <span className="inline-flex items-center gap-1.5 font-semibold text-slate-800 dark:text-slate-200">
                     <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                    <strong className="text-amber-700 dark:text-amber-300">{renewalStats.renewals_due} Societies</strong> due for renewal ({formatCurrency(renewalStats.total_amount)})
+                    <strong className="text-amber-700 dark:text-amber-300">
+                      {renewalStats.renewals_due} {renewalStats.renewals_due === 1 ? 'Society' : 'Societies'}
+                    </strong> due for renewal{renewalStats.total_amount > 0 ? ` (${formatCurrency(renewalStats.total_amount)})` : ''}
                   </span>
                 )}
                 {renewalStats && billingSummary && billingSummary.overdue_bills > 0 && (
@@ -338,11 +340,15 @@ export default function DashboardPage() {
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700 shadow-xs">
               <Building2 className="w-4 h-4 text-indigo-500" />
+              <span>{user?.society_name || "Sunrise CHS"}</span>
+            </div>
+            <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700 shadow-xs">
+              <ShieldCheck className="w-4 h-4 text-emerald-500" />
               <span>{user?.role ? user.role.replace(/_/g, " ") : "Administrator"}</span>
             </div>
             {user?.flat_number && (
               <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700 shadow-xs">
-                <span>Unit {user.wing ? `${user.wing}-` : ""}{user.flat_number}</span>
+                <span>Unit {user.wing ? `${user.wing.replace(/^Wing\s+/i, '')}-` : ""}{user.flat_number}</span>
               </div>
             )}
             <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700 shadow-xs">

@@ -8,7 +8,8 @@ import { formatCurrency, formatDate, getStatusColor } from "@/lib/utils";
 import {
   Receipt, Plus, Search, CheckCircle, XCircle, IndianRupee, Zap, X,
   TrendingUp, AlertTriangle, Clock, Send, Users, FileText, Download,
-  FileSpreadsheet, FilePlus, Layers, ArrowRight, Settings, Calendar, CreditCard
+  FileSpreadsheet, FilePlus, Layers, ArrowRight, Settings, Calendar, CreditCard,
+  Eye, Landmark
 } from "lucide-react";
 import { useLocale } from "@/context/LocaleContext";
 import Pagination from "@/components/Pagination";
@@ -16,7 +17,26 @@ import Link from "next/link";
 
 const ITEMS_PER_PAGE = 10;
 
-interface Bill { id: string; bill_number: string; member_id: string; amount: number; total_amount: number; paid_amount: number; status: string; bill_type: string; billing_period: string; due_date: string; created_at: string; items?: any[]; }
+interface Bill {
+  id: string;
+  bill_number: string;
+  member_id: string;
+  amount: number;
+  tax_amount?: number;
+  total_amount: number;
+  paid_amount: number;
+  status: string;
+  bill_type: string;
+  billing_period: string;
+  due_date: string;
+  bill_date?: string;
+  description?: string;
+  created_at: string;
+  items?: any[];
+  member_name?: string;
+  flat_number?: string;
+  wing?: string;
+}
 interface Payment { id: string; amount: number; payment_method: string; payment_reference?: string; status: string; payment_date: string; member_id: string; }
 interface Defaulter { member_id: string; member_name: string; flat_number: string; wing: string; total_outstanding: number; oldest_bill_date: string; days_overdue: number; bill_count: number; }
 interface ArrearsBucket { label: string; days_from: number; days_to: number; total_amount: number; bill_count: number; oldest_date: string | null; }
@@ -45,6 +65,11 @@ export default function BillingPage() {
   const [showCreateWithHeads, setShowCreateWithHeads] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
+  const [viewingBill, setViewingBill] = useState<Bill | null>(null);
+  const [showMandateModal, setShowMandateModal] = useState(false);
+  const [mandateForm, setMandateForm] = useState({ type: "UPI_AUTOPAY" as "UPI_AUTOPAY" | "NACH", amount_limit: "5000" });
+  const [cancellingMandate, setCancellingMandate] = useState<any | null>(null);
+  const [mandateSubmitting, setMandateSubmitting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [billingHeads, setBillingHeads] = useState<BillingHead[]>([]);
 
@@ -73,28 +98,35 @@ export default function BillingPage() {
   const load = async () => {
     setLoading(true);
     try {
-      const promises: Promise<any>[] = [
+      const [b, p, s] = await Promise.all([
         billingAPI.getAllBills().catch(() => ({ data: { bills: [] } })),
         billingAPI.getPayments().catch(() => ({ data: { payments: [] } })),
         billingAPI.getSummary().catch(() => ({ data: { summary: { total_billed: 0, total_collected: 0, outstanding: 0, pending_bills: 0, overdue_bills: 0, collection_rate: 0 } } }))
-      ];
-      if (isAdmin) {
-        promises.push(mandateAPI.list().catch(() => ({ data: { mandates: [] } })));
-        if (tab === "Arrears Aging") promises.push(Promise.resolve({ data: { buckets: [] }, status: 200, statusText: 'OK', headers: {}, config: {} } as any));
-        if (tab === "Defaulters") promises.push(billingAPI.getDefaulters().catch(() => ({ data: [], status: 200, statusText: 'OK', headers: {}, config: {} } as any)));
-        if (tab === "Dunning") promises.push(billingAPI.getDunningHistory().catch(() => ({ data: [], status: 200, statusText: 'OK', headers: {}, config: {} } as any)));
-      }
-      const [b, p, s, ...rest] = await Promise.all(promises);
-      setBills(b.data?.bills || []); setPayments(p.data?.payments || []); setSummary(s.data?.summary || { total_billed: 0, total_collected: 0, outstanding: 0, pending_bills: 0, overdue_bills: 0, collection_rate: 0 });
-      if (tab === "Mandates") setMandates(rest[0]?.data?.mandates || []);
-      if (tab === "Defaulters") setDefaulters(rest[0]?.data?.defaulters || rest[0]?.data || []);
-      if (tab === "Dunning") setDunningHistory(rest[0]?.data?.records || rest[0]?.data || []);
-      if (tab === "Arrears Aging") {
+      ]);
+      setBills(b.data?.bills || []);
+      setPayments(p.data?.payments || []);
+      setSummary(s.data?.summary || { total_billed: 0, total_collected: 0, outstanding: 0, pending_bills: 0, overdue_bills: 0, collection_rate: 0 });
+
+      if (tab === "Mandates") {
+        const m = await mandateAPI.list().catch(() => ({ data: { mandates: [] } }));
+        setMandates(Array.isArray(m.data?.mandates) ? m.data.mandates : []);
+      } else if (tab === "Defaulters") {
+        const d = await billingAPI.getDefaulters().catch(() => ({ data: { defaulters: [] } }));
+        const defs = d.data?.defaulters || (Array.isArray(d.data) ? d.data : []);
+        setDefaulters(Array.isArray(defs) ? defs : []);
+      } else if (tab === "Dunning") {
+        const dh = await billingAPI.getDunningHistory().catch(() => ({ data: { records: [] } }));
+        const recs = dh.data?.records || (Array.isArray(dh.data) ? dh.data : []);
+        setDunningHistory(Array.isArray(recs) ? recs : []);
+      } else if (tab === "Arrears Aging") {
         const ar = await billingAPI.getArrearsAging().catch(() => ({ data: { buckets: [] } }));
-        setArrears(ar.data);
+        setArrears(ar.data || { buckets: [] });
       }
-    } catch { toast.error(t("failedToLoadBillingData")); }
-    finally { setLoading(false); }
+    } catch {
+      toast.error(t("failedToLoadBillingData"));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleApprove = async (id: string) => {
@@ -119,8 +151,33 @@ export default function BillingPage() {
     if (!reminderBillId) return;
     try { await billingAPI.sendReminder({ bill_id: reminderBillId, type: reminderType }); toast.success("Reminder sent"); setReminderBillId(""); load(); } catch { toast.error("Failed to send reminder"); }
   };
-  const createMandate = async (type: "UPI_AUTOPAY" | "NACH") => {
-    try { await mandateAPI.create({ type, amount_limit: 15000 }); toast.success(`${type} created`); load(); } catch { toast.error(t("failedToCreateMandate")); }
+  const handleCreateMandate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMandateSubmitting(true);
+    try {
+      await mandateAPI.create({
+        type: mandateForm.type,
+        amount_limit: parseFloat(mandateForm.amount_limit) || 5000
+      });
+      toast.success(`${mandateForm.type === 'UPI_AUTOPAY' ? 'UPI Autopay' : 'NACH e-Mandate'} created successfully`);
+      setShowMandateModal(false);
+      load();
+    } catch {
+      toast.error(t("failedToCreateMandate"));
+    } finally {
+      setMandateSubmitting(false);
+    }
+  };
+  const handleConfirmCancelMandate = async () => {
+    if (!cancellingMandate) return;
+    try {
+      await mandateAPI.updateStatus(cancellingMandate.id, "CANCELLED");
+      toast.success("Mandate cancelled successfully");
+      setCancellingMandate(null);
+      load();
+    } catch {
+      toast.error(t("failedToUpdateMandate"));
+    }
   };
   const updateMandate = async (id: string, status: "ACTIVE" | "PAUSED" | "CANCELLED") => {
     try { await mandateAPI.updateStatus(id, status); load(); } catch { toast.error(t("failedToUpdateMandate")); }
@@ -355,30 +412,42 @@ export default function BillingPage() {
       </div>
 
       {/* Summary KPI Bento Strip */}
-      {summary && tab !== "Arrears Aging" && tab !== "Defaulters" && tab !== "Dunning" && (
+      {tab !== "Arrears Aging" && tab !== "Defaulters" && tab !== "Dunning" && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-          {[
-            { label: t("totalBilled"), value: formatCurrency(summary.total_billed), icon: Receipt, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50/80 dark:bg-blue-950/40", border: "border-blue-200/60 dark:border-blue-900/40" },
-            { label: t("collected"), value: formatCurrency(summary.total_collected), icon: IndianRupee, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50/80 dark:bg-emerald-950/40", border: "border-emerald-200/60 dark:border-emerald-900/40" },
-            { label: t("outstanding"), value: formatCurrency(summary.outstanding), icon: TrendingUp, color: "text-rose-600 dark:text-rose-400", bg: "bg-rose-50/80 dark:bg-rose-950/40", border: "border-rose-200/60 dark:border-rose-900/40" },
-            { label: t("collectionRate"), value: `${summary.collection_rate}%`, icon: CheckCircle, color: "text-indigo-600 dark:text-indigo-400", bg: "bg-indigo-50/80 dark:bg-indigo-950/40", border: "border-indigo-200/60 dark:border-indigo-900/40" },
-          ].map((c, i) => {
-            const Icon = c.icon;
-            return (
-              <div 
-                key={i} 
-                className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-sm flex items-center justify-between"
-              >
-                <div>
-                  <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">{c.label}</p>
-                  <p className="text-xl font-bold tracking-tight text-slate-900 dark:text-white mt-1.5">{c.value}</p>
+          {loading || !summary ? (
+            [...Array(4)].map((_, i) => (
+              <div key={i} className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-sm flex items-center justify-between">
+                <div className="space-y-2">
+                  <div className="h-3 w-16 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
+                  <div className="h-6 w-24 bg-slate-200 dark:bg-slate-800 rounded animate-pulse" />
                 </div>
-                <div className={`w-10 h-10 rounded-2xl ${c.bg} ${c.color} border ${c.border} flex items-center justify-center shrink-0`}>
-                  <Icon className="w-5 h-5" />
-                </div>
+                <div className="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-slate-800 animate-pulse" />
               </div>
-            );
-          })}
+            ))
+          ) : (
+            [
+              { label: t("totalBilled"), value: formatCurrency(summary.total_billed), icon: Receipt, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50/80 dark:bg-blue-950/40", border: "border-blue-200/60 dark:border-blue-900/40" },
+              { label: t("collected"), value: formatCurrency(summary.total_collected), icon: IndianRupee, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50/80 dark:bg-emerald-950/40", border: "border-emerald-200/60 dark:border-emerald-900/40" },
+              { label: t("outstanding"), value: formatCurrency(summary.outstanding), icon: TrendingUp, color: "text-rose-600 dark:text-rose-400", bg: "bg-rose-50/80 dark:bg-rose-950/40", border: "border-rose-200/60 dark:border-rose-900/40" },
+              { label: t("collectionRate"), value: `${summary.collection_rate}%`, icon: CheckCircle, color: "text-indigo-600 dark:text-indigo-400", bg: "bg-indigo-50/80 dark:bg-indigo-950/40", border: "border-indigo-200/60 dark:border-indigo-900/40" },
+            ].map((c, i) => {
+              const Icon = c.icon;
+              return (
+                <div 
+                  key={i} 
+                  className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-800 shadow-sm flex items-center justify-between"
+                >
+                  <div>
+                    <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">{c.label}</p>
+                    <p className="text-xl font-bold tracking-tight text-slate-900 dark:text-white mt-1.5">{c.value}</p>
+                  </div>
+                  <div className={`w-10 h-10 rounded-2xl ${c.bg} ${c.color} border ${c.border} flex items-center justify-center shrink-0`}>
+                    <Icon className="w-5 h-5" />
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       )}
 
@@ -449,7 +518,7 @@ export default function BillingPage() {
                       </td>
                     </tr>
                   ) : paginatedBills.map(bill => (
-                    <tr key={bill.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors">
+                    <tr key={bill.id} onClick={() => setViewingBill(bill)} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors cursor-pointer group">
                       <td className="px-5 py-3.5 font-mono text-xs font-bold text-slate-900 dark:text-white">
                         {bill.bill_number}
                       </td>
@@ -473,8 +542,15 @@ export default function BillingPage() {
                           {bill.status.replace(/_/g, " ")}
                         </span>
                       </td>
-                      <td className="px-5 py-3.5">
+                      <td className="px-5 py-3.5" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setViewingBill(bill)}
+                            className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold transition-all inline-flex items-center gap-1"
+                            title="View invoice & tax breakup"
+                          >
+                            <Eye className="w-3.5 h-3.5 text-slate-500" /> View
+                          </button>
                           {canApprove && bill.status === "PENDING_APPROVAL" && (
                             <>
                               <button 
@@ -519,17 +595,24 @@ export default function BillingPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-slate-50/80 dark:bg-slate-800/60 border-b border-slate-200/80 dark:border-slate-800">
-                  {["Date", "Amount", "Method", "Reference", "Status"].map(h => (
-                    <th key={h} className="text-left px-5 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{h}</th>
+                  {["Date", "Bill / Unit", "Member", "Amount", "Method", "Reference", "Status"].map(h => (
+                    <th key={h} className="text-left px-4 py-3.5 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
-                {loading ? [...Array(5)].map((_, i) => <tr key={i}><td colSpan={5} className="px-5 py-4"><div className="h-4 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" /></td></tr>)
-                  : payments.length === 0 ? <tr><td colSpan={5} className="text-center py-16 text-slate-400 text-xs">{t("noPaymentsYet")}</td></tr>
-                    : payments.map(p => (
+                {loading ? [...Array(5)].map((_, i) => <tr key={i}><td colSpan={7} className="px-5 py-4"><div className="h-4 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" /></td></tr>)
+                  : payments.length === 0 ? <tr><td colSpan={7} className="text-center py-16 text-slate-400 text-xs">{t("noPaymentsYet")}</td></tr>
+                    : payments.map((p: any) => (
                       <tr key={p.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors">
-                        <td className="px-5 py-3.5 text-slate-500 dark:text-slate-400 text-xs">{formatDate(p.payment_date)}</td>
+                        <td className="px-4 py-3.5 text-slate-500 dark:text-slate-400 text-xs">{formatDate(p.payment_date)}</td>
+                        <td className="px-4 py-3.5">
+                          <p className="font-semibold text-slate-900 dark:text-white text-xs">{p.bill_number || (p.bill_id ? `BIL-${p.bill_id.slice(0, 8)}` : "Direct Payment")}</p>
+                          <p className="text-[11px] text-slate-400">{p.flat_number ? `Unit ${p.wing ? `${p.wing}-` : ''}${p.flat_number}` : 'Society Unit'}</p>
+                        </td>
+                        <td className="px-4 py-3.5 text-slate-700 dark:text-slate-300 text-xs font-medium">
+                          {p.member_name || "Member"}
+                        </td>
                         <td className="px-4 py-3.5 font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(p.amount)}</td>
                         <td className="px-4 py-3.5">
                           <span className="text-xs bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2.5 py-1 rounded-lg font-bold">
@@ -549,8 +632,18 @@ export default function BillingPage() {
       {tab === "Mandates" && (
         <div className="space-y-4">
           <div className="flex gap-2.5">
-            <button onClick={() => createMandate("UPI_AUTOPAY")} className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md shadow-indigo-500/20 active:scale-[0.98] transition-all">Setup UPI Autopay</button>
-            <button onClick={() => createMandate("NACH")} className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-500/20 active:scale-[0.98] transition-all">Setup NACH e-Mandate</button>
+            <button
+              onClick={() => { setMandateForm({ type: "UPI_AUTOPAY", amount_limit: "5000" }); setShowMandateModal(true); }}
+              className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md shadow-indigo-500/20 active:scale-[0.98] transition-all inline-flex items-center gap-1.5"
+            >
+              <Zap className="w-3.5 h-3.5" /> Setup UPI Autopay
+            </button>
+            <button
+              onClick={() => { setMandateForm({ type: "NACH", amount_limit: "15000" }); setShowMandateModal(true); }}
+              className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-500/20 active:scale-[0.98] transition-all inline-flex items-center gap-1.5"
+            >
+              <Landmark className="w-3.5 h-3.5" /> Setup NACH e-Mandate
+            </button>
           </div>
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
             <table className="w-full text-sm">
@@ -562,21 +655,21 @@ export default function BillingPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
-                {mandates.length === 0 ? <tr><td colSpan={4} className="text-center py-16 text-slate-400 text-xs">{t("noMandatesFound")}</td></tr>
-                  : mandates.map((m) => (
+                {(Array.isArray(mandates) ? mandates : []).length === 0 ? <tr><td colSpan={4} className="text-center py-16 text-slate-400 text-xs">{t("noMandatesFound")}</td></tr>
+                  : (Array.isArray(mandates) ? mandates : []).map((m) => (
                     <tr key={m.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors">
                       <td className="px-5 py-3.5 font-bold text-slate-900 dark:text-white text-xs">{m.type}</td>
                       <td className="px-4 py-3.5 text-slate-700 dark:text-slate-300 font-mono text-xs">{formatCurrency(m.amount_limit || 0)}</td>
                       <td className="px-4 py-3.5">
-                        <span className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
+                        <span className={`text-[11px] font-bold px-2.5 py-1 rounded-lg ${m.status === 'ACTIVE' ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300' : m.status === 'PAUSED' ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>
                           {m.status}
                         </span>
                       </td>
                       <td className="px-4 py-3.5">
                         <div className="flex gap-2">
-                          <button onClick={() => updateMandate(m.id, "PAUSED")} className="px-2.5 py-1 text-xs font-semibold border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800">Pause</button>
-                          <button onClick={() => updateMandate(m.id, "ACTIVE")} className="px-2.5 py-1 text-xs font-semibold bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100">Activate</button>
-                          <button onClick={() => updateMandate(m.id, "CANCELLED")} className="px-2.5 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-lg">Cancel</button>
+                          {m.status === "ACTIVE" && <button onClick={() => updateMandate(m.id, "PAUSED")} className="px-2.5 py-1 text-xs font-semibold border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800">Pause</button>}
+                          {m.status === "PAUSED" && <button onClick={() => updateMandate(m.id, "ACTIVE")} className="px-2.5 py-1 text-xs font-semibold bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100">Activate</button>}
+                          {m.status !== "CANCELLED" && <button onClick={() => setCancellingMandate(m)} className="px-2.5 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-lg">Cancel</button>}
                         </div>
                       </td>
                     </tr>
@@ -624,8 +717,8 @@ export default function BillingPage() {
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
               {loading ? [...Array(5)].map((_, i) => <tr key={i}><td colSpan={7} className="px-5 py-4"><div className="h-4 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" /></td></tr>)
-                : defaulters.length === 0 ? <tr><td colSpan={7} className="text-center py-16 text-slate-400 text-xs"><Users className="w-10 h-10 mx-auto mb-2 opacity-30 text-slate-400" />No defaulters on record</td></tr>
-                  : defaulters.map((d: Defaulter, i: number) => (
+                : (Array.isArray(defaulters) ? defaulters : []).length === 0 ? <tr><td colSpan={7} className="text-center py-16 text-slate-400 text-xs"><Users className="w-10 h-10 mx-auto mb-2 opacity-30 text-slate-400" />No defaulters on record</td></tr>
+                  : (Array.isArray(defaulters) ? defaulters : []).map((d: Defaulter, i: number) => (
                     <tr key={i} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors">
                       <td className="px-5 py-3.5 font-bold text-slate-900 dark:text-white text-xs">{d.member_name || d.member_id}</td>
                       <td className="px-4 py-3.5 text-slate-600 dark:text-slate-400 text-xs">{d.flat_number || "—"}</td>
@@ -694,8 +787,8 @@ export default function BillingPage() {
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
                 {loading ? [...Array(5)].map((_, i) => <tr key={i}><td colSpan={5} className="px-5 py-4"><div className="h-4 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" /></td></tr>)
-                  : dunningHistory.length === 0 ? <tr><td colSpan={5} className="text-center py-16 text-slate-400 text-xs"><FileText className="w-10 h-10 mx-auto mb-2 opacity-30 text-slate-400" />No dunning records dispatched</td></tr>
-                    : dunningHistory.map((d: DunningRecord, i: number) => (
+                  : (Array.isArray(dunningHistory) ? dunningHistory : []).length === 0 ? <tr><td colSpan={5} className="text-center py-16 text-slate-400 text-xs"><FileText className="w-10 h-10 mx-auto mb-2 opacity-30 text-slate-400" />No dunning records dispatched</td></tr>
+                    : (Array.isArray(dunningHistory) ? dunningHistory : []).map((d: DunningRecord, i: number) => (
                       <tr key={i} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors">
                         <td className="px-5 py-3.5 text-slate-500 dark:text-slate-400 text-xs">{d.reminder_date ? formatDate(d.reminder_date) : "—"}</td>
                         <td className="px-4 py-3.5">
@@ -1367,6 +1460,281 @@ export default function BillingPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── View Bill & Tax Breakup Modal ── */}
+      {viewingBill && (
+        <div className="fixed inset-0 bg-slate-900/40 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-2xl w-full max-w-xl p-6 sm:p-7 animate-scale-in max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-100 dark:border-indigo-800/40 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                  <Receipt className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">{viewingBill.bill_number}</h2>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${getStatusColor(viewingBill.status)}`}>
+                      {viewingBill.status.replace(/_/g, " ")}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400">Tax Invoice &amp; Billing Head Breakup</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setViewingBill(null)}
+                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Bill Metadata Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 py-4 border-b border-slate-100 dark:border-slate-800 text-xs">
+              <div>
+                <p className="text-slate-400 font-medium">Billing Period</p>
+                <p className="font-bold text-slate-800 dark:text-slate-200 mt-0.5">{viewingBill.billing_period || "—"}</p>
+              </div>
+              <div>
+                <p className="text-slate-400 font-medium">Bill Type</p>
+                <p className="font-bold text-slate-800 dark:text-slate-200 mt-0.5">{viewingBill.bill_type}</p>
+              </div>
+              <div>
+                <p className="text-slate-400 font-medium">Issue Date</p>
+                <p className="font-bold text-slate-800 dark:text-slate-200 mt-0.5">{viewingBill.bill_date ? formatDate(viewingBill.bill_date) : formatDate(viewingBill.created_at)}</p>
+              </div>
+              <div>
+                <p className="text-slate-400 font-medium">Due Date</p>
+                <p className="font-bold text-rose-600 dark:text-rose-400 mt-0.5">{viewingBill.due_date ? formatDate(viewingBill.due_date) : "—"}</p>
+              </div>
+            </div>
+
+            {/* Resident / Unit Details if available */}
+            {(viewingBill.member_name || viewingBill.flat_number || members.find(m => m.id === viewingBill.member_id)) && (
+              <div className="py-3 px-3.5 my-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+                <div>
+                  <p className="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Billed To</p>
+                  <p className="font-bold text-slate-900 dark:text-white mt-0.5">
+                    {viewingBill.member_name || (() => {
+                      const m = members.find(x => x.id === viewingBill.member_id);
+                      return m ? `${m.first_name} ${m.last_name}` : "Resident";
+                    })()}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Unit</p>
+                  <p className="font-mono font-bold text-indigo-600 dark:text-indigo-400 mt-0.5">
+                    {(() => {
+                      const m = members.find(x => x.id === viewingBill.member_id);
+                      const wing = viewingBill.wing || m?.wing;
+                      const flat = viewingBill.flat_number || m?.flat_number;
+                      return flat ? `${wing ? `Wing ${wing} - ` : ''}${flat}` : 'Society Unit';
+                    })()}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Line Item & Tax Breakdown Table */}
+            <div className="mt-3">
+              <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Itemized Assessment &amp; Tax</h3>
+              <div className="border border-slate-200/80 dark:border-slate-800 rounded-2xl overflow-hidden">
+                <table className="w-full text-xs">
+                  <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 font-bold border-b border-slate-200/80 dark:border-slate-800">
+                    <tr>
+                      <th className="px-3.5 py-2.5 text-left">Description / Head</th>
+                      <th className="px-3 py-2.5 text-right">Base Amount</th>
+                      <th className="px-3 py-2.5 text-right">Tax (10%)</th>
+                      <th className="px-3.5 py-2.5 text-right">Subtotal</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {viewingBill.items && viewingBill.items.length > 0 ? (
+                      viewingBill.items.map((it: any, idx: number) => (
+                        <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
+                          <td className="px-3.5 py-2.5 font-medium text-slate-900 dark:text-white">{it.description || it.head_name || "Maintenance Head"}</td>
+                          <td className="px-3 py-2.5 text-right font-mono text-slate-700 dark:text-slate-300">{formatCurrency(parseFloat(it.amount || 0))}</td>
+                          <td className="px-3 py-2.5 text-right font-mono text-slate-500">{formatCurrency(parseFloat(it.tax_amount || 0))}</td>
+                          <td className="px-3.5 py-2.5 text-right font-mono font-bold text-slate-900 dark:text-white">{formatCurrency(parseFloat(it.total_amount || (Number(it.amount) + Number(it.tax_amount)) || 0))}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
+                        <td className="px-3.5 py-2.5 font-medium text-slate-900 dark:text-white">
+                          Monthly Maintenance Head
+                          <span className="block text-[10px] text-slate-400 font-normal">Society upkeep, common amenities, &amp; statutory reserve</span>
+                        </td>
+                        <td className="px-3 py-2.5 text-right font-mono text-slate-700 dark:text-slate-300">
+                          {formatCurrency(viewingBill.amount || (viewingBill.total_amount - (viewingBill.tax_amount || 0)))}
+                        </td>
+                        <td className="px-3 py-2.5 text-right font-mono text-slate-500">
+                          {formatCurrency(viewingBill.tax_amount || Math.round((viewingBill.amount || viewingBill.total_amount) * 0.10))}
+                        </td>
+                        <td className="px-3.5 py-2.5 text-right font-mono font-bold text-slate-900 dark:text-white">
+                          {formatCurrency(viewingBill.total_amount)}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Arithmetic Reconciliation Box */}
+            <div className="mt-4 p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800 space-y-1.5 text-xs">
+              <div className="flex justify-between text-slate-600 dark:text-slate-400">
+                <span>Subtotal (Base Charges):</span>
+                <span className="font-mono font-semibold">{formatCurrency(viewingBill.amount || (viewingBill.total_amount - (viewingBill.tax_amount || 0)))}</span>
+              </div>
+              <div className="flex justify-between text-slate-600 dark:text-slate-400">
+                <span>GST / Society Tax (10%):</span>
+                <span className="font-mono font-semibold">{formatCurrency(viewingBill.tax_amount || Math.round((viewingBill.amount || viewingBill.total_amount) * 0.10))}</span>
+              </div>
+              <div className="flex justify-between text-slate-900 dark:text-white font-bold pt-1.5 border-t border-slate-200 dark:border-slate-700 text-sm">
+                <span>Grand Total:</span>
+                <span className="font-mono text-indigo-600 dark:text-indigo-400">{formatCurrency(viewingBill.total_amount)}</span>
+              </div>
+              <div className="flex justify-between text-emerald-600 font-semibold pt-1">
+                <span>Paid to Date:</span>
+                <span className="font-mono">{formatCurrency(viewingBill.paid_amount || 0)}</span>
+              </div>
+              <div className="flex justify-between text-rose-600 font-bold text-sm pt-1 border-t border-slate-200/60 dark:border-slate-700/60">
+                <span>Balance Outstanding:</span>
+                <span className="font-mono">{formatCurrency(Math.max(0, viewingBill.total_amount - (viewingBill.paid_amount || 0)))}</span>
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex gap-2.5 pt-5">
+              <button
+                type="button"
+                onClick={() => handleDownloadBillPDF(viewingBill.id)}
+                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5"
+              >
+                <Download className="w-4 h-4 text-slate-500" /> Download PDF
+              </button>
+              {(viewingBill.total_amount - (viewingBill.paid_amount || 0)) > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const b = viewingBill;
+                    setViewingBill(null);
+                    setSelectedBill(b);
+                    setPayForm(p => ({ ...p, amount: String(b.total_amount - (b.paid_amount || 0)), bill_id: b.id }));
+                    setShowPayment(true);
+                  }}
+                  className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md shadow-indigo-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5"
+                >
+                  <IndianRupee className="w-4 h-4" /> Record Payment
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setViewingBill(null)}
+                className="px-4 py-2.5 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl text-xs font-bold transition-all"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Setup Mandate Modal ── */}
+      {showMandateModal && (
+        <div className="fixed inset-0 bg-slate-900/40 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-2xl w-full max-w-md p-6 sm:p-7 animate-scale-in">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-100 dark:border-indigo-800/40 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                  <Zap className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Configure Autopay Mandate</h2>
+                  <p className="text-xs text-slate-400">Set payment limit before activating</p>
+                </div>
+              </div>
+              <button onClick={() => setShowMandateModal(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 rounded-xl">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleCreateMandate} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Mandate Type *</label>
+                <select
+                  value={mandateForm.type}
+                  onChange={(e) => setMandateForm({ ...mandateForm, type: e.target.value as any })}
+                  className="w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 rounded-xl text-xs font-semibold"
+                >
+                  <option value="UPI_AUTOPAY">UPI Autopay (Instant QR / App Auth)</option>
+                  <option value="NACH">NACH e-Mandate (NetBanking / Debit Card)</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Maximum Debit Limit (₹) *</label>
+                <input
+                  type="number"
+                  min="500"
+                  max="100000"
+                  step="500"
+                  required
+                  value={mandateForm.amount_limit}
+                  onChange={(e) => setMandateForm({ ...mandateForm, amount_limit: e.target.value })}
+                  placeholder="e.g. 5000"
+                  className="w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 rounded-xl text-xs font-semibold"
+                />
+                <p className="text-[11px] text-slate-400 mt-1">Automatic deduction will never exceed this maximum limit.</p>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowMandateModal(false)}
+                  className="flex-1 py-2.5 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={mandateSubmitting}
+                  className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md shadow-indigo-500/20 active:scale-[0.98] transition-all disabled:opacity-50"
+                >
+                  {mandateSubmitting ? "Activating..." : "Confirm &amp; Setup Mandate"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Cancel Mandate Confirmation Modal ── */}
+      {cancellingMandate && (
+        <div className="fixed inset-0 bg-slate-900/40 dark:bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-2xl w-full max-w-sm p-6 text-center animate-scale-in">
+            <div className="w-12 h-12 bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400 rounded-2xl mx-auto flex items-center justify-center mb-3">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-1">Cancel Autopay Mandate?</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-5">
+              Are you sure you want to cancel the <strong>{cancellingMandate.type}</strong> mandate (Limit: {formatCurrency(cancellingMandate.amount_limit || 0)})? Automatic recurring debits will stop.
+            </p>
+            <div className="flex gap-2.5">
+              <button
+                type="button"
+                onClick={() => setCancellingMandate(null)}
+                className="flex-1 py-2.5 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold"
+              >
+                Keep Active
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmCancelMandate}
+                className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-md shadow-rose-500/20 active:scale-[0.98] transition-all"
+              >
+                Yes, Cancel Mandate
+              </button>
+            </div>
           </div>
         </div>
       )}

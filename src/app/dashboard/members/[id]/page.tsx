@@ -253,7 +253,7 @@ export default function MemberHistoryPage() {
             </div>
             <div className="bg-white rounded-2xl p-4 border border-gray-100">
               <p className="text-xs text-gray-500">Outstanding</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">Rs {outstanding.toLocaleString("en-IN")}</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">₹{outstanding.toLocaleString("en-IN")}</p>
             </div>
           </div>
 
@@ -289,7 +289,7 @@ export default function MemberHistoryPage() {
                   <div key={b.id} className="border border-gray-100 rounded-xl p-3">
                     <p className="text-sm font-medium text-gray-800">{b.bill_number}</p>
                     <p className="text-xs text-gray-500">{b.billing_period || "-"} | Due: {b.due_date || "-"}</p>
-                    <p className="text-xs text-gray-600 mt-1">Rs {Number(b.total_amount || 0).toLocaleString("en-IN")} | {b.status}</p>
+                    <p className="text-xs text-gray-600 mt-1">₹{Number(b.total_amount || 0).toLocaleString("en-IN")} | {b.status}</p>
                   </div>
                 ))}
               </div>
@@ -301,7 +301,7 @@ export default function MemberHistoryPage() {
               <div className="space-y-2 max-h-96 overflow-auto">
                 {filteredPayments.length === 0 ? <p className="text-sm text-gray-400">No payments found</p> : filteredPayments.map((p) => (
                   <div key={p.id} className="border border-gray-100 rounded-xl p-3">
-                    <p className="text-sm font-medium text-gray-800">Rs {Number(p.amount || 0).toLocaleString("en-IN")}</p>
+                    <p className="text-sm font-medium text-gray-800">₹{Number(p.amount || 0).toLocaleString("en-IN")}</p>
                     <p className="text-xs text-gray-500">{p.payment_method} | {new Date(p.payment_date).toLocaleDateString("en-IN")}</p>
                     <p className="text-xs text-gray-600 mt-1">{p.status}{p.payment_reference ? ` | Ref: ${p.payment_reference}` : ""}</p>
                   </div>

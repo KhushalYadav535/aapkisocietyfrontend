@@ -563,11 +563,11 @@ export default function MoveRequestsPage() {
               {/* Society Header */}
               <div className="text-center pb-6 border-b-2 border-slate-800">
                 <div className="w-12 h-12 mx-auto mb-2 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-black text-xl">
-                  AS
+                  {user?.society_name ? user.society_name.slice(0, 2).toUpperCase() : "SC"}
                 </div>
-                <h2 className="text-2xl font-black uppercase tracking-wider text-slate-900">AAPKI SOCIETY MANAGEMENT</h2>
-                <p className="text-xs text-slate-600 font-semibold tracking-wide">CO-OPERATIVE HOUSING SOCIETY LTD.</p>
-                <p className="text-[11px] text-slate-400 mt-0.5">Registration No: BOM/HSG/2024 • Verified Resident Portal</p>
+                <h2 className="text-2xl font-black uppercase tracking-wider text-slate-900">{user?.society_name ? `${user.society_name} Co-Operative Housing Society Ltd.` : "Sunrise Co-Operative Housing Society Ltd."}</h2>
+                <p className="text-xs text-slate-600 font-semibold tracking-wide">Registered Housing Society • Management Committee</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">Registration No: {(user as any)?.registration_number || "MH/CHS/2024/1234"} • Verified Resident Portal</p>
                 <div className="inline-block mt-3 px-4 py-1 bg-slate-900 text-white text-xs font-black tracking-widest uppercase rounded-md">
                   DIGITAL NO OBJECTION CERTIFICATE (NOC)
                 </div>
@@ -587,7 +587,7 @@ export default function MoveRequestsPage() {
                 </div>
 
                 <p className="text-slate-700 leading-relaxed">
-                  This is to certify that the Managing Committee of AapkiSociety has <strong>NO OBJECTION</strong> for the resident movement specified below, having verified society dues, security deposits, and building regulations:
+                  This is to certify that the Managing Committee of {user?.society_name || "Sunrise CHS"} has <strong>NO OBJECTION</strong> for the resident movement specified below, having verified society dues, security deposits, and building regulations:
                 </p>
 
                 <div className="grid grid-cols-2 gap-3.5 bg-slate-50/80 p-4 rounded-xl border border-slate-200">

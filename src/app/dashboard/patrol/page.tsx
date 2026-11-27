@@ -100,7 +100,7 @@ export default function PatrolPage() {
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <QrCode className="w-7 h-7 text-indigo-500" /> Guard Patrolling
           </h1>
-          <p className="text-gray-400 text-sm mt-1">{checkpoints.length} checkpoints · {logs.length} scans today</p>
+          <p className="text-gray-400 text-sm mt-1">{checkpoints.length} checkpoints · {summary.reduce((s, x) => s + (x.scan_count || 0), 0)} scans today</p>
         </div>
         {isAdmin && (
           <button onClick={() => setShowAdd(true)}
