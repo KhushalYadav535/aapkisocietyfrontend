@@ -120,7 +120,8 @@ export default function BillingPage() {
         setDunningHistory(Array.isArray(recs) ? recs : []);
       } else if (tab === "Arrears Aging") {
         const ar = await billingAPI.getArrearsAging().catch(() => ({ data: { buckets: [] } }));
-        setArrears(ar.data || { buckets: [] });
+        const rawBuckets = ar.data?.buckets || (Array.isArray(ar.data) ? ar.data : []);
+        setArrears({ buckets: rawBuckets });
       }
     } catch {
       toast.error(t("failedToLoadBillingData"));
@@ -393,17 +394,19 @@ export default function BillingPage() {
           </div>
         )}
 
-        {canCreate && tab === "Generate" && (
+        {canCreate && (tab === "Bills" || tab === "Generate") && (
           <div className="flex gap-2">
             <button 
+              type="button"
               onClick={handleExportExcel} 
-              className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-xl font-bold text-xs shadow-md shadow-emerald-500/20"
+              className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-xl font-bold text-xs shadow-md shadow-emerald-500/20 cursor-pointer"
             >
               <FileSpreadsheet className="w-3.5 h-3.5" /> Export Excel
             </button>
             <button 
+              type="button"
               onClick={handleExportPDF} 
-              className="inline-flex items-center gap-1.5 bg-rose-600 hover:bg-rose-700 text-white px-3.5 py-2 rounded-xl font-bold text-xs shadow-md shadow-rose-500/20"
+              className="inline-flex items-center gap-1.5 bg-rose-600 hover:bg-rose-700 text-white px-3.5 py-2 rounded-xl font-bold text-xs shadow-md shadow-rose-500/20 cursor-pointer"
             >
               <Download className="w-3.5 h-3.5" /> Export PDF
             </button>

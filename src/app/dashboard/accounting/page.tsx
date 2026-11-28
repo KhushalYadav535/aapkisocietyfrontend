@@ -31,8 +31,12 @@ export default function AccountingPage() {
   const [ledgerData, setLedgerData] = useState<any>(null);
   const [isLedgerLoading, setIsLedgerLoading] = useState(false);
 
-  // Date filters
-  const [fromDate, setFromDate] = useState(() => { const d = new Date(); d.setMonth(d.getMonth() - 1); return d.toISOString().split('T')[0]; });
+  // Date filters - defaults to start of current Indian Financial Year (April 1st)
+  const [fromDate, setFromDate] = useState(() => {
+    const now = new Date();
+    const year = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
+    return `${year}-04-01`;
+  });
   const [toDate, setToDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [asOnDate, setAsOnDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [brMonth, setBrMonth] = useState(() => new Date().getMonth() + 1);

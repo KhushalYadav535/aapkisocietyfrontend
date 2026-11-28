@@ -55,7 +55,12 @@ export default function LoginPage() {
       toast.success("Welcome back to AapkiSociety!");
       router.push("/dashboard");
     } catch (error: any) {
-      toast.error(error.response?.data?.error || "Invalid email or password. Please try again.");
+      console.error("Login error:", error);
+      const msg = error.response?.data?.error 
+        || (error.code === 'ECONNABORTED' ? "Request timed out. Please try again." : null)
+        || (error.message?.includes('Network Error') ? "Unable to reach server. Please check your internet connection." : null)
+        || "Invalid email or password. Please try again.";
+      toast.error(msg);
     } finally {
       setLoading(false);
     }

@@ -118,7 +118,7 @@ export default function MessagesPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between"><p className="font-semibold text-sm text-gray-900 truncate">{c.other_name} {c.other_last_name}</p>{c.unread_count > 0 && <span className="w-5 h-5 bg-indigo-600 text-white text-xs rounded-full flex items-center justify-center">{c.unread_count}</span>}</div>
                       <p className="text-xs text-gray-500 truncate">{c.other_flat ? `Wing ${c.other_wing} - ${c.other_flat}` : ""}</p>
-                      <p className="text-xs text-gray-400 truncate mt-0.5">{c.last_message}</p>
+                      <p className="text-xs text-gray-400 truncate mt-0.5">{c.last_message || c.content || "Click to open conversation"}</p>
                     </div>
                   </div>
                 </button>
@@ -203,14 +203,15 @@ export default function MessagesPage() {
                   {messages.length === 0 ? (
                     <div className="text-center py-16"><MessageSquare className="w-12 h-12 mx-auto mb-2 text-gray-200" /><p className="text-sm text-gray-400">Start the conversation</p></div>
                   ) : messages.map(m => {
-                    const isMe = m.sender_id === user?.id;
+                    const isMe = String(m.sender_id) === String(user?.id);
+                    const msgText = m.content || m.message || m.body || m.text || "";
                     return (
-                      <div key={m.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+                      <div key={m.id || Math.random()} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
                         <div className={`max-w-[75%] ${isMe ? "order-2" : "order-1"}`}>
                           <div className={`rounded-2xl px-4 py-2.5 ${isMe ? "bg-indigo-600 text-white rounded-br-md" : "bg-gray-100 text-gray-900 rounded-bl-md"}`}>
-                            <p className="text-sm">{m.content}</p>
+                            <p className="text-sm whitespace-pre-wrap break-words">{msgText || "..."}</p>
                           </div>
-                          <p className={`text-[10px] text-gray-400 mt-1 ${isMe ? "text-right" : "text-left"}`}>{formatDate(m.created_at)}</p>
+                          <p className={`text-[10px] text-gray-400 mt-1 ${isMe ? "text-right" : "text-left"}`}>{m.created_at ? formatDate(m.created_at) : ""}</p>
                         </div>
                       </div>
                     );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
@@ -132,6 +132,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [showNotifications, setShowNotifications] = useState(false);
   const [notificationsList, setNotificationsList] = useState<any[]>([]);
   const [unreadNotifsCount, setUnreadNotifsCount] = useState(3);
+
+  const notifRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setShowNotifications(false);
+      }
+    };
+    if (showNotifications) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showNotifications]);
 
   const toggleSection = (secKey: string) => {
     setCollapsedSections(prev => ({
@@ -542,15 +556,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <button onClick={() => setLocale(locale === "en" ? "hi" : "en")} className="px-2.5 py-1.5 text-xs font-bold rounded-lg border border-gray-200 hover:border-indigo-300 hover:text-indigo-600 text-gray-600 transition-all" title="Switch language">
                 {locale === "en" ? "EN" : "HI"}
               </button>
-              <div className="relative">
+              <div ref={notifRef} className="relative">
                 <button 
+                  type="button"
                   onClick={() => setShowNotifications(prev => !prev)}
                   className="relative p-2 hover:bg-indigo-50 rounded-xl transition-colors group cursor-pointer"
                   title="Notifications"
                 >
                   <Bell className="w-4 h-4 text-gray-500 group-hover:text-indigo-600 transition-colors" />
                   {unreadNotifsCount > 0 && (
-                    <span className="absolute top-1.5 right-1.5 min-w-[15px] h-[15px] px-1 bg-red-500 text-[9px] font-bold text-white rounded-full flex items-center justify-center ring-2 ring-white animate-pulse">
+                    <span className="absolute top-1.5 right-1.5 min-w-[15px] h-[15px] px-1 bg-red-500 text-[9px] font-bold text-white rounded-full flex items-center justify-center ring-2 ring-white animate-pulse pointer-events-none">
                       {unreadNotifsCount > 9 ? '9+' : unreadNotifsCount}
                     </span>
                   )}

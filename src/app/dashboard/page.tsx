@@ -271,7 +271,7 @@ export default function DashboardPage() {
                 {billingSummary && billingSummary.overdue_bills > 0 && (
                   <span className="inline-flex items-center gap-1.5 font-semibold text-slate-800 dark:text-slate-200">
                     <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-                    <strong className="text-rose-700 dark:text-rose-300">{billingSummary.overdue_bills} Overdue Invoices</strong> ({formatCurrency(billingSummary.outstanding)})
+                    <strong className="text-rose-700 dark:text-rose-300">{billingSummary.overdue_bills} Overdue Invoices</strong> ({formatCurrency(billingSummary.overdue_amount || billingSummary.outstanding)})
                   </span>
                 )}
               </div>
