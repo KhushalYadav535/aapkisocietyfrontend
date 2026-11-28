@@ -113,7 +113,8 @@ export default function BillingPage() {
       } else if (tab === "Defaulters") {
         const d = await billingAPI.getDefaulters().catch(() => ({ data: { defaulters: [] } }));
         const defs = d.data?.defaulters || (Array.isArray(d.data) ? d.data : []);
-        setDefaulters(Array.isArray(defs) ? defs : []);
+        const validDefs = (Array.isArray(defs) ? defs : []).filter((x: any) => Number(x.days_overdue) > 0);
+        setDefaulters(validDefs);
       } else if (tab === "Dunning") {
         const dh = await billingAPI.getDunningHistory().catch(() => ({ data: { records: [] } }));
         const recs = dh.data?.records || (Array.isArray(dh.data) ? dh.data : []);

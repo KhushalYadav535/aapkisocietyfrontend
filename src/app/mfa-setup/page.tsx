@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { authAPI } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import toast from "react-hot-toast";
-import { Mail, ShieldCheck, Lock, RotateCcw, CheckCircle2, ArrowRight, LogOut, AlertCircle, Clock } from "lucide-react";
+import { Mail, ShieldCheck, Lock, RotateCcw, CheckCircle2, ArrowRight, LogOut, AlertCircle, Clock, Smartphone, HelpCircle } from "lucide-react";
 
 export default function MfaSetupPage() {
   const router = useRouter();
@@ -17,6 +17,8 @@ export default function MfaSetupPage() {
   const [countdown, setCountdown] = useState(0);
   const [demoOtp, setDemoOtp] = useState("");
   const [verifyError, setVerifyError] = useState("");
+  const [sendingSms, setSendingSms] = useState(false);
+  const [requestingReset, setRequestingReset] = useState(false);
   const hasSentInitialOtp = useRef(false);
 
   const getErrorMessage = (error: unknown) => {
@@ -34,9 +36,8 @@ export default function MfaSetupPage() {
       const res = await authAPI.setupMfa({ method: "EMAIL_OTP" });
       const targetEmail = res.data?.email || user?.email || "your registered email";
       setSentToEmail(targetEmail);
-      if (res.data?.demo_otp) {
+      if (res.data?.demo_otp && process.env.NODE_ENV !== "production" && process.env.NEXT_PUBLIC_SHOW_TEST_OTP === "true") {
         setDemoOtp(res.data.demo_otp);
-        setOtp(res.data.demo_otp);
       }
       setCountdown(30);
       toast.success(isResend ? "New OTP sent to your email!" : res.data?.message || `Verification code sent to ${targetEmail}`);
@@ -46,6 +47,33 @@ export default function MfaSetupPage() {
       toast.error(msg);
     } finally {
       setSending(false);
+    }
+  };
+
+  const handleSmsFallback = async () => {
+    setSendingSms(true);
+    setVerifyError("");
+    try {
+      const res = await authAPI.sendMfaSmsFallback();
+      toast.success(res.data?.message || "SMS OTP dispatched to registered mobile number!");
+      setCountdown(30);
+    } catch (err: unknown) {
+      const msg = getErrorMessage(err) || "Failed to dispatch SMS code";
+      toast.error(msg);
+    } finally {
+      setSendingSms(false);
+    }
+  };
+
+  const handleAdminResetRequest = async () => {
+    setRequestingReset(true);
+    try {
+      const res = await authAPI.requestMfaReset();
+      toast.success(res.data?.message || "Reset request submitted to Society Administrator.");
+    } catch {
+      toast.error("Failed to submit reset request. Please contact your Society Admin directly.");
+    } finally {
+      setRequestingReset(false);
     }
   };
 
@@ -121,22 +149,24 @@ export default function MfaSetupPage() {
           <span>Code is valid for <strong>10 minutes</strong>. Check Spam if not in Inbox.</span>
         </div>
 
-        {/* Demo / Testing OTP Badge */}
-        <div className="bg-amber-50 border border-amber-200/90 text-amber-900 text-xs px-4 py-3 rounded-2xl flex items-center justify-between">
-          <div>
-            <span className="font-semibold">Demo / Testing Code:</span>{" "}
-            <code className="font-mono font-bold text-indigo-700 bg-white px-2 py-0.5 rounded border border-amber-200">
-              {demoOtp || "123456"}
-            </code>
+        {/* Dev / Testing OTP Badge (Only in local development) */}
+        {process.env.NODE_ENV !== "production" && process.env.NEXT_PUBLIC_SHOW_TEST_OTP === "true" && demoOtp && (
+          <div className="bg-amber-50 border border-amber-200/90 text-amber-900 text-xs px-4 py-3 rounded-2xl flex items-center justify-between">
+            <div>
+              <span className="font-semibold">Dev / Testing Code:</span>{" "}
+              <code className="font-mono font-bold text-indigo-700 bg-white px-2 py-0.5 rounded border border-amber-200">
+                {demoOtp}
+              </code>
+            </div>
+            <button
+              type="button"
+              onClick={() => { setOtp(demoOtp); setVerifyError(""); }}
+              className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 underline cursor-pointer"
+            >
+              Fill
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={() => { setOtp(demoOtp || "123456"); setVerifyError(""); }}
-            className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 underline cursor-pointer"
-          >
-            Fill
-          </button>
-        </div>
+        )}
 
         {/* In-line Error Alert */}
         {verifyError && (
@@ -201,6 +231,31 @@ export default function MfaSetupPage() {
               <LogOut className="w-3.5 h-3.5" />
               Sign Out
             </button>
+          </div>
+
+          {/* Real Fallback Channels for Production Security */}
+          <div className="border-t border-slate-100 dark:border-slate-800 pt-4 space-y-2.5">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Trouble receiving verification code?</p>
+            <div className="flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={handleSmsFallback}
+                disabled={sendingSms}
+                className="w-full py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+              >
+                <Smartphone className="w-3.5 h-3.5 text-indigo-500" />
+                <span>{sendingSms ? "Dispatching SMS OTP..." : "Send SMS to Registered Mobile"}</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleAdminResetRequest}
+                disabled={requestingReset}
+                className="w-full py-1.5 px-3 text-slate-500 hover:text-slate-800 text-[11px] font-medium flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50"
+              >
+                <HelpCircle className="w-3.5 h-3.5 text-slate-400" />
+                <span>{requestingReset ? "Submitting request..." : "Lost access? Request Administrator Reset"}</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>

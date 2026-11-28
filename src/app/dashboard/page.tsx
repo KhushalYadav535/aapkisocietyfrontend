@@ -424,7 +424,9 @@ export default function DashboardPage() {
 
           <div className="bg-white dark:bg-slate-800/80 rounded-2xl p-4 border border-slate-200/80 dark:border-slate-700/60 shadow-xs hover:border-indigo-300 dark:hover:border-indigo-500/40 transition-all">
             <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{isGuard ? "Gate Visitors" : "Pending Dues"}</p>
-            <p className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-1">{isGuard ? (stats?.today_visitors || 0) : (stats?.pending_bills || 0)}</p>
+            <p className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-1">
+              {isGuard ? (stats?.today_visitors || 0) : (isResident ? (billingSummary?.pending_bills ?? stats?.pending_bills ?? 0) : (stats?.pending_bills || 0))}
+            </p>
             <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-1 font-semibold flex items-center gap-1">
               <Clock className="w-3 h-3" />
               {isGuard ? "Today's Log" : "Action Required"}
@@ -467,7 +469,7 @@ export default function DashboardPage() {
 
             <ExecutiveStatCard
               label={t("pendingBills")}
-              value={stats?.pending_bills || 0}
+              value={isResident ? (billingSummary?.pending_bills ?? stats?.pending_bills ?? 0) : (stats?.pending_bills || 0)}
               subtitle="Invoices awaiting settlement"
               icon={Receipt}
               gradient="from-amber-500 to-orange-600"

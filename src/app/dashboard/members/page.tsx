@@ -71,7 +71,7 @@ export default function MembersPage() {
 
   const loadData = async () => {
     try {
-      const res = await memberAPI.getAll();
+      const res = await memberAPI.getAll({ limit: 1000 });
       setMembers(res.data.members || []);
       const sid = user?.society_id || res.data.members?.[0]?.society_id;
       if (sid) {
@@ -242,8 +242,8 @@ export default function MembersPage() {
         {[
           { label: "Residents", count: members.filter(m => m.role === "RESIDENT").length, desc: "Flats & Tenants", gradient: "from-orange-500 to-amber-500", text: "text-orange-600" },
           { label: "Committee", count: members.filter(m => m.role === "COMMITTEE").length, desc: "Governing Body", gradient: "from-blue-500 to-cyan-600", text: "text-blue-600" },
-          { label: "Treasury", count: members.filter(m => ["TREASURER", "MAKER", "CHECKER"].includes(m.role)).length, desc: "Financial Controls", gradient: "from-emerald-500 to-teal-600", text: "text-emerald-600" },
-          { label: "Admins", count: members.filter(m => ["ADMIN", "PLATFORM_ADMIN"].includes(m.role)).length, desc: "System Authorities", gradient: "from-violet-600 to-indigo-600", text: "text-violet-600" },
+          { label: "Treasury", count: members.filter(m => ["TREASURER", "MAKER", "CHECKER", "TREASURY"].includes(m.role)).length, desc: "Financial Controls", gradient: "from-emerald-500 to-teal-600", text: "text-emerald-600" },
+          { label: "Admins & Staff", count: members.filter(m => !["RESIDENT", "COMMITTEE", "TREASURER", "MAKER", "CHECKER", "TREASURY"].includes(m.role)).length, desc: "Officials & Security", gradient: "from-violet-600 to-indigo-600", text: "text-violet-600" },
         ].map((stat, i) => (
           <div key={i} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-4 shadow-xs hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
