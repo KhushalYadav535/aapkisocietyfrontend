@@ -88,6 +88,18 @@ export default function MembersPage() {
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.email?.trim() || !formData.first_name?.trim() || !formData.last_name?.trim()) {
+      toast.error("Please enter email, first name, and last name");
+      return;
+    }
+    if (!formData.wing) {
+      toast.error("Please select a Wing for this member");
+      return;
+    }
+    if (!formData.flat_number) {
+      toast.error("Please select a Flat Number for this member");
+      return;
+    }
     try {
       await memberAPI.create(formData);
       const isMakerOrChecker = ['MAKER', 'CHECKER'].includes(formData.role);
@@ -103,7 +115,12 @@ export default function MembersPage() {
       setShowAddModal(false);
       setFormData({ email: "", first_name: "", last_name: "", phone: "", role: "RESIDENT", flat_number: "", wing: "", password: "" });
       loadData();
-    } catch (err: any) { toast.error(err.response?.data?.error || "Failed to add member"); }
+    } catch (err: any) {
+      const msg = err.response?.data?.details
+        ? err.response.data.details.map((d: any) => d.message).join(", ")
+        : (err.response?.data?.error || "Failed to add member");
+      toast.error(msg);
+    }
   };
 
   const handleDeactivate = async (id: string) => {
@@ -424,28 +441,30 @@ export default function MembersPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">Wing</label>
+                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">Wing *</label>
                   <select
                     data-testid="member-wing"
                     value={formData.wing}
                     onChange={e => { setFormData(p => ({ ...p, wing: e.target.value, flat_number: "" })) }}
                     className="w-full px-3 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                    required
                   >
-                    <option value="">None</option>
+                    <option value="">Select Wing...</option>
                     {wings.map(w => <option key={w.id} value={w.name}>{w.name}</option>)}
                     <option value="A">A</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">Flat Number</label>
+                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">Flat Number *</label>
                   <select
                     data-testid="member-unit"
                     value={formData.flat_number}
                     onChange={e => setFormData(p => ({ ...p, flat_number: e.target.value }))}
                     className="w-full px-3 py-2.5 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                     disabled={!formData.wing}
+                    required
                   >
-                    <option value="">None</option>
+                    <option value="">{formData.wing ? "Select Flat..." : "Choose Wing first"}</option>
                     {flats.filter(f => {
                       const w = wings.find(ww => ww.name === formData.wing);
                       return w && f.wing_id === w.id;

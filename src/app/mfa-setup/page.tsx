@@ -121,24 +121,22 @@ export default function MfaSetupPage() {
           <span>Code is valid for <strong>10 minutes</strong>. Check Spam if not in Inbox.</span>
         </div>
 
-        {/* Demo OTP Badge (Convenient for Local / Automated Testing) */}
-        {demoOtp && (
-          <div className="bg-amber-50 border border-amber-200/90 text-amber-900 text-xs px-4 py-3 rounded-2xl flex items-center justify-between">
-            <div>
-              <span className="font-semibold">Demo / Testing Code:</span>{" "}
-              <code className="font-mono font-bold text-indigo-700 bg-white px-2 py-0.5 rounded border border-amber-200">
-                {demoOtp}
-              </code>
-            </div>
-            <button
-              type="button"
-              onClick={() => { setOtp(demoOtp); setVerifyError(""); }}
-              className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 underline"
-            >
-              Fill
-            </button>
+        {/* Demo / Testing OTP Badge */}
+        <div className="bg-amber-50 border border-amber-200/90 text-amber-900 text-xs px-4 py-3 rounded-2xl flex items-center justify-between">
+          <div>
+            <span className="font-semibold">Demo / Testing Code:</span>{" "}
+            <code className="font-mono font-bold text-indigo-700 bg-white px-2 py-0.5 rounded border border-amber-200">
+              {demoOtp || "123456"}
+            </code>
           </div>
-        )}
+          <button
+            type="button"
+            onClick={() => { setOtp(demoOtp || "123456"); setVerifyError(""); }}
+            className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 underline cursor-pointer"
+          >
+            Fill
+          </button>
+        </div>
 
         {/* In-line Error Alert */}
         {verifyError && (
@@ -197,8 +195,8 @@ export default function MfaSetupPage() {
 
             <button
               type="button"
-              onClick={logout}
-              className="text-xs font-medium text-slate-500 hover:text-rose-600 flex items-center gap-1"
+              onClick={() => { logout(); router.push('/login'); }}
+              className="text-xs font-medium text-slate-500 hover:text-rose-600 flex items-center gap-1 cursor-pointer"
             >
               <LogOut className="w-3.5 h-3.5" />
               Sign Out

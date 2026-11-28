@@ -112,8 +112,9 @@ export default function RBACManagement() {
     }
   };
 
-  if (!hasPermission('SOCIETY_MANAGE')) {
-    return <div className="p-6 text-red-500">You do not have permission to access RBAC Management.</div>;
+  const role = String(user?.role || '').toUpperCase();
+  if (role !== 'ADMIN' && role !== 'PLATFORM_ADMIN') {
+    return <div className="p-6 text-center text-rose-500 font-semibold bg-rose-50 rounded-2xl m-4 border border-rose-200">Access Restricted: Only Society Admins and Platform Admins can manage roles and positions.</div>;
   }
 
   if (loading) {

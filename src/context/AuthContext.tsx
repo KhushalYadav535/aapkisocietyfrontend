@@ -101,13 +101,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setPermissions([]);
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login';
+    }
   };
 
   const hasPermission = (code: string) => {
     const role = String(user?.role || '').toUpperCase();
     if (role === 'PLATFORM_ADMIN' || role === 'ADMIN') return true;
     if (['COMMITTEE', 'SECRETARY'].includes(role)) {
-      if (['COMPLAINT_ASSIGN', 'COMPLAINT_RESOLVE', 'SOCIETY_MANAGE', 'NOC_MANAGE', 'NOC_APPROVE', 'VIOLATION_MANAGE', 'ACCOUNTING_MANAGE', 'AUDIT_VIEW', 'VOUCHER_VIEW', 'REPORT_VIEW', 'COMPLIANCE_MANAGE', 'NOTIFICATION_MANAGE', 'NOTICE_CREATE', 'FACILITY_MANAGE', 'STAFF_MANAGE', 'VEHICLE_MANAGE'].includes(code)) return true;
+      if (['COMPLAINT_ASSIGN', 'COMPLAINT_RESOLVE', 'NOC_MANAGE', 'NOC_APPROVE', 'VIOLATION_MANAGE', 'ACCOUNTING_MANAGE', 'AUDIT_VIEW', 'VOUCHER_VIEW', 'REPORT_VIEW', 'COMPLIANCE_MANAGE', 'NOTIFICATION_MANAGE', 'NOTICE_CREATE', 'FACILITY_MANAGE', 'STAFF_MANAGE', 'VEHICLE_MANAGE'].includes(code)) return true;
     }
     if (['TREASURER', 'TREASURY'].includes(role)) {
       if (['ACCOUNTING_MANAGE', 'AUDIT_VIEW', 'VOUCHER_VIEW', 'REPORT_VIEW', 'BILLING_APPROVE', 'BILL_APPROVE', 'BILLING_CREATE', 'COMPLIANCE_MANAGE', 'NOTIFICATION_MANAGE', 'TAX_MANAGE', 'TAX_VIEW'].includes(code)) return true;

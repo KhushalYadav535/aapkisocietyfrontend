@@ -32,10 +32,26 @@ export default function MessagesPage() {
     if (messagesEndRef.current) messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Live polling for active conversation
+  useEffect(() => {
+    if (!selectedConv?.conversation_id) return;
+    const interval = setInterval(async () => {
+      try {
+        const r = await messageAPI.getMessages(selectedConv.conversation_id);
+        const fetched = r.data?.messages || [];
+        setMessages(prev => {
+          if (fetched.length !== prev.length) return fetched;
+          return prev;
+        });
+      } catch {}
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [selectedConv?.conversation_id]);
+
   const load = async () => {
     setLoading(true);
     try {
-      const [c, m] = await Promise.all([messageAPI.getConversations(), memberAPI.getAll()]);
+      const [c, m] = await Promise.all([messageAPI.getConversations(), memberAPI.getAll({ limit: 1000 })]);
       setConversations(c.data.conversations || []);
       setMembers(m.data.members || []);
     } catch { toast.error("Failed to load messages"); }
@@ -58,13 +74,19 @@ export default function MessagesPage() {
       || receiver?.id
       || (selectedConv?.conversation_id?.includes('__') ? selectedConv.conversation_id.split('__').find((id: string) => id !== user?.id) : null)
       || (selectedConv?.sender_id === user?.id ? selectedConv?.receiver_id : selectedConv?.sender_id);
-    if (!content.trim() || !targetId) return;
+    const textToSend = content.trim();
+    if (!textToSend || !targetId) return;
     setSending(true);
     try {
-      const r = await messageAPI.send({ receiver_id: targetId, content: content.trim() });
-      if (r.data?.message) {
-        setMessages(prev => [...prev, r.data.message]);
-      }
+      const r = await messageAPI.send({ receiver_id: targetId, content: textToSend });
+      const newMsg = r.data?.message || {
+        id: 'msg-' + Date.now(),
+        sender_id: user?.id,
+        receiver_id: targetId,
+        content: textToSend,
+        created_at: new Date().toISOString()
+      };
+      setMessages(prev => [...prev, newMsg]);
       setContent("");
       if (receiver && !selectedConv) {
         setSelectedConv({
@@ -161,7 +183,12 @@ export default function MessagesPage() {
                   <div className="px-4 py-3 border-b border-gray-100">
                     <div className="relative"><Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" /><input value={composeSearch} onChange={e => setComposeSearch(e.target.value)} className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Search member to message..." /></div>
                     {composeSearch && <div className="mt-2 border border-gray-100 rounded-xl overflow-hidden max-h-48 overflow-y-auto">
-                      {members.filter(u => `${u.first_name} ${u.last_name} ${u.flat_number || ""} ${u.wing || ""}`.toLowerCase().includes(composeSearch.toLowerCase())).slice(0, 10).map(u => (
+                      {members.filter(u => {
+                        if (u.id === user?.id) return false;
+                        const q = composeSearch.toLowerCase().trim();
+                        const searchStr = `${u.first_name || ''} ${u.last_name || ''} ${u.role || ''} ${u.email || ''} ${u.flat_number || ''} ${u.wing || ''}`.toLowerCase();
+                        return searchStr.includes(q);
+                      }).slice(0, 15).map(u => (
                         <button
                           type="button"
                           key={u.id}
@@ -181,10 +208,24 @@ export default function MessagesPage() {
                               messageAPI.getMessages(convId).then(r => setMessages(r.data?.messages || [])).catch(() => setMessages([]));
                             }
                           }}
-                          className="w-full text-left px-3 py-2.5 hover:bg-gray-50 flex items-center gap-2 border-b border-gray-50 last:border-0"
+                          className="w-full text-left px-3 py-2.5 hover:bg-gray-50 flex items-center justify-between gap-2 border-b border-gray-50 last:border-0 cursor-pointer"
                         >
-                          <div className="w-7 h-7 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 text-xs font-bold">{u.first_name?.[0]}</div>
-                          <div><p className="text-sm font-medium text-gray-900">{u.first_name} {u.last_name}</p><p className="text-xs text-gray-500">{u.flat_number ? `Wing ${u.wing || ''} - ${u.flat_number}` : ""}</p></div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-7 h-7 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 text-xs font-bold">{u.first_name?.[0]}</div>
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">{u.first_name} {u.last_name}</p>
+                              <p className="text-xs text-gray-500">{u.flat_number ? `Wing ${u.wing || ''} - ${u.flat_number}` : (u.role || "Member")}</p>
+                            </div>
+                          </div>
+                          {u.role && (
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                              u.role === 'ADMIN' ? 'bg-amber-100 text-amber-800' :
+                              u.role === 'COMMITTEE' || u.role === 'SECRETARY' ? 'bg-purple-100 text-purple-800' :
+                              u.role === 'TREASURER' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-700'
+                            }`}>
+                              {u.role}
+                            </span>
+                          )}
                         </button>
                       ))}
                     </div>}

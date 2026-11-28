@@ -86,7 +86,7 @@ const navItems: NavItem[] = [
 
   // ── 7. SYSTEM & SETUP
   { href: "/dashboard/settings", label: "Society Settings", icon: Settings, roles: ["ADMIN", "PLATFORM_ADMIN"], section: "settings" },
-  { href: "/dashboard/settings/rbac", label: "Role Management", icon: ShieldCheck, roles: ["ADMIN"], permission: "SOCIETY_MANAGE", section: "settings" },
+  { href: "/dashboard/settings/rbac", label: "Role Management", icon: ShieldCheck, roles: ["ADMIN", "PLATFORM_ADMIN"], section: "settings" },
   { href: "/dashboard/notifications", label: "Notification Channels", icon: Bell, roles: ["ADMIN", "TREASURER", "COMMITTEE"], permission: "NOTIFICATION_MANAGE", section: "settings" },
   { href: "/dashboard/privacy", label: "Privacy & Consent", icon: Fingerprint, roles: ["ADMIN", "TREASURER", "COMMITTEE", "RESIDENT", "PLATFORM_ADMIN", "MAKER", "CHECKER", "GUARD"], section: "settings" },
   { href: "/dashboard/profile", label: "My Profile", icon: User, roles: ["ADMIN", "TREASURER", "COMMITTEE", "RESIDENT", "PLATFORM_ADMIN", "MAKER", "CHECKER", "GUARD"], section: "settings" },
